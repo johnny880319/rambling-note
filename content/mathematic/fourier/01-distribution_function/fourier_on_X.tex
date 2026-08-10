@@ -1,0 +1,18 @@
+\documentclass[tikz,border=3pt]{standalone}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tikz-cd}
+
+\begin{document}
+
+\begin{tikzcd}[column sep=huge, row sep=large]
+T_f \in \mathcal{B} (\mathcal{X};\mathbb{C}): g
+  \arrow[r, mapsto]
+  \arrow[d, "\mathcal{F} \colon \text{Fourier Transform}"]
+& \langle f, \overline{g} \rangle_{L^2(\mathbb{R}; \mathbb{C})} \\
+\mathcal{F}(T_f) \in \mathcal{B} (\mathcal{X};\mathbb{C}): g
+  \arrow[r, mapsto]
+& \langle f, \mathcal{F}^{-1}(\overline{g}) \rangle_{L^2(\mathbb{R}; \mathbb{C})}
+\end{tikzcd}
+
+\end{document}

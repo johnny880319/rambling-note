@@ -1,0 +1,24 @@
+{
+  "latex-workshop.latex.outDir": "%WORKSPACE_FOLDER%/.build/latex/%RELATIVE_DIR%",
+  "latex-workshop.latex.recipe.default": "latexmk (LuaLaTeX)",
+  "latex-workshop.latex.tools": [
+    {
+      "name": "latexmk-lualatex",
+      "command": "latexmk",
+      "args": [
+        "-synctex=1",
+        "-interaction=nonstopmode",
+        "-file-line-error",
+        "-lualatex",
+        "-outdir=%OUTDIR%",
+        "%DOC%"
+      ]
+    }
+  ],
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "latexmk (LuaLaTeX)",
+      "tools": ["latexmk-lualatex"]
+    }
+  ]
+}
