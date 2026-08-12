@@ -77,7 +77,7 @@ def _(mo):
         \text{subject to } \quad & s + Ax = b \\
         \text{and } \quad & s, x \geq 0
     \end{aligned}
-    \tag{standard form}
+    \tag{slack form}
     $$
 
 
@@ -120,7 +120,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    接下來我們用以下的 canonical form 表示 simplex method 每一步的狀態；pivot operation 會改變基底，但仍維持這個形式：
+    此時如果 $b \geq 0$，那 initial form 就會是下列 canonical form 的特例。一般情況還需要其他方法尋找初始可行基底，這之後有機會再討論；為了方便起見，本文**從現在開始只考慮 $b \geq 0$ 的情況**。
 
     $$
     \begin{aligned}
@@ -156,7 +156,7 @@ def _(mo):
     \tag{canonical form}
     $$
 
-    此時如果 $c_D \leq 0$ ，則令 $(x_B, x_D) = (b_B, 0)$ 就能讓 $z$ attain 最大值 $z_0$。
+    那simplex method的核心思想，就是不斷的將 canonical form 轉換成另一個 canonical form，看看能否能讓 $c_D \leq 0$ 。假如此情境真的發生了，則令 $(x_B, x_D) = (b_B, 0)$ 就能讓 $z$ attain 最大值 $z_0$。
     """)
     return
 
@@ -178,9 +178,6 @@ def _(mo):
 
     - $x_i \in x_B$ 稱為 `基變數 (basic variables)`
     - $x_i \in x_D$ 稱為 `非基變數 (non-basic variables)`。
-
-    稍微比對會發現，其實 initial form 裡的 $b \geq 0$ 的話，它就是 canonical form 了。若無法直接得到初始 basic feasible solution，則還需要透過 Phase I 等方法尋找；若 Phase I 失敗，也就代表原問題不可行。這部分細節有機會再談，以下先假設我們已經取得一個初始 canonical form。
-
 
     Simplex method 的思想基本上就是持續的將基變數跟非基變數互換，並且互換的過程都保持 canonical form，直到換到 $c_D \leq 0$ 為止。這樣的操作被稱為轉軸操作 (pivot operation)
 
@@ -257,7 +254,7 @@ def _(mo):
     > 但這種情況其實代表，令 $x_{D, \geq 2} = 0$ 後，對任意 $x_{D,1} \geq 0$ 都可取
     > $x_B = b_B - D_{\cdot, 1} x_{D, 1}$ ，所以仍是可行解。讓 $x_{D,1}$ 趨近無窮大時，$z$ 也會趨近無窮大；此時問題無界，也就不用再做 pivot operation 了。
 
-    > **Remark:** 若遇到退化的 basic feasible solution，pivot 後目標值可能沒有嚴格增加，甚至可能發生 cycling。因此若要保證有限步終止，還需要搭配 Bland's rule 等防止 cycling 的選擇規則；這部分有空再談。
+    > **Remark:** 其實理論上還需要一些手段才能保證 simplex method 經過有限次 pivot operation 就能終止，這或許以後有機會再來談。
     """)
     return
 
@@ -437,12 +434,11 @@ def _(mo, simplex_simulation, simulation_result, simulation_step_index):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    從模擬可以觀察到，slack variable $s_i=b_i-A_{i,\cdot}x$ 可以想成**現在這個點**跟**對應限制平面**之間的帶比例距離；除以 $\lVert A_{i,\cdot}\rVert$ 後才是實際的歐幾里得距離。當 $s_i$ 變成 0 時，代表現在的點正好在對應的限制平面上。$x_i$ 也是同理，只是它對應的邊界平面是 $x_i=0$。因此，在非退化的 basic feasible solution 中，可以這樣詮釋：
+    從模擬跟限制式可以觀察到，當 $A_{i,\cdot}\neq0$ 時，slack variable 除以限制式法向量的 norm，就會是**現在的點**跟**對應限制式的平面**之間的距離，也就是
 
-    - 基變數 (basic variables) 為正，代表現在不在它所對應的邊界平面上。
-    - 非基變數 (non-basic variables) 為 0，代表現在位於它所對應的邊界平面上。
+    $$\frac{s_i}{\lVert A_{i, \cdot} \rVert} = \frac{b_i - A_{i, \cdot} x}{\lVert A_{i, \cdot} \rVert} = \text{distance between the current point and the constraint plane}.$$
 
-    若頂點是退化的，某些基變數也可能等於 0，因此第一項就不一定成立。
+    當 $s_i$ 變成 0 時，代表現在的點正好在對應的限制平面上。$x_i$ 也是同理，只是它對應的邊界平面是 $x_i=0$。
     """)
     return
 
