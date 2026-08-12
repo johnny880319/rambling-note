@@ -120,7 +120,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    此時如果 $b \geq 0$，那 initial form 就會是下列 canonical form 的特例。一般情況還需要其他方法尋找初始可行基底，這之後有機會再討論；為了方便起見，本文**從現在開始只考慮 $b \geq 0$ 的情況**。
+    此時如果 $b \geq 0$，那 initial form 就會是下列 canonical form 的特例。一般情況還需要其他方法來把問題化約成 canonical form ，這之後有機會再討論；為了方便起見，本文**從現在開始只考慮 $b \geq 0$ 的情況**。
 
     $$
     \begin{aligned}
