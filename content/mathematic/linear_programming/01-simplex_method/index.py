@@ -1,5 +1,5 @@
 # /// script
-# dependencies = ["marimo"]
+# dependencies = ["marimo", "plotly"]
 # requires-python = ">=3.12"
 # ///
 
@@ -156,7 +156,7 @@ def _(mo):
     \tag{canonical form}
     $$
 
-    此時如果 $c_D \geq 0$ ，則令 $(x_B, x_D) = (b_B, 0)$ 就能讓 $z$ attain 最大值 $z_0$。
+    此時如果 $c_D \leq 0$ ，則令 $(x_B, x_D) = (b_B, 0)$ 就能讓 $z$ attain 最大值 $z_0$。
     """)
     return
 
@@ -182,9 +182,9 @@ def _(mo):
     稍微比對會發現，其實 initial form 裡的 $b \geq 0$ 的話，他就是 canonical form 了。事實上我們總是能透過一些手段讓這件事情成立。不過這部分細節有機會再談，我們可以當作我們的初始狀態永遠能化成一個canonical form。
 
 
-    Simplex method 的思想基本上就是持續的將基變數跟非基變數互換，並且互換的過程都保持 canonical form，直到換到 $c_D \geq 0$ 為止。這樣的操作被稱為轉軸操作 (pivot operation)
+    Simplex method 的思想基本上就是持續的將基變數跟非基變數互換，並且互換的過程都保持 canonical form，直到換到 $c_D \leq 0$ 為止。這樣的操作被稱為轉軸操作 (pivot operation)
 
-    實際操作大改長這樣，不失一般性假設 $c_D$ 的第一個元素 $c_{D, 1} < 0$。
+    實際操作大概長這樣，不失一般性假設 $c_D$ 的第一個元素 $c_{D, 1} > 0$。
     """)
     return
 
@@ -238,25 +238,122 @@ def _(mo):
     當然，我們做完pivot operation之後，整個矩陣的表達式依舊要滿足canonical form，我們等式右邊的向量的 entries 必須都非負。觀察一下上式就可以發現當
 
     $$
-    \frac{b_{B, 1}}{D_{1, 1}} \leq \frac{b_{B, i}}{D_{i, 1}}, \forall i \in \{j \in \mathbb{N} \mid 1 \leq j \leq m, D_{j, 1} \neq 0 \}.
+    D_{1, 1} > 0 \quad \text{ and } \quad \frac{b_{B, 1}}{D_{1, 1}} = \min_{\substack{1 \leq i \leq m \\ D_{i, 1} > 0}} \frac{b_{B, i}}{D_{i, 1}}.
     $$
 
     就可以了。
 
-    > Remark: 這裡有個小細節是，今天選好 $c_{D, 1}$ 並準備開始 pivot operation 時，如果 $D_{1, 1}, D_{2, 1} \cdots D_{m, 1}$ 皆為 0 的話，似乎就沒辦法正常執行上述計算了。
+    > Remark: 這裡有個小細節是，今天選好 $c_{D, 1}$ 並準備開始 pivot operation 時，如果 $D_{1, 1}, D_{2, 1} \cdots D_{m, 1}$ 皆小於等於 0 的話，似乎就沒辦法正常執行上述計算了。
     >
-    > 但這種情況其實代表，只要 $(x_{B}, x_{D, \geq 2}) = (b_B, 0)$ ，他就可以滿足限制式。也就是說 $x_{D, 1}$ 可以是任意數字。此時如果讓 $x_{D, 1}$ 趨近於無窮大，那 $z$ 也會需要趨近於無窮大。 此時也不用做 pivot operation了，因為我們已經找到了可以讓目標式趨近無窮大的解xd
+    > 但這種情況其實代表，令 $x_{D, \geq 2} = 0$ 後，對任意 $x_{D,1} \geq 0$ 都可取
+    > $x_B = b_B - D_{\cdot, 1} x_{D, 1}$ ，所以仍是可行解。讓 $x_{D,1}$ 趨近無窮大時，$z$ 也會趨近無窮大；此時問題無界，也就不用再做 pivot operation 了。
 
     > Remark: 其實理論上還需要證明只要透過有限個 pivot operation 就可以抵達最佳解。不過這證明有空再寫吧。
     """)
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Pivot operation 與幾何路徑的同步模擬
+
+    以下固定考慮
+
+    $$
+    \begin{aligned}
+        \text{maximize}\quad & 3x_1+2x_2+x_3 \\
+        \text{subject to}\quad
+        & x_1\leq4,\quad x_2\leq3,\quad x_3\leq2, \\
+        & x_1+x_2+x_3\leq8,\quad x_1,x_2,x_3\geq0.
+    \end{aligned}
+    $$
+
+    拖曳步驟滑桿，或按上一步／下一步。左圖的橘色路徑是目前走過的頂點；綠色箭頭是目標函數固定的梯度 $\nabla f=(3,2,1)$。右側 tableau 與左圖使用同一個 basis：高斯消去使 entering variable 的欄成為單位向量，接著交換欄只是把新基變數重新排回 canonical form。
+    """)
+    return
+
+
+@app.cell
+def _(mo):
+    get_simulation_step, set_simulation_step = mo.state(0)
+    return get_simulation_step, set_simulation_step
+
+
+@app.cell(hide_code=True)
+def _(mo, set_simulation_step, simplex_simulation):
+    previous_step_button = mo.ui.button(
+        label="← 上一步",
+        value=0,
+        on_click=lambda click_count: click_count + 1,
+        on_change=lambda _: set_simulation_step(
+            lambda value: max(0, value - 1)
+        ),
+    )
+    next_step_button = mo.ui.button(
+        label="下一步 →",
+        value=0,
+        on_click=lambda click_count: click_count + 1,
+        on_change=lambda _: set_simulation_step(
+            lambda value: min(
+                len(simplex_simulation.SIMPLEX_STEPS) - 1,
+                value + 1,
+            )
+        ),
+    )
+    mo.hstack(
+        [previous_step_button, next_step_button],
+        widths=[0.5, 0.5],
+        align="center",
+        gap=1,
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(get_simulation_step, mo, set_simulation_step, simplex_simulation):
+    simulation_step_slider = mo.ui.slider(
+        start=0,
+        stop=len(simplex_simulation.SIMPLEX_STEPS) - 1,
+        step=1,
+        value=get_simulation_step(),
+        show_value=True,
+        full_width=True,
+        label="步驟",
+        on_change=set_simulation_step,
+    )
+    simulation_step_slider
+    return
+
+
+@app.cell
+def _(get_simulation_step):
+    simulation_step_index = get_simulation_step()
+    return (simulation_step_index,)
+
+
+@app.cell(hide_code=True)
+def _(mo, simplex_simulation, simulation_step_index):
+    _figure = simplex_simulation.make_figure(simulation_step_index)
+    _explanation = mo.md(
+        simplex_simulation.step_markdown(simulation_step_index)
+    )
+    mo.hstack(
+        [mo.ui.plotly(_figure), _explanation],
+        widths=[0.48, 0.52],
+        align="start",
+        gap=1.5,
+        wrap=True,
+    )
+    return
+
+
 @app.cell
 def _():
     import marimo as mo
+    import simplex_simulation
 
-    return (mo,)
+    return mo, simplex_simulation
 
 
 if __name__ == "__main__":
