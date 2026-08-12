@@ -55,6 +55,61 @@ theme_svg() {
   sed "s|stroke='#fff'|stroke='var(--diagram-background)'|g" "$themed_output" > "$output_file"
 }
 
+sort_svg_glyph_paths() {
+  local output_file="$1"
+  local sorted_output="$2"
+
+  # dvisvgm occasionally emits the same glyph definitions in a different
+  # order.  SVG rendering is unaffected, but Git sees a noisy diff.  Glyph
+  # definitions are one-line paths with IDs such as g4-1; sort each contiguous
+  # run inside <defs> while leaving the actual drawing paths untouched.
+  LC_ALL=C awk '
+    function flush_paths(    i, j, value) {
+      for (i = 2; i <= path_count; i++) {
+        value = paths[i]
+        j = i - 1
+        while (j >= 1 && paths[j] > value) {
+          paths[j + 1] = paths[j]
+          j--
+        }
+        paths[j + 1] = value
+      }
+
+      for (i = 1; i <= path_count; i++) {
+        print paths[i]
+      }
+
+      delete paths
+      path_count = 0
+    }
+
+    /^<defs>$/ {
+      in_defs = 1
+      print
+      next
+    }
+
+    in_defs && /^<path id='\''g[0-9]+-[0-9]+'\'' d=.*\/>$/ {
+      paths[++path_count] = $0
+      next
+    }
+
+    {
+      flush_paths()
+      print
+      if ($0 == "</defs>") {
+        in_defs = 0
+      }
+    }
+
+    END {
+      flush_paths()
+    }
+  ' "$output_file" > "$sorted_output"
+
+  mv -- "$sorted_output" "$output_file"
+}
+
 remove_stale_outputs() {
   local output_stem="$1"
   local page_count="$2"
@@ -121,6 +176,7 @@ while IFS= read -r -d '' tex_file; do
     # `currentColor` lets the SVG change foreground colour without recompiling.
     dvisvgm --pdf --page="$page_number" --no-fonts --currentcolor "$pdf_file" --output="$output_file" >/dev/null
     theme_svg "$output_file" "$build_root/$job_name-$page_number.themed.svg"
+    sort_svg_glyph_paths "$output_file" "$build_root/$job_name-$page_number.sorted.svg"
 
     rendered_pages=$((rendered_pages + 1))
   done
