@@ -24,7 +24,7 @@ def _(mo):
 @app.cell
 def _(mo):
     mo.image(
-        mo.notebook_dir() / "fourier_on_X.svg",
+        mo.notebook_location() / "fourier_on_X.svg",
         caption="稍微推廣的傅立葉定義",
     )
     return
@@ -63,7 +63,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.image(
-        mo.notebook_dir() / "fourier_on_tempered_distributions.svg",
+        mo.notebook_location() / "fourier_on_tempered_distributions.svg",
         caption="Tempered distributions 上傅立葉變換的定義。",
     )
     return

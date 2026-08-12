@@ -55,3 +55,29 @@ LATEX_COMPILER=pdflatex ./scripts/render-diagrams.sh
 ```bash
 sudo apt install texlive-luatex texlive-latex-extra texlive-lang-chinese dvisvgm
 ```
+
+## 建置網站
+
+網站會自動尋找所有 `content/**/index.py`，不需要在腳本中維護文章清單。每篇筆記會輸出到與 `content/` 相同的目錄結構，並由首頁產生目錄。
+
+在本機完整建置：
+
+```bash
+uv run python scripts/build-site.py
+```
+
+輸出位於 `_site/`。因為 WebAssembly 頁面必須透過 HTTP 開啟，請用下列方式預覽，不能直接雙擊 HTML：
+
+```bash
+uv run python -m http.server --directory _site 8000
+```
+
+然後開啟 <http://localhost:8000>。
+
+若只想快速檢查網站結構，不預先執行每篇 notebook：
+
+```bash
+uv run python scripts/build-site.py --no-execute
+```
+
+`.github/workflows/deploy-pages.yml` 會在每次 push 到 `main` 時自動建置並部署 GitHub Pages。第一次發布前，需要到 GitHub repository 的 **Settings → Pages → Build and deployment**，把 Source 設為 **GitHub Actions**。

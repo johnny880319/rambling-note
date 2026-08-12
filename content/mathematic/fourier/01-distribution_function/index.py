@@ -133,7 +133,7 @@ def _(mo):
 @app.cell
 def _(mo):
     mo.image(
-        mo.notebook_dir() / "fourier_on_X.svg",
+        mo.notebook_location() / "fourier_on_X.svg",
         caption="稍微廣義的傅立葉變換",
     )
     return

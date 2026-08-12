@@ -1,5 +1,6 @@
 .venv/
 .build/
+_site/
 __pycache__/
 __marimo__/
 .codex/

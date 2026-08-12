@@ -190,7 +190,7 @@ def _(mo):
 def _(mo):
     mo.center(
         mo.image(
-            mo.notebook_dir() / "pivot_operation_step-1.svg",
+            mo.notebook_location() / "pivot_operation_step-1.svg",
             caption="Pivot operation step 1.",
             width=600,
         )
@@ -210,7 +210,7 @@ def _(mo):
 def _(mo):
     mo.center(
         mo.image(
-            mo.notebook_dir() / "pivot_operation_step-2.svg",
+            mo.notebook_location() / "pivot_operation_step-2.svg",
             caption="Pivot operation step 2.",
             width=800,
         )
@@ -230,7 +230,7 @@ def _(mo):
 def _(mo):
     mo.center(
         mo.image(
-            mo.notebook_dir() / "pivot_operation_step-3.svg",
+            mo.notebook_location() / "pivot_operation_step-3.svg",
             caption="Pivot operation step 3.",
             width=800,
         )
