@@ -1,4 +1,4 @@
-# Rambling Notes Lab
+# Rambling Notes
 
 以文章為本的數學筆記庫。每一篇筆記都是可獨立開啟、執行與互動的 [Marimo](https://marimo.io/) Python notebook；圖表、模擬與 LaTeX 圖的原始碼都和文章放在同一個目錄。
 
