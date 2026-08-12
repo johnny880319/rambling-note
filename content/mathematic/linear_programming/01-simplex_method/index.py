@@ -1,5 +1,5 @@
 # /// script
-# dependencies = ["marimo", "plotly"]
+# dependencies = ["marimo", "numpy", "plotly"]
 # requires-python = ">=3.12"
 # ///
 
@@ -18,9 +18,9 @@ def _(mo):
 
     ## 核心思想
 
-    Simplex Method的核心思想是，線性規劃的限制式圍成了一個凸多面體，而凸多面體的其中一個頂點一定會是其中一個最佳解 (高中數學課本裡用的圖形法也是利用了此性質)。因此如果我們能先找到一個頂點，然後沿著邊走到另一個能讓目標式變得更好的頂點，不停迭代後一定能抵達上述的頂點。
+    Simplex Method的核心思想是，線性規劃的限制式圍成了一個凸多面體；當問題可行而且最佳值有限時，至少會有一個頂點是最佳解 (高中數學課本裡用的圖形法也是利用了此性質)。因此如果我們能先找到一個頂點，然後沿著邊走到另一個能讓目標式變得更好的頂點，就有機會逐步抵達最佳頂點。
 
-    關於為何一定存在一個頂點使得目標式達到最佳解，這裡暫不做嚴謹證明。不過直覺的想法其實跟圖形法一樣，因目標式是一個線性函數，他的梯度是固定的，所以我們在凸多面體裡朝著這個方向走時，碰壁時就還是沿著牆壁朝著這個梯度走，最終要嘛會碰到一個頂點，要嘛會碰到一個與梯度垂直的牆壁，這時構成這道牆的頂點們就都會是最佳解。
+    關於為何一定存在一個頂點使得目標式達到最佳解，這裡暫不做嚴謹證明。不過直覺的想法其實跟圖形法一樣，因目標式是一個線性函數，它的梯度是固定的，所以我們在凸多面體裡朝著這個方向走時，碰壁時就還是沿著牆壁朝著這個梯度走；若最佳值有限，最終要嘛會碰到一個最佳頂點，要嘛會碰到一個與梯度垂直的面，這時這個面上的頂點也會是最佳解。
     """)
     return
 
@@ -120,7 +120,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    那simplex method的最終目標，就是對矩陣們做適當的row operation跟column operation 來得到
+    接下來我們用以下的 canonical form 表示 simplex method 每一步的狀態；pivot operation 會改變基底，但仍維持這個形式：
 
     $$
     \begin{aligned}
@@ -164,7 +164,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    > **Remark:** initial form 跟 canonical form 是我在這篇文章為了方便先暫時取的名稱。目前學界對他們似乎沒有統一的名稱，或我沒找到。但 standard form 的定義在 operating research 這個領域式有共識的。
+    > **Remark:** initial form 跟 canonical form 是我在這篇文章為了方便先暫時取的名稱。不同教材對 standard form 的 convention 也不完全相同；本文固定用 $Ax\leq b,\ x\geq0$ 的最大化形式。
     """)
     return
 
@@ -179,7 +179,7 @@ def _(mo):
     - $x_i \in x_B$ 稱為 `基變數 (basic variables)`
     - $x_i \in x_D$ 稱為 `非基變數 (non-basic variables)`。
 
-    稍微比對會發現，其實 initial form 裡的 $b \geq 0$ 的話，他就是 canonical form 了。事實上我們總是能透過一些手段讓這件事情成立。不過這部分細節有機會再談，我們可以當作我們的初始狀態永遠能化成一個canonical form。
+    稍微比對會發現，其實 initial form 裡的 $b \geq 0$ 的話，它就是 canonical form 了。若無法直接得到初始 basic feasible solution，則還需要透過 Phase I 等方法尋找；若 Phase I 失敗，也就代表原問題不可行。這部分細節有機會再談，以下先假設我們已經取得一個初始 canonical form。
 
 
     Simplex method 的思想基本上就是持續的將基變數跟非基變數互換，並且互換的過程都保持 canonical form，直到換到 $c_D \leq 0$ 為止。這樣的操作被稱為轉軸操作 (pivot operation)
@@ -191,9 +191,12 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.image(
-        mo.notebook_dir() / "pivot_operation_step-1.svg",
-        caption="Pivot operation step 1.",
+    mo.center(
+        mo.image(
+            mo.notebook_dir() / "pivot_operation_step-1.svg",
+            caption="Pivot operation step 1.",
+            width=600,
+        )
     )
     return
 
@@ -208,9 +211,12 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.image(
-        mo.notebook_dir() / "pivot_operation_step-2.svg",
-        caption="Pivot operation step 2.",
+    mo.center(
+        mo.image(
+            mo.notebook_dir() / "pivot_operation_step-2.svg",
+            caption="Pivot operation step 2.",
+            width=800,
+        )
     )
     return
 
@@ -225,9 +231,12 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.image(
-        mo.notebook_dir() / "pivot_operation_step-3.svg",
-        caption="Pivot operation step 3.",
+    mo.center(
+        mo.image(
+            mo.notebook_dir() / "pivot_operation_step-3.svg",
+            caption="Pivot operation step 3.",
+            width=800,
+        )
     )
     return
 
@@ -243,12 +252,12 @@ def _(mo):
 
     就可以了。
 
-    > Remark: 這裡有個小細節是，今天選好 $c_{D, 1}$ 並準備開始 pivot operation 時，如果 $D_{1, 1}, D_{2, 1} \cdots D_{m, 1}$ 皆小於等於 0 的話，似乎就沒辦法正常執行上述計算了。
+    > **Remark:** 這裡有個小細節是，今天選好 $c_{D, 1}$ 並準備開始 pivot operation 時，如果 $D_{1, 1}, D_{2, 1} \cdots D_{m, 1}$ 皆小於等於 0 的話，似乎就沒辦法正常執行上述計算了。
     >
     > 但這種情況其實代表，令 $x_{D, \geq 2} = 0$ 後，對任意 $x_{D,1} \geq 0$ 都可取
     > $x_B = b_B - D_{\cdot, 1} x_{D, 1}$ ，所以仍是可行解。讓 $x_{D,1}$ 趨近無窮大時，$z$ 也會趨近無窮大；此時問題無界，也就不用再做 pivot operation 了。
 
-    > Remark: 其實理論上還需要證明只要透過有限個 pivot operation 就可以抵達最佳解。不過這證明有空再寫吧。
+    > **Remark:** 若遇到退化的 basic feasible solution，pivot 後目標值可能沒有嚴格增加，甚至可能發生 cycling。因此若要保證有限步終止，還需要搭配 Bland's rule 等防止 cycling 的選擇規則；這部分有空再談。
     """)
     return
 
@@ -256,22 +265,91 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Pivot operation 與幾何路徑的同步模擬
+    ## Simplex method 的視覺化模擬
 
-    以下固定考慮
+    總之我讓 AI 幫我生成了一下 simplex method 的視覺化模擬
 
-    $$
-    \begin{aligned}
-        \text{maximize}\quad & 3x_1+2x_2+x_3 \\
-        \text{subject to}\quad
-        & x_1\leq4,\quad x_2\leq3,\quad x_3\leq2, \\
-        & x_1+x_2+x_3\leq8,\quad x_1,x_2,x_3\geq0.
-    \end{aligned}
-    $$
+    下面可以自行輸入三維線性規劃的目標式跟限制式。
 
-    拖曳步驟滑桿，或按上一步／下一步。左圖的橘色路徑是目前走過的頂點；綠色箭頭是目標函數固定的梯度 $\nabla f=(3,2,1)$。右側 tableau 與左圖使用同一個 basis：高斯消去使 entering variable 的欄成為單位向量，接著交換欄只是把新基變數重新排回 canonical form。
+    - 限制式的格式為: `a_1, a_2, a_3 <= b` ，程式會把他轉成 $a_1 x_1 + a_2 x_2 + a_3 x_3 \leq b$
+    - 目標式的格式為: `c_1, c_2, c_3` ，程式會把他轉成 maximize $c_1 x_1 + c_2 x_2 + c_3 x_3$
+
+    同時程式也會自動加入 $x_1,x_2,x_3\geq0$ 的條件。
+
+    為了能直接用 slack variables 作為初始 basis，目前要求每個 $b\geq0$，且可行域必須是有體積、封閉的三維多面體。
     """)
     return
+
+
+@app.cell(hide_code=True)
+def _(mo, set_simulation_step, simplex_simulation):
+    simulation_input_form = mo.ui.batch(
+        mo.md("""
+        **目標係數 $c=(c_1,c_2,c_3)$**
+
+        {objective}
+
+        **限制式（每行：`a1, a2, a3 <= b`）**
+
+        {constraints}
+        """),
+        elements={
+            "objective": mo.ui.text(
+                value=simplex_simulation.DEFAULT_OBJECTIVE,
+                full_width=True,
+            ),
+            "constraints": mo.ui.text_area(
+                value=simplex_simulation.DEFAULT_CONSTRAINTS,
+                rows=6,
+                full_width=True,
+            ),
+        },
+    ).form(
+        submit_button_label="套用並重新計算",
+        on_change=lambda _: set_simulation_step(0),
+    )
+    simulation_input_form
+    return (simulation_input_form,)
+
+
+@app.cell(hide_code=True)
+def _(mo, simplex_simulation, simulation_input_form):
+    _submitted = simulation_input_form.value
+    _objective_text = (
+        _submitted["objective"]
+        if _submitted is not None
+        else simplex_simulation.DEFAULT_OBJECTIVE
+    )
+    _constraints_text = (
+        _submitted["constraints"]
+        if _submitted is not None
+        else simplex_simulation.DEFAULT_CONSTRAINTS
+    )
+    try:
+        _program = simplex_simulation.parse_linear_program(
+            _objective_text,
+            _constraints_text,
+        )
+        simulation_result = simplex_simulation.build_simulation(_program)
+        _notice = mo.md("")
+    except ValueError as _error:
+        simulation_result = simplex_simulation.DEFAULT_SIMULATION
+        _notice = mo.callout(
+            mo.md(f"**輸入無法套用：** {_error} 目前仍顯示預設範例。"),
+            kind="warn",
+        )
+
+    mo.vstack(
+        [
+            _notice,
+            mo.md(simplex_simulation.program_markdown(simulation_result)),
+            mo.md(
+                "拖曳滑桿，或按上一步／下一步。橘色是已走路徑；"
+                "綠色箭頭是目標函數梯度。右側 tableau 和幾何頂點使用同一個 basis。"
+            ),
+        ]
+    )
+    return (simulation_result,)
 
 
 @app.cell
@@ -281,14 +359,12 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo, set_simulation_step, simplex_simulation):
+def _(mo, set_simulation_step, simulation_result):
     previous_step_button = mo.ui.button(
         label="← 上一步",
         value=0,
         on_click=lambda click_count: click_count + 1,
-        on_change=lambda _: set_simulation_step(
-            lambda value: max(0, value - 1)
-        ),
+        on_change=lambda _: set_simulation_step(lambda value: max(0, value - 1)),
     )
     next_step_button = mo.ui.button(
         label="下一步 →",
@@ -296,7 +372,7 @@ def _(mo, set_simulation_step, simplex_simulation):
         on_click=lambda click_count: click_count + 1,
         on_change=lambda _: set_simulation_step(
             lambda value: min(
-                len(simplex_simulation.SIMPLEX_STEPS) - 1,
+                len(simulation_result.steps) - 1,
                 value + 1,
             )
         ),
@@ -311,12 +387,13 @@ def _(mo, set_simulation_step, simplex_simulation):
 
 
 @app.cell(hide_code=True)
-def _(get_simulation_step, mo, set_simulation_step, simplex_simulation):
+def _(get_simulation_step, mo, set_simulation_step, simulation_result):
+    _last_step = len(simulation_result.steps) - 1
     simulation_step_slider = mo.ui.slider(
         start=0,
-        stop=len(simplex_simulation.SIMPLEX_STEPS) - 1,
+        stop=_last_step,
         step=1,
-        value=get_simulation_step(),
+        value=min(get_simulation_step(), _last_step),
         show_value=True,
         full_width=True,
         label="步驟",
@@ -327,16 +404,25 @@ def _(get_simulation_step, mo, set_simulation_step, simplex_simulation):
 
 
 @app.cell
-def _(get_simulation_step):
-    simulation_step_index = get_simulation_step()
+def _(get_simulation_step, simulation_result):
+    simulation_step_index = min(
+        get_simulation_step(),
+        len(simulation_result.steps) - 1,
+    )
     return (simulation_step_index,)
 
 
 @app.cell(hide_code=True)
-def _(mo, simplex_simulation, simulation_step_index):
-    _figure = simplex_simulation.make_figure(simulation_step_index)
+def _(mo, simplex_simulation, simulation_result, simulation_step_index):
+    _figure = simplex_simulation.make_figure(
+        simulation_result,
+        simulation_step_index,
+    )
     _explanation = mo.md(
-        simplex_simulation.step_markdown(simulation_step_index)
+        simplex_simulation.step_markdown(
+            simulation_result,
+            simulation_step_index,
+        )
     )
     mo.hstack(
         [mo.ui.plotly(_figure), _explanation],
@@ -345,6 +431,19 @@ def _(mo, simplex_simulation, simulation_step_index):
         gap=1.5,
         wrap=True,
     )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    從模擬可以觀察到，slack variable $s_i=b_i-A_{i,\cdot}x$ 可以想成**現在這個點**跟**對應限制平面**之間的帶比例距離；除以 $\lVert A_{i,\cdot}\rVert$ 後才是實際的歐幾里得距離。當 $s_i$ 變成 0 時，代表現在的點正好在對應的限制平面上。$x_i$ 也是同理，只是它對應的邊界平面是 $x_i=0$。因此，在非退化的 basic feasible solution 中，可以這樣詮釋：
+
+    - 基變數 (basic variables) 為正，代表現在不在它所對應的邊界平面上。
+    - 非基變數 (non-basic variables) 為 0，代表現在位於它所對應的邊界平面上。
+
+    若頂點是退化的，某些基變數也可能等於 0，因此第一項就不一定成立。
+    """)
     return
 
 
