@@ -18,6 +18,35 @@
   --notes-remark-border: #8d735d;
 }
 
+/*
+ * Keep exported WASM pages and the editor on Marimo's own theme palette.
+ * Explicit typography variables also avoid a mismatch between Marimo's
+ * system theme and Tailwind Typography's dark-mode media query.
+ */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-lead: var(--muted-foreground);
+  --tw-prose-links: var(--link);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--muted-foreground);
+  --tw-prose-bullets: var(--muted-foreground);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-quote-borders: var(--border);
+  --tw-prose-captions: var(--muted-foreground);
+  color: var(--foreground);
+}
+
+.prose :where(h1, h2, h3, h4, h5, h6) {
+  color: var(--foreground);
+}
+
+/* A button's nested Markdown must inherit the button foreground, not prose text. */
+button[data-testid="marimo-plugin-button"] :where(.prose, .paragraph) {
+  color: inherit;
+}
+
 /* Emphasis differs mainly by tone, without looking like a UI status color. */
 .prose strong {
   color: var(--notes-emphasis);

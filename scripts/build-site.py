@@ -29,6 +29,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 CONTENT_ROOT = REPO_ROOT / "content"
 DEFAULT_OUTPUT = REPO_ROOT / "_site"
 SITE_CSS = REPO_ROOT / "styles" / "site.css"
+SITE_JS = REPO_ROOT / "scripts" / "site.js"
 
 PUBLISHABLE_ASSET_SUFFIXES = {
     ".avif",
@@ -168,11 +169,16 @@ def export_note(note: Note, output_root: Path, *, execute: bool) -> None:
 def rewrite_exported_html(html_path: Path, note: Note, output_root: Path) -> None:
     text = html_path.read_text(encoding="utf-8")
 
-    # Marimo writes local wheel URLs for a flat HTML file. Because this site
-    # uses clean nested URLs, keep each wheel beside its notebook instead.
-    text = text.replace("../public/wheels", "./public/wheels")
-    text = text.replace("..%2Fpublic%2Fwheels", ".%2Fpublic%2Fwheels")
-    text = text.replace("..%252Fpublic%252Fwheels", ".%252Fpublic%252Fwheels")
+    # The editor theme is a personal preference, so it is deliberately absent
+    # from pyproject.toml. Only the published site's default is set here.
+    text, replacements = re.subn(
+        r'("display":\s*\{[^{}]*"theme":\s*)"(?:light|dark|system)"',
+        r'\1"system"',
+        text,
+        count=1,
+    )
+    if replacements != 1:
+        raise RuntimeError(f"Could not set the exported theme in {html_path}")
 
     title = html.escape(note.title)
     text = re.sub(
@@ -190,6 +196,7 @@ def rewrite_exported_html(html_path: Path, note: Note, output_root: Path) -> Non
     else:
         relative_home += "/"
     site_css = relative_home + "site.css"
+    site_js = relative_home + "site.js"
     text = text.replace(
         "</head>",
         f'  <link rel="stylesheet" href="{site_css}" />\n</head>',
@@ -199,9 +206,22 @@ def rewrite_exported_html(html_path: Path, note: Note, output_root: Path) -> Non
         '<body>\n    <div id="root"></div>',
         (
             "<body>\n"
-            f'    <a class="note-home-link" href="{relative_home}" '
-            'target="_top" aria-label="回到筆記目錄">← Notes</a>\n'
+            '    <button class="note-sidebar-toggle" type="button" '
+            'aria-label="開啟文章目錄" aria-expanded="false" '
+            "data-note-sidebar-toggle>目錄</button>\n"
+            '    <nav class="note-theme-switch" aria-label="主題">\n'
+            "      <span>主題</span>\n"
+            '      <a href="?theme=light" data-note-theme="light">亮色</a>\n'
+            '      <a href="?theme=dark" data-note-theme="dark">深色</a>\n'
+            "    </nav>\n"
+            '    <aside class="note-sidebar" data-note-sidebar>\n'
+            f'      <a class="note-site-link" href="{relative_home}" target="_top">'
+            "← Rambling Notes</a>\n"
+            f'      <p class="note-sidebar-title">{title}</p>\n'
+            '      <nav class="note-toc" aria-label="文章目錄" data-note-toc></nav>\n'
+            "    </aside>\n"
             '    <div id="root"></div>'
+            f'\n    <script src="{site_js}" defer></script>'
         ),
         1,
     )
@@ -272,15 +292,18 @@ def write_homepage(notes: list[Note], output_root: Path) -> None:
     <link rel="stylesheet" href="site.css" />
   </head>
   <body>
+    <nav class="note-theme-switch" aria-label="主題">
+      <span>主題</span>
+      <a href="?theme=light" data-note-theme="light">亮色</a>
+      <a href="?theme=dark" data-note-theme="dark">深色</a>
+    </nav>
     <main class="site-shell">
       <header class="site-header">
         <div>
           <p class="site-kicker">Mathematics · Simulation · Notes</p>
           <h1>Rambling<br />Notes</h1>
         </div>
-        <p class="site-intro">
-          以文章為本的數學筆記。互動模擬直接在瀏覽器中執行，不需安裝 Python。
-        </p>
+        <p class="site-intro">偷偷來放些筆記。</p>
       </header>
       <nav class="notes-tree" aria-label="筆記目錄">{tree}</nav>
       <footer class="site-footer">
@@ -288,6 +311,7 @@ def write_homepage(notes: list[Note], output_root: Path) -> None:
         <span>Built from <code>content/**/index.py</code> with marimo</span>
       </footer>
     </main>
+    <script src="site.js"></script>
   </body>
 </html>
 """
@@ -296,6 +320,7 @@ def write_homepage(notes: list[Note], output_root: Path) -> None:
 
 def copy_site_files(output_root: Path) -> None:
     shutil.copy2(SITE_CSS, output_root / "site.css")
+    shutil.copy2(SITE_JS, output_root / "site.js")
     (output_root / ".nojekyll").touch()
 
 

@@ -190,7 +190,7 @@ def _(mo):
 def _(mo):
     mo.center(
         mo.image(
-            mo.notebook_location() / "pivot_operation_step-1.svg",
+            str(mo.notebook_location() / "pivot_operation_step-1.svg"),
             caption="Pivot operation step 1.",
             width=600,
         )
@@ -210,7 +210,7 @@ def _(mo):
 def _(mo):
     mo.center(
         mo.image(
-            mo.notebook_location() / "pivot_operation_step-2.svg",
+            str(mo.notebook_location() / "pivot_operation_step-2.svg"),
             caption="Pivot operation step 2.",
             width=800,
         )
@@ -230,7 +230,7 @@ def _(mo):
 def _(mo):
     mo.center(
         mo.image(
-            mo.notebook_location() / "pivot_operation_step-3.svg",
+            str(mo.notebook_location() / "pivot_operation_step-3.svg"),
             caption="Pivot operation step 3.",
             width=800,
         )
@@ -446,9 +446,15 @@ def _(mo):
 @app.cell
 def _():
     import marimo as mo
+
+    return (mo,)
+
+
+@app.cell
+def _():
     import simplex_simulation
 
-    return mo, simplex_simulation
+    return (simplex_simulation,)
 
 
 if __name__ == "__main__":

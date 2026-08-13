@@ -1,5 +1,11 @@
 # Commit conventions
 
+## Commit authorization
+
+Do not create a commit unless the user explicitly asks you to commit the current changes. A request to edit, fix, build, test, or review files does not imply permission to commit them.
+
+## Commit message format
+
 All commit messages must follow the [Conventional Commits](https://www.conventionalcommits.org/) specification.
 
 Use this format:
