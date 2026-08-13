@@ -60,6 +60,78 @@ body {
   margin: 0;
 }
 
+.note-load-progress {
+  --note-load-progress: 0.08;
+  position: fixed;
+  z-index: 20000;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 240ms ease;
+}
+
+.note-load-progress span {
+  position: absolute;
+  inset: 0;
+  background: var(--primary, var(--accent));
+  box-shadow: 0 0 0.45rem
+    color-mix(in srgb, var(--primary, var(--accent)) 55%, transparent);
+  transform: scaleX(var(--note-load-progress));
+  transform-origin: left;
+  transition: transform 220ms ease-out;
+}
+
+.note-load-progress span::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(9rem, 24vw);
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 60%),
+    transparent
+  );
+  content: "";
+  opacity: 0;
+  transform: translateX(-100%);
+}
+
+.note-load-progress.is-waiting span::after {
+  animation: note-load-shimmer 1.4s ease-in-out infinite;
+  opacity: 1;
+}
+
+.note-load-progress.is-complete {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 240ms ease 120ms,
+    visibility 0s linear 360ms;
+}
+
+@keyframes note-load-shimmer {
+  to {
+    transform: translateX(650%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note-load-progress,
+  .note-load-progress span {
+    transition-duration: 0.01ms;
+  }
+
+  .note-load-progress.is-waiting span::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
 a {
   color: inherit;
 }
@@ -214,6 +286,25 @@ h1 {
   border-width: 0 1px 0 0;
 }
 
+.note-sidebar-close {
+  display: none;
+  align-self: flex-end;
+  padding: 0.3rem 0.5rem;
+  color: var(--muted-foreground, var(--muted));
+  background: transparent;
+  border: 1px solid var(--border, var(--line));
+  border-radius: 0.2rem;
+  font-family: ui-monospace, "Fira Mono", monospace;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.note-sidebar-close:hover,
+.note-sidebar-close:focus-visible {
+  color: var(--foreground, var(--ink));
+  background: var(--accent-bg, var(--code));
+}
+
 .note-site-link {
   display: inline-flex;
   align-items: center;
@@ -229,14 +320,107 @@ h1 {
   color: var(--primary, var(--accent));
 }
 
-.note-sidebar-title {
-  margin: 1.4rem 0 0.75rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border, var(--line));
+.note-sidebar-section {
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--border, var(--line));
+}
+
+.note-sidebar-label {
+  margin: 0 0 0.45rem;
+  color: var(--muted-foreground, var(--muted));
+  font-family: ui-monospace, "Fira Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+
+.note-tree {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.note-tree-topic > summary {
+  position: relative;
+  padding: 0.35rem 1.25rem 0.35rem 0.4rem;
+  color: var(--muted-foreground, var(--muted));
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  list-style: none;
+}
+
+.note-tree-topic > summary::-webkit-details-marker {
+  display: none;
+}
+
+.note-tree-topic > summary::after {
+  position: absolute;
+  top: 0.38rem;
+  right: 0.4rem;
+  color: var(--muted-foreground, var(--muted));
+  content: "›";
+  transform: rotate(0deg);
+  transition: transform 120ms ease;
+}
+
+.note-tree-topic[open] > summary::after {
+  transform: rotate(90deg);
+}
+
+.note-tree-topic > summary:hover,
+.note-tree-topic > summary:focus-visible {
+  color: var(--foreground, var(--ink));
+}
+
+.note-tree-children {
+  margin-left: 0.65rem;
+  padding-left: 0.35rem;
+  border-left: 1px solid var(--border, var(--line));
+}
+
+.note-tree-link {
+  display: grid;
+  grid-template-columns: 0.65rem minmax(0, 1fr);
+  gap: 0.25rem;
+  padding: 0.32rem 0.4rem;
+  color: var(--muted-foreground, var(--muted));
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.note-tree-marker {
+  color: transparent;
+}
+
+.note-tree-link:hover,
+.note-tree-link:focus-visible,
+.note-tree-link[aria-current="page"] {
+  color: var(--foreground, var(--ink));
+}
+
+.note-tree-link[aria-current="page"] .note-tree-marker {
+  color: var(--primary, var(--accent));
+}
+
+.note-page-toc {
+  position: fixed;
+  z-index: 9999;
+  top: 4rem;
+  right: 1rem;
+  bottom: 1rem;
+  display: none;
+  width: 13rem;
+  padding: 0 0.5rem;
+  overflow-y: auto;
+  color: var(--foreground, var(--ink));
+}
+
+.note-page-toc-title {
+  margin: 0 0 0.35rem;
   font-family: var(--heading-font, Georgia, "Noto Serif TC", serif);
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
 .note-theme-switch {
@@ -326,9 +510,14 @@ h1 {
 
 @media (min-width: 80rem) {
   body.note-page #App {
-    width: calc(100% - 15rem);
+    width: calc(100% - 29rem);
     margin-left: 15rem;
   }
+
+  .note-page-toc {
+    display: block;
+  }
+
 }
 
 @media (max-width: 79.999rem) {
@@ -339,11 +528,16 @@ h1 {
     box-shadow: 0.4rem 0 1.5rem rgb(0 0 0 / 18%);
   }
 
+  .note-sidebar-close {
+    display: inline-flex;
+  }
+
   .note-sidebar-toggle {
     display: inline-flex;
   }
 
   body.note-sidebar-open .note-sidebar {
+    z-index: 10002;
     transform: translateX(0);
   }
 }

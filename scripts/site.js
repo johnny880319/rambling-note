@@ -1,4 +1,59 @@
 (() => {
+  const loadProgress = document.querySelector("[data-note-load-progress]");
+  let progress = 8;
+  let progressTimer;
+
+  function setLoadProgress(nextProgress) {
+    if (!loadProgress) {
+      return;
+    }
+    progress = Math.max(progress, Math.min(nextProgress, 100));
+    loadProgress.style.setProperty("--note-load-progress", `${progress / 100}`);
+    loadProgress.setAttribute("aria-valuenow", String(Math.round(progress)));
+  }
+
+  function finishLoadProgress() {
+    if (!loadProgress || loadProgress.classList.contains("is-complete")) {
+      return;
+    }
+    if (progressTimer) {
+      window.clearInterval(progressTimer);
+    }
+    setLoadProgress(100);
+    window.setTimeout(() => loadProgress.classList.add("is-complete"), 180);
+  }
+
+  const hasBrowserRuntime = document.querySelector("marimo-wasm") !== null;
+  if (loadProgress) {
+    window.addEventListener("note:runtime-ready", finishLoadProgress, { once: true });
+
+    progressTimer = window.setInterval(() => {
+      if (window.__noteRuntimeReady) {
+        finishLoadProgress();
+        return;
+      }
+
+      if (!hasBrowserRuntime && document.readyState === "complete") {
+        finishLoadProgress();
+        return;
+      }
+
+      if (hasBrowserRuntime && document.readyState === "complete") {
+        loadProgress.classList.add("is-waiting");
+        loadProgress.setAttribute("aria-valuetext", "正在啟動互動環境");
+      }
+
+      const ceiling = document.readyState === "complete" ? 88 : 42;
+      const increment = Math.max(0.15, (ceiling - progress) * 0.045);
+      setLoadProgress(Math.min(ceiling, progress + increment));
+    }, 180);
+
+    window.addEventListener("load", () => setLoadProgress(36), { once: true });
+    if (window.__noteRuntimeReady) {
+      finishLoadProgress();
+    }
+  }
+
   const THEMES = new Set(["light", "dark"]);
   const query = new URLSearchParams(window.location.search);
   const queryTheme = query.get("theme");
@@ -109,18 +164,31 @@
   }
 
   const sidebar = document.querySelector("[data-note-sidebar]");
-  const toc = document.querySelector("[data-note-toc]");
+  const tocs = [...document.querySelectorAll("[data-note-toc]")];
   const toggle = document.querySelector("[data-note-sidebar-toggle]");
+  const close = document.querySelector("[data-note-sidebar-close]");
 
-  if (!sidebar || !toc || !toggle) {
+  if (!sidebar || !tocs.length || !toggle || !close) {
     return;
   }
 
   document.body.classList.add("note-page");
 
+  function closeSidebar() {
+    document.body.classList.remove("note-sidebar-open");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.focus();
+  }
+
   toggle.addEventListener("click", () => {
     const open = document.body.classList.toggle("note-sidebar-open");
     toggle.setAttribute("aria-expanded", String(open));
+  });
+  close.addEventListener("click", closeSidebar);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && document.body.classList.contains("note-sidebar-open")) {
+      closeSidebar();
+    }
   });
 
   let headingSignature = "";
@@ -144,10 +212,10 @@
     if (activeObserver) {
       activeObserver.disconnect();
     }
-    toc.replaceChildren();
+    tocs.forEach((toc) => toc.replaceChildren());
 
     const usedIds = new Set();
-    const links = new Map();
+    const links = new Map(headings.map((heading) => [heading, []]));
     headings.forEach((heading, index) => {
       let id = heading.id || `section-${index + 1}`;
       while (usedIds.has(id)) {
@@ -156,21 +224,23 @@
       usedIds.add(id);
       heading.id = id;
 
-      const link = document.createElement("a");
-      link.className = `note-toc-link note-toc-${heading.tagName.toLowerCase()}`;
-      link.href = `#${encodeURIComponent(id)}`;
-      link.textContent = heading.textContent;
-      link.addEventListener("click", (event) => {
-        event.preventDefault();
-        heading.scrollIntoView({ behavior: "smooth", block: "start" });
-        const url = new URL(window.location.href);
-        url.hash = encodeURIComponent(id);
-        history.replaceState(null, "", url);
-        document.body.classList.remove("note-sidebar-open");
-        toggle.setAttribute("aria-expanded", "false");
+      tocs.forEach((toc) => {
+        const link = document.createElement("a");
+        link.className = `note-toc-link note-toc-${heading.tagName.toLowerCase()}`;
+        link.href = `#${encodeURIComponent(id)}`;
+        link.textContent = heading.textContent;
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          heading.scrollIntoView({ behavior: "smooth", block: "start" });
+          const url = new URL(window.location.href);
+          url.hash = encodeURIComponent(id);
+          history.replaceState(null, "", url);
+          document.body.classList.remove("note-sidebar-open");
+          toggle.setAttribute("aria-expanded", "false");
+        });
+        toc.append(link);
+        links.get(heading).push(link);
       });
-      toc.append(link);
-      links.set(heading, link);
     });
 
     activeObserver = new IntersectionObserver(
@@ -181,8 +251,12 @@
         if (!visible.length) {
           return;
         }
-        links.forEach((link) => link.removeAttribute("aria-current"));
-        links.get(visible[0].target)?.setAttribute("aria-current", "location");
+        links.forEach((headingLinks) => {
+          headingLinks.forEach((link) => link.removeAttribute("aria-current"));
+        });
+        links.get(visible[0].target)?.forEach((link) => {
+          link.setAttribute("aria-current", "location");
+        });
       },
       { rootMargin: "-10% 0px -75% 0px" },
     );

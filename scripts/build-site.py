@@ -30,6 +30,7 @@ CONTENT_ROOT = REPO_ROOT / "content"
 DEFAULT_OUTPUT = REPO_ROOT / "_site"
 SITE_CSS = REPO_ROOT / "styles" / "site.css"
 SITE_JS = REPO_ROOT / "scripts" / "site.js"
+SITE_BOOTSTRAP_JS = REPO_ROOT / "scripts" / "site-bootstrap.js"
 
 PUBLISHABLE_ASSET_SUFFIXES = {
     ".avif",
@@ -127,7 +128,9 @@ def run(command: list[str]) -> None:
     subprocess.run(command, cwd=REPO_ROOT, check=True)
 
 
-def export_note(note: Note, output_root: Path, *, execute: bool) -> None:
+def export_note(
+    note: Note, notes: list[Note], output_root: Path, *, execute: bool
+) -> None:
     output_directory = output_root / note.output_directory
     output_directory.mkdir(parents=True, exist_ok=True)
 
@@ -162,11 +165,13 @@ def export_note(note: Note, output_root: Path, *, execute: bool) -> None:
     run(command)
 
     html_path = output_directory / "index.html"
-    rewrite_exported_html(html_path, note, output_root)
+    rewrite_exported_html(html_path, note, notes, output_root)
     copy_note_assets(note, output_directory)
 
 
-def rewrite_exported_html(html_path: Path, note: Note, output_root: Path) -> None:
+def rewrite_exported_html(
+    html_path: Path, note: Note, notes: list[Note], output_root: Path
+) -> None:
     text = html_path.read_text(encoding="utf-8")
 
     # The editor theme is a personal preference, so it is deliberately absent
@@ -197,27 +202,48 @@ def rewrite_exported_html(html_path: Path, note: Note, output_root: Path) -> Non
         relative_home += "/"
     site_css = relative_home + "site.css"
     site_js = relative_home + "site.js"
+    site_bootstrap_js = relative_home + "site-bootstrap.js"
+    site_tree = render_sidebar_tree(note, notes, relative_home)
     text = text.replace(
         "</head>",
         f'  <link rel="stylesheet" href="{site_css}" />\n</head>',
         1,
     )
     text = text.replace(
+        '<script type="module"',
+        f'<script src="{site_bootstrap_js}"></script>\n    <script type="module"',
+        1,
+    )
+    text = text.replace(
         '<body>\n    <div id="root"></div>',
         (
             "<body>\n"
+            '    <div class="note-load-progress" role="progressbar" '
+            'aria-label="正在載入互動內容" aria-valuemin="0" '
+            'aria-valuemax="100" aria-valuenow="8" data-note-load-progress>\n'
+            "      <span></span>\n"
+            "    </div>\n"
             '    <button class="note-sidebar-toggle" type="button" '
-            'aria-label="開啟文章目錄" aria-expanded="false" '
-            "data-note-sidebar-toggle>目錄</button>\n"
+            'aria-label="開啟網站導覽" aria-expanded="false" '
+            "data-note-sidebar-toggle>導覽</button>\n"
             '    <nav class="note-theme-switch" aria-label="主題">\n'
             "      <span>主題</span>\n"
             '      <a href="?theme=light" data-note-theme="light">亮色</a>\n'
             '      <a href="?theme=dark" data-note-theme="dark">深色</a>\n'
             "    </nav>\n"
             '    <aside class="note-sidebar" data-note-sidebar>\n'
+            '      <button class="note-sidebar-close" type="button" '
+            'aria-label="關閉網站導覽" data-note-sidebar-close>關閉</button>\n'
             f'      <a class="note-site-link" href="{relative_home}" target="_top">'
             "← Rambling Notes</a>\n"
-            f'      <p class="note-sidebar-title">{title}</p>\n'
+            '      <section class="note-sidebar-section note-site-navigation">\n'
+            '        <p class="note-sidebar-label">所有文章</p>\n'
+            f"        {site_tree}\n"
+            "      </section>\n"
+            "    </aside>\n"
+            '    <aside class="note-page-toc">\n'
+            f'      <p class="note-page-toc-title">{title}</p>\n'
+            '      <p class="note-sidebar-label">本頁內容</p>\n'
             '      <nav class="note-toc" aria-label="文章目錄" data-note-toc></nav>\n'
             "    </aside>\n"
             '    <div id="root"></div>'
@@ -256,12 +282,52 @@ def build_topic_tree(notes: list[Note]) -> TopicNode:
     return root
 
 
-def render_topic(node: TopicNode) -> str:
+def topic_anchor(parts: tuple[str, ...]) -> str:
+    slug = "-".join(parts)
+    return "topic-" + re.sub(r"[^a-zA-Z0-9_-]+", "-", slug).strip("-")
+
+
+def render_sidebar_tree(note: Note, notes: list[Note], relative_home: str) -> str:
+    tree = build_topic_tree(notes)
+    current_topics = note.relative_directory.parts[:-1]
+
+    def render_node(node: TopicNode, path: tuple[str, ...] = ()) -> str:
+        parts: list[str] = []
+        for child in node.children.values():
+            child_path = (*path, child.name)
+            open_attribute = (
+                " open" if current_topics[: len(child_path)] == child_path else ""
+            )
+            parts.append(
+                f'<details class="note-tree-topic"{open_attribute}>'
+                f"<summary>{html.escape(humanize(child.name))}</summary>"
+                f'<div class="note-tree-children">{render_node(child, child_path)}</div>'
+                "</details>"
+            )
+
+        for sibling in node.notes:
+            current_attribute = ' aria-current="page"' if sibling == note else ""
+            parts.append(
+                f'<a class="note-tree-link" href="{relative_home}{sibling.url}"'
+                f'{current_attribute} target="_top">'
+                '<span class="note-tree-marker" aria-hidden="true">•</span>'
+                f"<span>{html.escape(sibling.title)}</span></a>"
+            )
+        return "".join(parts)
+
+    return (
+        '<nav class="note-tree" aria-label="所有文章">' + render_node(tree) + "</nav>"
+    )
+
+
+def render_topic(node: TopicNode, path: tuple[str, ...] = ()) -> str:
     parts: list[str] = []
     for child in node.children.values():
+        child_path = (*path, child.name)
         parts.append(
-            f'<details class="topic" open><summary>{html.escape(humanize(child.name))}</summary>'
-            f'<div class="topic-children">{render_topic(child)}</div></details>'
+            f'<details class="topic" id="{topic_anchor(child_path)}" open>'
+            f"<summary>{html.escape(humanize(child.name))}</summary>"
+            f'<div class="topic-children">{render_topic(child, child_path)}</div></details>'
         )
     if node.notes:
         links = []
@@ -321,6 +387,7 @@ def write_homepage(notes: list[Note], output_root: Path) -> None:
 def copy_site_files(output_root: Path) -> None:
     shutil.copy2(SITE_CSS, output_root / "site.css")
     shutil.copy2(SITE_JS, output_root / "site.js")
+    shutil.copy2(SITE_BOOTSTRAP_JS, output_root / "site-bootstrap.js")
     (output_root / ".nojekyll").touch()
 
 
@@ -352,7 +419,7 @@ def main() -> None:
 
     for note in notes:
         print(f"\nBuilding {note.relative_directory} — {note.title}", flush=True)
-        export_note(note, output_root, execute=not args.no_execute)
+        export_note(note, notes, output_root, execute=not args.no_execute)
 
     write_homepage(notes, output_root)
     copy_site_files(output_root)
