@@ -17,3 +17,9 @@ dev = [
 
 [tool.marimo.display]
 custom_css = ["styles/marimo.css"]
+
+[tool.ruff.lint.per-file-ignores]
+# marimo's generated notebook format: every cell function ends with a return,
+# and a bare trailing expression is how a cell renders its output. Both are
+# structural to the notebook, not defects.
+"content/**/*.py" = ["PLR1711", "B018"]
