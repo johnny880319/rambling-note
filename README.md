@@ -1,24 +1,35 @@
 # Rambling Notes
 
-以文章為本的數學筆記庫。每一篇筆記都是可獨立開啟、執行與互動的 [Marimo](https://marimo.io/) Python notebook；圖表、模擬與 LaTeX 圖的原始碼都和文章放在同一個目錄。
+An article-first collection of mathematics notes. Every note is a
+[Marimo](https://marimo.io/) Python notebook that can be opened, executed and
+interacted with on its own; the source for plots, simulations and LaTeX diagrams
+lives in the same directory as the article.
 
-## 開啟筆記
+## Opening a note
 
-第一次使用時安裝環境：
+For first-time setup, install the environment and the task runner:
 
 ```bash
 uv sync
+uv tool install rust-just
 ```
 
-從專案根目錄開啟 Marimo 的 notebook 瀏覽器：
+Every common command lives in the `Justfile`. Running `just` on its own lists
+them all:
 
 ```bash
-./scripts/marimo.sh edit
+just         # list all available recipes
+just edit    # open the Marimo notebook browser
 ```
 
-## 撰寫方式
+`just edit` does not open a browser tab automatically; the URL is printed to the
+terminal. To open it inside VS Code, use `Ctrl+Shift+P` → `Simple Browser: Show`
+and paste that URL.
 
-一個主題是一個目錄，文章、互動元件和資產放在一起：
+## Writing notes
+
+One topic is one directory, holding the article, its interactive components and
+its assets together:
 
 ```text
 content/mathematic/
@@ -34,50 +45,62 @@ content/mathematic/
       simplex_method.py
 ```
 
-一般數學式直接寫在 `mo.md(r"""...""")` 中，使用 KaTeX 相容的 LaTeX。需要較複雜的交換圖時，將 `.tex` 與產生的 `.svg` 放在同一資料夾，並在筆記中用 `mo.image(...)` 讀取 SVG；這不依賴 Marimo 的 `/public` 靜態檔案路由。請透過 `scripts/marimo.sh` 開啟 Marimo，Python bytecode 就會集中在 `.build/pycache/`。
+Write ordinary math directly inside `mo.md(r"""...""")` using KaTeX-compatible
+LaTeX. For more involved commutative diagrams, put the `.tex` and its generated
+`.svg` in the same folder and load the SVG with `mo.image(...)` from the note;
+this does not rely on Marimo's `/public` static file route. Open Marimo through
+`just edit` so Python bytecode is collected under `.build/pycache/`.
 
-## 更新 LaTeX 圖
+## Updating LaTeX diagrams
 
-修改任何 `.tex` 圖後，在根目錄執行：
-
-```bash
-./scripts/render-diagrams.sh
-```
-
-腳本預設使用 LuaLaTeX，並將每個圖輸出為同名 `.svg`。若系統的 LuaLaTeX 尚未裝完整，可暫時使用：
+After changing any `.tex` diagram, run this from the repository root:
 
 ```bash
-LATEX_COMPILER=pdflatex ./scripts/render-diagrams.sh
+just diagrams
 ```
 
-在 Ubuntu/Debian 上要完整使用 LuaLaTeX：
+The script uses LuaLaTeX by default and writes each diagram to a `.svg` of the
+same name. If LuaLaTeX is not fully installed on your system, you can fall back
+to:
+
+```bash
+LATEX_COMPILER=pdflatex just diagrams
+```
+
+For a complete LuaLaTeX setup on Ubuntu/Debian:
 
 ```bash
 sudo apt install texlive-luatex texlive-latex-extra texlive-lang-chinese dvisvgm
 ```
 
-## 建置網站
+## Building the site
 
-網站會自動尋找所有 `content/**/index.py`，不需要在腳本中維護文章清單。每篇筆記會輸出到與 `content/` 相同的目錄結構，並由首頁產生目錄。
+The build discovers every `content/**/index.py` automatically, so there is no
+article list to maintain in the script. Each note is emitted into the same
+directory structure as `content/`, and the home page generates the index.
 
-在本機完整建置：
-
-```bash
-uv run python scripts/build-site.py
-```
-
-輸出位於 `_site/`。因為 WebAssembly 頁面必須透過 HTTP 開啟，請用下列方式預覽，不能直接雙擊 HTML：
+To build everything locally:
 
 ```bash
-uv run python -m http.server --directory _site 8000
+just build
 ```
 
-然後開啟 <http://localhost:8000>。
-
-若只想快速檢查網站結構，不預先執行每篇 notebook：
+Output lands in `_site/`. Because WebAssembly pages must be served over HTTP,
+preview them this way rather than opening the HTML directly:
 
 ```bash
-uv run python scripts/build-site.py --no-execute
+just serve          # port 8000 by default; use `just serve 9000` to override
+just preview        # build, then start the server
 ```
 
-`.github/workflows/deploy-pages.yml` 會在每次 push 到 `main` 時自動建置並部署 GitHub Pages。第一次發布前，需要到 GitHub repository 的 **Settings → Pages → Build and deployment**，把 Source 設為 **GitHub Actions**。
+Then open <http://localhost:8000>.
+
+To check the site structure quickly without executing every notebook first:
+
+```bash
+just build-fast
+```
+
+`.github/workflows/deploy-pages.yml` builds and deploys to GitHub Pages on every
+push to `main`. Before the first publish, go to the repository's
+**Settings → Pages → Build and deployment** and set Source to **GitHub Actions**.
