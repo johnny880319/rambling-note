@@ -28,8 +28,14 @@ jobs:
       - name: Install project dependencies
         run: uv sync --locked
 
+      - name: Install just
+        run: uv tool install rust-just
+
+      - name: Run checks
+        run: just check
+
       - name: Build interactive notes
-        run: uv run python scripts/build-site.py
+        run: just build
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
