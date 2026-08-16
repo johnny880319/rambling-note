@@ -42,6 +42,35 @@
   color: var(--foreground);
 }
 
+/*
+ * CJK glyphs fill their em box with no side bearing, so the synthetic italic a
+ * browser fakes for `<em>` slants the last glyph straight into its neighbour.
+ * Tracking gives that slant somewhere to land, and also stops long Chinese
+ * paragraphs from reading as one solid block.  Both properties inherit, so the
+ * cascade carries them through Marimo's nested markdown spans.
+ */
+.prose {
+  letter-spacing: 0.03em;
+  line-height: 1.9;
+}
+
+/* Headings set their own rhythm; body tracking would loosen them too much. */
+.prose :where(h1, h2, h3, h4, h5, h6) {
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+}
+
+/* Code and typeset math ship their own metrics; tracking only smears them. */
+.prose :where(pre, code, kbd, samp),
+.prose :where(marimo-tex, .katex, .katex-display) {
+  letter-spacing: normal;
+}
+
+/* The slanted tail of the final glyph still needs its own room. */
+.prose :where(em, i) {
+  padding-inline-end: 0.15em;
+}
+
 /* A button's nested Markdown must inherit the button foreground, not prose text. */
 button[data-testid="marimo-plugin-button"] :where(.prose, .paragraph) {
   color: inherit;
