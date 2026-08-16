@@ -41,33 +41,36 @@ def _(mo):
         \text{maximize } \quad & z \\
         \text{subject to } \quad &
             \begin{bmatrix}
-                1 & 0 & -c_D^T \\
+                1 & 0 & -\bar{c}_N^T \\
                 0 & I_m & D
             \end{bmatrix}
             \begin{bmatrix}
                 z \\
                 x_B \\
-                x_D
+                x_N
             \end{bmatrix}
             =
             \begin{bmatrix}
                 z_0 \\
                 b_B
             \end{bmatrix} \\
-        \text{and } \quad & x_D, x_B, b_B \geq 0 \\
-        \text{where } \quad & z, x_B, x_D \text{ are variables.}
+        \text{and } \quad & x_N, x_B, b_B \geq 0 \\
+        \text{where } \quad & z, x_B, x_N \text{ are variables.}
     \end{aligned}
     \tag{canonical form}
     $$
 
-    如果將 $z$ 用 $x_B, x_D$ 來表示，那他就是一個** $n$ 變數 $m$ 限制式**的特別的線性規劃問題，其中
+    如果將 $z$ 用 $x_B, x_N$ 來表示，那他就是一個** $n$ 變數 $m$ 限制式**的特別的線性規劃問題，其中
 
     - $z \in \mathbf{R}$ 是目標式的值，我們想知道他最大值是多少。
     - $x_B \in \mathbf{R}^m$ 是**基變數 (basic variables)**
-    - $x_D \in \mathbf{R}^{n - m}$ 是**非基變數 (non-basic variables)**
-    - $c_D \in \mathbf{R}^{n - m}$ 是非基變數在目標式中的係數
+    - $x_N \in \mathbf{R}^{n - m}$ 是**非基變數 (non-basic variables)**
+    - $\bar{c}_N \in \mathbf{R}^{n - m}$ 是非基變數在目標式中的係數
     - $D \in \mathbf{R}^{m \times (n - m)}$ 是非基變數在限制式中的係數
     - $b_B \in \mathbf{R}_{\geq 0}^m$ 是限制式的常數項
+
+    > **Remark: **$\bar{c}_N$ 上面那一橫是要強調它是**把基變數消掉之後**才剩下的係數
+    > （也就是所謂的 **reduced cost**），跟原本目標式裡的係數不是同一回事。
     """)
     return
 
@@ -75,15 +78,15 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    可以發現在這種形式之中， $(x_B, x_D) = (b_B, 0)$ 一定會是一組可行解，我們稱這種解叫**基本可行解 (basic feasible solution) **。特別的，假如今天  $c_D \leq 0$ ，此時 basic feasible solution 就會是讓 $z$ attain 最大值 $z_0$ 的**最佳解 (optimal solution) **。那我們就解開了這個 canonical form 的最佳化問題。
+    可以發現在這種形式之中， $(x_B, x_N) = (b_B, 0)$ 一定會是一組可行解，我們稱這種解叫**基本可行解 (basic feasible solution) **。特別的，假如今天  $\bar{c}_N \leq 0$ ，此時 basic feasible solution 就會是讓 $z$ attain 最大值 $z_0$ 的**最佳解 (optimal solution) **。那我們就解開了這個 canonical form 的最佳化問題。
 
     > **Remark: **`canonical form` 是我在這篇文章為了方便先暫時取的名稱。學術圈似乎對此形式沒有一個統一的名稱。
     >
-    > **Remark: **一般來說，如果不考慮 $b_B \geq 0$ 這個條件， $(x_B, x_D) = (b_B, 0)$ 都叫**基本解 (basic solution) **；而 canonical form 中因為要求 $b_B \geq 0$，所以這裡的基本解一定是基本可行解。
+    > **Remark: **一般來說，如果不考慮 $b_B \geq 0$ 這個條件， $(x_B, x_N) = (b_B, 0)$ 都叫**基本解 (basic solution) **；而 canonical form 中因為要求 $b_B \geq 0$，所以這裡的基本解一定是基本可行解。
 
-    而 pivot operation 就是一個可以將 canonical form 轉換成另一個 canonical form，並將 $c_D$ 慢慢轉換成非正向量的一個步驟。具體操作大概遵循下列流程
+    而 pivot operation 就是一個可以將 canonical form 轉換成另一個 canonical form，並將 $\bar{c}_N$ 慢慢轉換成非正向量的一個步驟。具體操作大概遵循下列流程
 
-    不失一般性假設 $c_D$ 的第一個元素 $c_{D, 1} > 0$。
+    不失一般性假設 $\bar{c}_N$ 的第一個元素 $\bar{c}_{N, 1} > 0$。
     """)
     return
 
@@ -103,7 +106,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    為了消除 $c_{D, 1}$，我們需要選擇一個 row 讓他對目標式還有其他 row 做高斯消去法，並且還要維持 $b_B >= 0$。 這個 row 要怎麼挑我們等等再討論，WLOG 我們可以先假設 1-th row 就是那個合適的 row ，則消去後會長這樣
+    為了消除 $\bar{c}_{N, 1}$，我們需要選擇一個 row 讓他對目標式還有其他 row 做高斯消去法，並且還要維持 $b_B >= 0$。 這個 row 要怎麼挑我們等等再討論，WLOG 我們可以先假設 1-th row 就是那個合適的 row ，則消去後會長這樣
     """)
     return
 
@@ -123,7 +126,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    最後再把 $x_{B, 1}$ 跟 $x_{D, 1}$ 位置互換， $x_{B, 1}$ 從 basic variable 變成 non-basic variable， $x_{D, 1}$ 從 non-basic variable 變成 basic variable。這樣就完成了一次 pivot operation。
+    最後再把 $x_{B, 1}$ 跟 $x_{N, 1}$ 位置互換， $x_{B, 1}$ 從 basic variable 變成 non-basic variable， $x_{N, 1}$ 從 non-basic variable 變成 basic variable。這樣就完成了一次 pivot operation。
     """)
     return
 
@@ -152,12 +155,12 @@ def _(mo):
     \frac{b_{B, 1}}{D_{1, 1}} = \min_{\substack{1 \leq i \leq m \\ D_{i, 1} > 0}} \frac{b_{B, i}}{D_{i, 1}}.
     $$
 
-    這個條件叫 `minimum ratio test` 。
+    這個條件叫 `minimum ratio test` 。此時我們可以說在這次 pivot operation 之中， $x_{N, 1}$ **進基 (Entering variable) **，而 $x_{B, 1}$ **離基 (Leaving variable) **。
 
-    > **Remark:** 這裡有個小細節是，今天選好 $c_{D, 1}$ 並準備開始 pivot operation 時，如果 $b_{B, 1} > 0$ 且 $D_{1, 1}, D_{2, 1} \cdots D_{m, 1}$ 皆小於等於 0 的話，似乎就沒辦法做 minimum ratio test 了。
+    > **Remark:** 這裡有個小細節是，今天選好 $\bar{c}_{N, 1}$ 並準備開始 pivot operation 時，如果 $b_{B, 1} > 0$ 且 $D_{1, 1}, D_{2, 1} \cdots D_{m, 1}$ 皆小於等於 0 的話，似乎就沒辦法做 minimum ratio test 了。
     >
-    > 但這種情況其實代表，令 $x_{D, \geq 2} = 0$ 後，對任意 $x_{D,1} \geq 0$ 都可取
-    > $x_B = b_B - D_{\cdot, 1} x_{D, 1}$ ，所以仍是可行解。讓 $x_{D,1}$ 趨近無窮大時，$z$ 也會趨近無窮大；此時問題無界，也就不用再做 pivot operation 了。
+    > 但這種情況其實代表，令 $x_{N, \geq 2} = 0$ 後，對任意 $x_{N,1} \geq 0$ 都可取
+    > $x_B = b_B - D_{\cdot, 1} x_{N, 1}$ ，所以仍是可行解。讓 $x_{N,1}$ 趨近無窮大時，$z$ 也會趨近無窮大；此時問題無界，也就不用再做 pivot operation 了。
 
     > **Remark:** 通常我們會優先選擇 $b_{B, i} > 0$ 的 row 來進行 pivot operation，這樣我們目標式所對應的常數才會持續上升，讓我們盡快達到 optimal solution 。不過可能還是會遇到所有可行的 row 的 $b_{B, i}$ 皆為 0 的狀況。此時就需要一些其他手法來保證演算法可以在有限步 pivot operation 內停止。
     """)
@@ -335,7 +338,7 @@ def _(mo):
         \text{maximize } \quad & z \\
         \text{subject to } \quad &
             \left[ \begin{array}{c|cc|c}
-                1 & 0 & 0 & -c_{\widetilde{D}}^T \\
+                1 & 0 & 0 & -\bar{c}_{\widetilde{N}}^T \\
                 \hline
                 0 & I & 0 & D_1 \\
                 0 & 0 & I & D_2
@@ -346,7 +349,7 @@ def _(mo):
                 x_{\widetilde{B}} \\
                 x_S \\
                 \hline
-                x_{\widetilde{D}}
+                x_{\widetilde{N}}
             \end{array} \right]
             =
             \left[ \begin{array}{c}
@@ -356,8 +359,8 @@ def _(mo):
                 0
             \end{array} \right] \\
         \text{and } \quad & b_{\widetilde{B}} \geq 0 \\
-        \text{and } \quad & x_{\widetilde{B}}, x_S, x_{\widetilde{D}} \geq 0 \\
-        \text{where } \quad & x_S \subseteq a_E \cup a_G \subseteq x_S \cup x_{\widetilde{D}}.
+        \text{and } \quad & x_{\widetilde{B}}, x_S, x_{\widetilde{N}} \geq 0 \\
+        \text{where } \quad & x_S \subseteq a_E \cup a_G \subseteq x_S \cup x_{\widetilde{N}}.
     \end{aligned}
     $$
 
@@ -383,7 +386,7 @@ def _(mo):
         \text{maximize } \quad & z \\
         \text{subject to } \quad &
             \left[ \begin{array}{c|c|cc}
-                1 & 0 & -\widetilde{c}_D^T & -\widetilde{c}_{\widetilde{a}}^T \\
+                1 & 0 & -\widetilde{\bar{c}}_N^T & -\widetilde{c}_{\widetilde{a}}^T \\
                 \hline
                 0 & I & D & A_{\widetilde{a}}
             \end{array} \right]
@@ -392,7 +395,7 @@ def _(mo):
                 \hline
                 x_B \\
                 \hline
-                x_D \\
+                x_N \\
                 \widetilde{a}
             \end{array} \right]
             =
@@ -402,11 +405,11 @@ def _(mo):
                 b_B
             \end{array} \right] \\
         \text{and } \quad & b_B \geq 0 \\
-        \text{and } \quad & x_B, x_D, \widetilde{a} \geq 0 \\
+        \text{and } \quad & x_B, x_N, \widetilde{a} \geq 0 \\
         \text{and } \quad &
         \begin{bmatrix}
             x_B \\
-            x_D
+            x_N
         \end{bmatrix}
         \text{ is permutation of }
         \begin{bmatrix}
@@ -431,7 +434,7 @@ def _(mo):
         \text{maximize } \quad & z \\
         \text{subject to } \quad &
             \left[ \begin{array}{c|c|c}
-                1 & -c_B^T & -c_D^T \\
+                1 & -c_B^T & -\bar{c}_N^T \\
                 \hline
                 0 & I & D
             \end{array} \right]
@@ -440,7 +443,7 @@ def _(mo):
                 \hline
                 x_B \\
                 \hline
-                x_D
+                x_N
             \end{array} \right]
             =
             \left[ \begin{array}{c}
@@ -449,11 +452,11 @@ def _(mo):
                 b_B
             \end{array} \right] \\
         \text{and } \quad & b_B \geq 0 \\
-        \text{and } \quad & x_B, x_D \geq 0 \\
+        \text{and } \quad & x_B, x_N \geq 0 \\
         \text{and } \quad &
         \begin{bmatrix}
             x_B \\
-            x_D
+            x_N
         \end{bmatrix}
         \text{ is permutation of }
         \begin{bmatrix}
@@ -465,6 +468,106 @@ def _(mo):
     $$
 
     此時就可以進入 `phase two` 的階段了，只要用基變數對目標式的 row 做高斯消去，就可以得到一個完美的 canonical form 。接著只要持續做 pivot operation 。嘗試**從可行解移動到最佳解** simplex method 就圓滿成功了。
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 更精簡的表示法
+
+    前面整套流程都是用 row operation 跟 column operation 進行描述的。透過這樣一步步操作我們才能知道現在的 basic variables, non-basic variables, 以及矩陣裡的各個係數為何。
+
+    但其實我們只要知道 basic variables, non-basic variables 分別有哪些成員，我們就能直接算出矩陣裡的內容。
+
+    方便起見我們就先假設我們的線性規劃問題已經轉成了以下形式
+
+    $$
+    \begin{aligned}
+    \text{maximize } \quad & z = c^T x \\
+    \text{subject to } \quad & A x = b \\
+    \text{and } \quad & x \geq 0.
+    \end{aligned}
+    $$
+
+    假設現在把 $x$ 切成 basic variables $x_B$ 跟 non-basic variables $x_N$ ，並將 $A, c$ 都做相應的拆分，可以得到
+
+
+    $$
+    \begin{aligned}
+    \text{maximize } \quad & z = c_B^T x_B + c_N^T x_N \\
+    \text{subject to } \quad & A_B x_B + A_N x_N = b \\
+    \text{and } \quad & x_B, x_N \geq 0.
+    \end{aligned}
+    $$
+
+    注意到我們在進基過程中，就是不停地做 row operation 及 column 互換。這代表 $A_B$ 可以透過一系列 row operation 變回單位矩陣（每次 pivot 都要求 $D_{1,1} \neq 0$，所以那些列運算都是可逆的），也就是說他可逆，於是我們可以得到關係式
+
+    $$
+    x_B = A_B^{-1} (b - A_N x_N)
+    $$
+
+    帶回上述式子就得到
+
+    $$
+    \begin{aligned}
+    \text{maximize } \quad & z = - (c_B^T A_B^{-1} A_N - c_N^T) x_N + c_B^T A_B^{-1} b \\
+    \text{subject to } \quad & x_B + A_B^{-1} A_N x_N = A_B^{-1} b \\
+    \text{and } \quad & x_B, x_N \geq 0.
+    \end{aligned}
+    $$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    或者寫成 block matrix 的形式，就會發現他是一個令人熟悉的形式
+
+    $$
+    \begin{aligned}
+        \text{maximize } \quad & z \\
+        \text{subject to } \quad &
+            \left[ \begin{array}{c|c|c}
+                1 & 0 & c_B^T A_B^{-1} A_N - c_N^T \\
+                \hline
+                0 & I & A_B^{-1} A_N
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                z \\
+                \hline
+                x_B \\
+                \hline
+                x_N
+            \end{array} \right]
+            =
+            \left[ \begin{array}{c}
+                c_B^T A_B^{-1} b \\
+                \hline
+                A_B^{-1} b
+            \end{array} \right] \\
+        \text{and } \quad & x_B, x_N \geq 0
+    \end{aligned}
+    $$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    也就是前幾段說的 $\bar{c}_N^T$ 其實就是 $c_N^T - c_B^T A_B^{-1} A_N$ 。我們稱他為 **reduced cost** 。
+
+    這個表達式告訴我們，** canonical form 裡的矩陣形式完全由基底決定**，跟你經過哪一連串列運算走到這裡完全無關。
+    於是整個 simplex method 可以重新表述成
+
+    > 在所有「選 $m$ 個線性獨立欄位」的基底之間搜尋，
+    > 直到找到一組同時滿足 $A_B^{-1}b \geq 0$（原始可行）
+    > 與 $c_N^T - c_B^TA_B^{-1}A_N \leq 0$（最佳性）的基底。
+
+    之後我們探討 dual simplex 等主題時，這個表達式會很好用。
     """)
     return
 
@@ -745,6 +848,25 @@ def _(mo):
     這對 slack 和 surplus 都成立 —— $\leq$ 的限制式給出 $s_i = b_i - A_{i,\cdot}x$，$\geq$ 的則是 $s_i = A_{i,\cdot}x - b_i$，兩者都非負，差別只在點落在平面的哪一側。
 
     當 $s_i$ 變成 0 時，代表現在的點正好在對應的限制平面上。$x_i$ 也是同理，只是它對應的邊界平面是 $x_i=0$。
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 接下來
+
+    有了「tableau 是基底的函數」這個視角，好幾件事會變得容易講：
+
+    - **對偶 (duality)** — $y^T = c_B^TA_B^{-1}$ 恰好就是對偶問題的解，
+      而最佳性條件 $c_N^T - y^TA_N \leq 0$ 讀起來就是對偶可行性
+    - **敏感度分析 (sensitivity analysis)** — 問的是 $b$ 或 $c$ 變動時最佳基底還撐不撐得住，
+      而「撐得住」就是 $A_B^{-1}b \geq 0$ 仍然成立
+    - **對偶單純形法 (dual simplex)** — 反過來維持最佳性、修復可行性，
+      也就是讓 $\bar{c}_N \leq 0$ 一直成立，逐步把 $A_B^{-1}b$ 修正成非負
+
+    這些就留到之後的筆記再談。
     """)
     return
 

@@ -11,7 +11,7 @@
 
     \[
         \left[ \begin{array}{c|cccc|cc}
-            1       & 0         & 0         & \cdots    & 0         & - c_{D, 1}  & -c_{D, \geq 2}^T    \\
+            1       & 0         & 0         & \cdots    & 0         & - \bar{c}_{N, 1}  & -\bar{c}_{N, \geq 2}^T    \\
             \hline
             0       & 1         & 0         & \cdots    & 0         & D_{1, 1}         & D_{1, \geq 2}  \\
             0       & 0         & 1         & \cdots    & 0         & D_{2, 1}         & D_{2, \geq 2}  \\
@@ -26,8 +26,8 @@
             \vdots      \\
             x_{B, m}    \\
             \hline
-            x_{D, 1}    \\
-            x_{D, \geq 2}
+            x_{N, 1}    \\
+            x_{N, \geq 2}
         \end{array} \right]
         =
         \left[ \begin{array}{c}
@@ -48,7 +48,7 @@
 
     \[
         \left[ \begin{array}{c|cccc|cc}
-            1       & \frac{c_{D, 1}}{D_{1, 1}}     & 0         & \cdots    & 0         & 0         & -c_{D, \geq 2}^T + \frac{c_{D, 1}}{D_{1, 1}} D_{1, \geq 2}    \\
+            1       & \frac{\bar{c}_{N, 1}}{D_{1, 1}}     & 0         & \cdots    & 0         & 0         & -\bar{c}_{N, \geq 2}^T + \frac{\bar{c}_{N, 1}}{D_{1, 1}} D_{1, \geq 2}    \\
             \hline
             0       & \frac{1}{D_{1, 1}}            & 0         & \cdots    & 0         & 1         & \frac{1}{D_{1, 1}} D_{1, \geq 2}                              \\
             0       & - \frac{D_{2, 1}}{D_{1, 1}}   & 1         & \cdots    & 0         & 0         & D_{2, \geq 2} - \frac{D_{2, 1}}{D_{1, 1}} D_{1, \geq 2}       \\
@@ -63,12 +63,12 @@
             \vdots      \\
             x_{B, m}    \\
             \hline
-            x_{D, 1}    \\
-            x_{D, \geq 2}
+            x_{N, 1}    \\
+            x_{N, \geq 2}
         \end{array} \right]
         =
         \left[ \begin{array}{c}
-            z_0 + \frac{c_{D, 1}}{D_{1, 1}} b_{B, 1}        \\
+            z_0 + \frac{\bar{c}_{N, 1}}{D_{1, 1}} b_{B, 1}        \\
             \hline
             \frac{1}{D_{1, 1}} b_{B, 1}                     \\
             b_{B, 2} - \frac{D_{2, 1}}{D_{1, 1}} b_{B, 1}   \\
@@ -85,7 +85,7 @@
 
     \[
         \left[ \begin{array}{c|cccc|cc}
-            1       & 0         & 0         & \cdots    & 0         & \frac{c_{D, 1}}{D_{1, 1}}     & -c_{D, \geq 2}^T + \frac{c_{D, 1}}{D_{1, 1}} D_{1, \geq 2}    \\
+            1       & 0         & 0         & \cdots    & 0         & \frac{\bar{c}_{N, 1}}{D_{1, 1}}     & -\bar{c}_{N, \geq 2}^T + \frac{\bar{c}_{N, 1}}{D_{1, 1}} D_{1, \geq 2}    \\
             \hline
             0       & 1         & 0         & \cdots    & 0         & \frac{1}{D_{1, 1}}            & \frac{1}{D_{1, 1}} D_{1, \geq 2}                              \\
             0       & 0         & 1         & \cdots    & 0         & - \frac{D_{2, 1}}{D_{1, 1}}   & D_{2, \geq 2} - \frac{D_{2, 1}}{D_{1, 1}} D_{1, \geq 2}       \\
@@ -95,17 +95,17 @@
         \left[ \begin{array}{c}
             z           \\
             \hline
-            x_{D, 1}    \\
+            x_{N, 1}    \\
             x_{B, 2}    \\
             \vdots      \\
             x_{B, m}    \\
             \hline
             x_{B, 1}    \\
-            x_{D, \geq 2}
+            x_{N, \geq 2}
         \end{array} \right]
         =
         \left[ \begin{array}{c}
-            z_0 + \frac{c_{D, 1}}{D_{1, 1}} b_{B, 1}                                           \\
+            z_0 + \frac{\bar{c}_{N, 1}}{D_{1, 1}} b_{B, 1}                                           \\
             \hline
             \frac{1}{D_{1, 1}} b_{B, 1}                     \\
             b_{B, 2} - \frac{D_{2, 1}}{D_{1, 1}} b_{B, 1}   \\
