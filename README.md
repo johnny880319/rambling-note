@@ -115,6 +115,18 @@ The notebook pass catches mistakes that only surface once a page is rendered:
 unpaired `$`, `$$` or `**`, LaTeX written outside math delimiters, formulas
 trapped inside a code span, and doubled CJK punctuation left behind by an edit.
 
+To run the same checks automatically before each commit:
+
+```bash
+uv tool install lefthook
+lefthook install
+```
+
+`git commit --no-verify` skips them when a commit is deliberately work in
+progress. The hook only catches what the local toolchain catches — ruff's `EXE`
+rules read the executable bit, which WSL does not report the way a Linux runner
+does, so CI stays the final word.
+
 `.github/workflows/deploy-pages.yml` builds and deploys to GitHub Pages on every
 push to `main`. Before the first publish, go to the repository's
 **Settings → Pages → Build and deployment** and set Source to **GitHub Actions**.
