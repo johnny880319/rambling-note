@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Build every content/**/index.py notebook into a GitHub Pages site.
 
 The script deliberately discovers notebooks from the content tree instead of

@@ -1,0 +1,20 @@
+# Run the checks CI runs, before a commit is made.
+#
+# Setup, once per clone:
+#
+#     uv tool install lefthook
+#     lefthook install
+#
+# Skip a run with `git commit --no-verify` when a commit is deliberately
+# work in progress.
+#
+# Note that this only catches what the local toolchain catches. Rules whose
+# result depends on the environment — ruff's EXE checks read the executable
+# bit, which WSL does not report the way a Linux runner does — still need CI.
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      run: just lint
+    notebooks:
+      run: just check-notebooks
