@@ -33,6 +33,13 @@ preview port="8000": build (serve port)
 lint:
     uv run ruff check .
 
+# Check notebook markdown and KaTeX, e.g. `just check-notebooks content/a/index.py`
+check-notebooks *ARGS:
+    uv run python scripts/check-notebooks.py {{ARGS}}
+
+# Run every check
+check: lint check-notebooks
+
 # Format
 fmt:
     uv run ruff format .

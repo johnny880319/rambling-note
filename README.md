@@ -101,6 +101,20 @@ To check the site structure quickly without executing every notebook first:
 just build-fast
 ```
 
+## Checks
+
+`just check` runs everything CI runs — `ruff` over the Python, and a markdown
+pass over the notebooks:
+
+```bash
+just check                                   # lint + notebook checks
+just check-notebooks content/a/index.py      # one notebook
+```
+
+The notebook pass catches mistakes that only surface once a page is rendered:
+unpaired `$`, `$$` or `**`, LaTeX written outside math delimiters, formulas
+trapped inside a code span, and doubled CJK punctuation left behind by an edit.
+
 `.github/workflows/deploy-pages.yml` builds and deploys to GitHub Pages on every
 push to `main`. Before the first publish, go to the repository's
 **Settings → Pages → Build and deployment** and set Source to **GitHub Actions**.
