@@ -24,6 +24,13 @@ A file is never wholly one or the other. A notebook under `content/` holds
 rendered Chinese prose and English code comments side by side, and
 `scripts/build-site.py` is English code that emits Chinese markup.
 
+# Article authorization
+
+Do not edit anything under `content/` unless the user explicitly asks for the
+edit. Reviewing an article, answering a question about its mathematics, or being
+asked what something should be named is not permission to change the file.
+Report the finding or give the suggestion, and let the user apply it.
+
 # Commit conventions
 
 ## Commit authorization
