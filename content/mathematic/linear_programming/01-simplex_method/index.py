@@ -174,13 +174,14 @@ def _(mo):
     $$
     \begin{aligned}
     \text{maximize } \quad & z = c^T x \\
-    \text{subject to } \quad & A_1 x \leq b_1 \\
-    \text{and } \quad & A_2 x = b_2 \\
-    \text{and } \quad & A_3 x \geq b_3
+    \text{subject to } \quad & A_L x \leq b_L \\
+    \text{and } \quad & A_E x = b_E \\
+    \text{and } \quad & A_G x \geq b_G
     \end{aligned}
     $$
 
-    > **Remark: **$x, b_i, c$ 皆為向量， $A_i$ 皆為矩陣，只有 $z$ 是一維變數。
+    > **Remark: **下標 $L, E, G$ 分別代表 less、equal、greater，用來區分三類限制式。
+    > $x, b_L, b_E, b_G, c$ 皆為向量， $A_L, A_E, A_G$ 皆為矩陣，只有 $z$ 是一維變數。
     """)
     return
 
@@ -190,17 +191,17 @@ def _(mo):
     mo.md(r"""
     首先，針對各個變數 $x$ ，我們總是能透過平移、乘負號或是將值域為實數的變數拆成兩個非負實數相減，讓變數的值域變成 $\mathbb{R}_{\geq 0}$ 。
 
-    針對每個限制式的常數項，我們也能透過乘負號的方式讓他們都變為非負常數。只是第一類的限制式會變成第三類，反之同理。
+    針對每個限制式的常數項，我們也能透過乘負號的方式讓他們都變為非負常數。只是乘負號會讓不等號反向，所以 $\leq$ 的限制式會跑到 $\geq$ 那一類去，反之同理。
 
     所以不失一般性，我們可以將變數跟常數加上非負的條件。
 
     $$
     \begin{aligned}
     \text{maximize } \quad & z = c^T x \\
-    \text{subject to } \quad & A_1 x \leq b_1 \\
-    \text{and } \quad & A_2 x = b_2 \\
-    \text{and } \quad & A_3 x \geq b_3 \\
-    \text{and } \quad & b_1, b_2, b_3, x \geq 0
+    \text{subject to } \quad & A_L x \leq b_L \\
+    \text{and } \quad & A_E x = b_E \\
+    \text{and } \quad & A_G x \geq b_G \\
+    \text{and } \quad & b_L, b_E, b_G, x \geq 0
     \end{aligned}
     $$
     """)
@@ -215,14 +216,18 @@ def _(mo):
     $$
     \begin{aligned}
     \text{maximize } \quad & z = c^T x \\
-    \text{subject to } \quad & A_1 x + s_1 = b_1 \\
-    \text{and } \quad & A_2 x + s_2 = b_2 \\
-    \text{and } \quad & A_3 x - s_3^- + s_3 = b_3 \\
-    \text{and } \quad & b_1, b_2, b_3 \geq 0 \\
-    \text{and } \quad & x, s_1, s_3^- \geq 0 \\
-    \text{and } \quad & s_2, s_3 = 0
+    \text{subject to } \quad & A_L x + s_L = b_L \\
+    \text{and } \quad & A_E x + a_E = b_E \\
+    \text{and } \quad & A_G x - s_G + a_G = b_G \\
+    \text{and } \quad & b_L, b_E, b_G \geq 0 \\
+    \text{and } \quad & x, s_L, s_G \geq 0 \\
+    \text{and } \quad & a_E, a_G = 0
     \end{aligned}
     $$
+
+    > **Remark: **這裡用兩組字母分辨兩種角色：$s$ 是真正的鬆弛量（$s_L$ 是 slack、$s_G$ 是 surplus），
+    > $a$ 則是為了湊出基底而硬加的**人工變數 (artificial variables)**。
+    > 人工變數不屬於原問題，所以要額外要求 $a_E, a_G = 0$。
     """)
     return
 
@@ -239,31 +244,31 @@ def _(mo):
             \left[ \begin{array}{c|ccc|cc}
                 1 & 0 & 0 & 0 & 0 & -c^T \\
                 \hline
-                0 & I & 0 & 0 & 0 & A_1  \\
-                0 & 0 & I & 0 & 0 & A_2  \\
-                0 & 0 & 0 & I & -I & A_3  \\
+                0 & I & 0 & 0 & 0 & A_L  \\
+                0 & 0 & I & 0 & 0 & A_E  \\
+                0 & 0 & 0 & I & -I & A_G  \\
             \end{array} \right]
             \left[ \begin{array}{c}
                 z \\
                 \hline
-                s_1 \\
-                s_2 \\
-                s_3 \\
+                s_L \\
+                a_E \\
+                a_G \\
                 \hline
-                s_3^- \\
+                s_G \\
                 x
             \end{array} \right]
             =
             \left[ \begin{array}{c}
                 0 \\
                 \hline
-                b_1 \\
-                b_2 \\
-                b_3
+                b_L \\
+                b_E \\
+                b_G
             \end{array} \right] \\
-        \text{and } \quad & b_1, b_2, b_3 \geq 0 \\
-        \text{and } \quad & s_1, s_2, s_3, s_3^-, x \geq 0 \\
-        \text{and } \quad & s_2, s_3 = 0
+        \text{and } \quad & b_L, b_E, b_G \geq 0 \\
+        \text{and } \quad & s_L, s_G, a_E, a_G, x \geq 0 \\
+        \text{and } \quad & a_E, a_G = 0
     \end{aligned}
     $$
     """)
@@ -273,11 +278,11 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    可以發現這幾乎已經是 canonical form 的樣子了，只是此時的 basic feasible solution 並不一定滿足 $s_2, s_3 = 0$ ，為了找到可行解，我們可以先捨棄 $s_2, s_3 = 0$ 的條件，把目標式改成最大化 $- s_2 - s_3$ 的值並做 pivot operation。當算法停止時，如果此規劃問題的目標式
+    可以發現這幾乎已經是 canonical form 的樣子了，只是此時的 basic feasible solution 並不一定滿足 $a_E, a_G = 0$ ，為了找到可行解，我們可以先捨棄 $a_E, a_G = 0$ 的條件，把目標式改成最大化 $- a_E - a_G$ 的值並做 pivot operation。當算法停止時，如果此規劃問題的目標式
 
-    - **最大值 < 0 **，代表在滿足限制式的情況下，根本就沒有 $s_2, s_3 = 0$ 的可行解。原規劃問題無解。
+    - **最大值 < 0 **，代表在滿足限制式的情況下，根本就沒有 $a_E, a_G = 0$ 的可行解。原規劃問題無解。
     - **最大值 = 0 **，此時的 basic feasible solution 對於原規劃問題是 feasible solution 。我們可以從這個點開始對原目標式做 pivot operation 來嘗試得到 optimal solution 。
-    - **最大值 > 0 **，這個狀況代表 $- s_2 - s_3 > 0$，會跟 $s_2, s_3 \geq 0$ 的條件矛盾，所以不會發生。
+    - **最大值 > 0 **，這個狀況代表 $- a_E - a_G > 0$，會跟 $a_E, a_G \geq 0$ 的條件矛盾，所以不會發生。
 
     也就是說 `phase one` 其實就是先解以下規劃問題，把我們的點嘗試**從不可行解移動成可行解**。
 
@@ -288,30 +293,30 @@ def _(mo):
             \left[ \begin{array}{c|ccc|cc}
                 1 & 0 & 1^T & 1^T & 0 & 0 \\
                 \hline
-                0 & I & 0 & 0 & 0 & A_1  \\
-                0 & 0 & I & 0 & 0 & A_2  \\
-                0 & 0 & 0 & I & -I & A_3  \\
+                0 & I & 0 & 0 & 0 & A_L  \\
+                0 & 0 & I & 0 & 0 & A_E  \\
+                0 & 0 & 0 & I & -I & A_G  \\
             \end{array} \right]
             \left[ \begin{array}{c}
                 z \\
                 \hline
-                s_1 \\
-                s_2 \\
-                s_3 \\
+                s_L \\
+                a_E \\
+                a_G \\
                 \hline
-                s_3^- \\
+                s_G \\
                 x
             \end{array} \right]
             =
             \left[ \begin{array}{c}
                 0 \\
                 \hline
-                b_1 \\
-                b_2 \\
-                b_3
+                b_L \\
+                b_E \\
+                b_G
             \end{array} \right] \\
-        \text{and } \quad & b_1, b_2, b_3 \geq 0 \\
-        \text{and } \quad & s_1, s_2, s_3, s_3^-, x \geq 0
+        \text{and } \quad & b_L, b_E, b_G \geq 0 \\
+        \text{and } \quad & s_L, s_G, a_E, a_G, x \geq 0
     \end{aligned}
     $$
 
@@ -323,7 +328,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    假設我們的最佳化問題有可行解，那麼 `phase one` 的最佳化結果就會是 0 。此時的 basic feasible solution 裡， $s_2, s_3$ 的部分都會是 0 (但他們不一定全是non basic variables) 。其形式大概會是這樣
+    假設我們的最佳化問題有可行解，那麼 `phase one` 的最佳化結果就會是 0 。此時的 basic feasible solution 裡， $a_E, a_G$ 的部分都會是 0 (但他們不一定全是non basic variables) 。其形式大概會是這樣
 
     $$
     \begin{aligned}
@@ -352,17 +357,17 @@ def _(mo):
             \end{array} \right] \\
         \text{and } \quad & b_{\widetilde{B}} \geq 0 \\
         \text{and } \quad & x_{\widetilde{B}}, x_S, x_{\widetilde{D}} \geq 0 \\
-        \text{where } \quad & x_S \subseteq s_2 \cup s_3 \subseteq x_S \cup x_{\widetilde{D}}.
+        \text{where } \quad & x_S \subseteq a_E \cup a_G \subseteq x_S \cup x_{\widetilde{D}}.
     \end{aligned}
     $$
 
-    雖然我們已經得到 basic feasible solution 了，但我們會希望接下來要固定 $s_2, s_3 = 0$ 的條件，所以我們會希望他們能夠都變成 non-basic variables 。
+    雖然我們已經得到 basic feasible solution 了，但我們會希望接下來要固定 $a_E, a_G = 0$ 的條件，所以我們會希望他們能夠都變成 non-basic variables 。
 
-    因為有點懶得再打一個大矩陣，所以就大概口頭描述解法就好。假如今天某個 $x_{S, i} \in x_S$ 想從 basic variable 降級為 non-basic variable 。需要先找出對應的會讓 $x_{S, i}$ 係數為 1 的 row ，然後尋找在那個 row 之中係數 $\neq 0$ 且不是 $s_2, s_3$ 裡的成員的 non-basic variable。那麼就對那個 non-basic variable 以此 row 為基準去做 pivot operation 。因為這個 row 原本是對應到 $x_{S, i}$ 的，所以他會被降級為 non-basic variable。
+    因為有點懶得再打一個大矩陣，所以就大概口頭描述解法就好。假如今天某個 $x_{S, i} \in x_S$ 想從 basic variable 降級為 non-basic variable 。需要先找出對應的會讓 $x_{S, i}$ 係數為 1 的 row ，然後尋找在那個 row 之中係數 $\neq 0$ 且不是人工變數的 non-basic variable。那麼就對那個 non-basic variable 以此 row 為基準去做 pivot operation 。因為這個 row 原本是對應到 $x_{S, i}$ 的，所以他會被降級為 non-basic variable。
 
     至於為何一定能以此 row 做 pivot operation，是因為這個 row 對應的常數項是 0 ，所以之前在 minimum ratio test 時討論的第一項條件一定會成立。
 
-    上面的過程中，選擇不是 $s_2, s_3$ 裡的成員的 non-basic variable 是因為，這樣才能保證做最多 $|s_2| + |s_3|$ 次 pivot operation 就能完成上述過程。不過萬一此 row 的所有非 $s_2, s_3$ 的成員的 non-basic variable 對應到的係數都是 0 。那就沒辦法進行 pivot operation 了。但此時這個限制式將可以完全被 $s_2, s_3 = 0$ 給替代，而 $x_{S, i}$ 也不會在其他限制式出現。所以它們其實就是多餘的條件了，直接把 $x_{S, i}$ 連同這個限制式刪除就好。
+    上面的過程中，選擇不是人工變數的 non-basic variable 是因為，這樣才能保證做最多 $|a_E| + |a_G|$ 次 pivot operation 就能完成上述過程。不過萬一此 row 的所有非人工變數的 non-basic variable 對應到的係數都是 0 。那就沒辦法進行 pivot operation 了。但此時這個限制式將可以完全被 $a_E, a_G = 0$ 給替代，而 $x_{S, i}$ 也不會在其他限制式出現。所以它們其實就是多餘的條件了，直接把 $x_{S, i}$ 連同這個限制式刪除就好。
     """)
     return
 
@@ -378,9 +383,9 @@ def _(mo):
         \text{maximize } \quad & z \\
         \text{subject to } \quad &
             \left[ \begin{array}{c|c|cc}
-                1 & 0 & -\widetilde{c}_D^T & -\widetilde{c}_{\widetilde{s}}^T \\
+                1 & 0 & -\widetilde{c}_D^T & -\widetilde{c}_{\widetilde{a}}^T \\
                 \hline
-                0 & I & D & A_{\widetilde{s}}
+                0 & I & D & A_{\widetilde{a}}
             \end{array} \right]
             \left[ \begin{array}{c}
                 z \\
@@ -388,7 +393,7 @@ def _(mo):
                 x_B \\
                 \hline
                 x_D \\
-                \widetilde{s}
+                \widetilde{a}
             \end{array} \right]
             =
             \left[ \begin{array}{c}
@@ -397,7 +402,7 @@ def _(mo):
                 b_B
             \end{array} \right] \\
         \text{and } \quad & b_B \geq 0 \\
-        \text{and } \quad & x_B, x_D, \widetilde{s} \geq 0 \\
+        \text{and } \quad & x_B, x_D, \widetilde{a} \geq 0 \\
         \text{and } \quad &
         \begin{bmatrix}
             x_B \\
@@ -405,11 +410,11 @@ def _(mo):
         \end{bmatrix}
         \text{ is permutation of }
         \begin{bmatrix}
-            s_1 \\
-            s_3^- \\
+            s_L \\
+            s_G \\
             x
         \end{bmatrix},
-        \widetilde{s} \subseteq s_2 \cup s_3
+        \widetilde{a} \subseteq a_E \cup a_G
     \end{aligned}
     $$
     """)
@@ -419,7 +424,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    此時我們就可以把 $s_2, s_3 = 0$ (也就是 $\widetilde{s} = 0$ ) 的條件加回來了，或是更精簡的作法是，因為他們從現在開始永遠都只會是 0 了，所以就可以把他們從式子裡刪掉，同時也把目標式改回我們原本的目標式，要注意的是因為有做過一些 column permutation 了，所以矩陣裡目標式的係數要跟著對齊。
+    此時我們就可以把 $a_E, a_G = 0$ (也就是 $\widetilde{a} = 0$ ) 的條件加回來了，或是更精簡的作法是，因為他們從現在開始永遠都只會是 0 了，所以就可以把他們從式子裡刪掉，同時也把目標式改回我們原本的目標式，要注意的是因為有做過一些 column permutation 了，所以矩陣裡目標式的係數要跟著對齊。
 
     $$
     \begin{aligned}
@@ -452,8 +457,8 @@ def _(mo):
         \end{bmatrix}
         \text{ is permutation of }
         \begin{bmatrix}
-            s_1 \\
-            s_3^- \\
+            s_L \\
+            s_G \\
             x
         \end{bmatrix}
     \end{aligned}
@@ -469,39 +474,131 @@ def _(mo):
     mo.md(r"""
     ## Simplex method 的視覺化模擬
 
-    總之我讓 AI 幫我生成了一下 simplex method 的視覺化模擬
+    這個章節我讓 AI 完全照著我前面寫的內容生成 simplex method 的視覺化模擬。目前效果感覺還不錯，不過之後的一些細節跟用詞我可能還會再親自修。
 
     下面可以自行輸入三維線性規劃的目標式跟限制式。
 
-    - 限制式的格式為: `a_1, a_2, a_3 <= b` ，程式會把他轉成 $a_1 x_1 + a_2 x_2 + a_3 x_3 \leq b$
-    - 目標式的格式為: `c_1, c_2, c_3` ，程式會把他轉成 maximize $c_1 x_1 + c_2 x_2 + c_3 x_3$
+    - 限制式一行一條，格式為 `A1, A2, A3 <= b`，第 $i$ 行會被轉成
+      $A_{i,1}x_1 + A_{i,2}x_2 + A_{i,3}x_3 \leq b_i$，也就是 $A_{i,\cdot}\,x \leq b_i$。
+      `>=` 與 `=` 也支援；$b_i$ 是負的會自動整條乘上 $-1$（不等號跟著反向）
+    - 目標式的格式為 `c1, c2, c3`，會被轉成 maximize $c^T x$
 
     同時程式也會自動加入 $x_1,x_2,x_3\geq0$ 的條件。
 
-    為了能直接用 slack variables 作為初始 basis，目前要求每個 $b\geq0$，且可行域必須是有體積、封閉的三維多面體。
+    ### 跟上述章節的對照
+
+    模擬會依輸入自動選擇路徑，每一步的標籤會標示目前在哪個階段：
+
+    | 標籤 | 對應的段落 |
+    | --- | --- |
+    | `Phase two` | 全部都是 $\leq$ 時，slack variables 直接就是可行基底，跳過 phase one |
+    | `Phase one` | 有 $\geq$ 或 $=$ 時，替它們加上人工變數 $a_i$，最大化 $-\sum_i a_i$ |
+    | `逐出人工變數` | phase one 結束後仍留在基底裡的 $a_i$；整列在非人工欄位全為 0 時則刪除該冗餘限制式 |
+    | `換回原目標式` | 刪掉 $a_i$ 的欄位、放回 $z=c^Tx$，再消去一次得到 canonical form |
+
+    模擬沿用前面的字母：$A$ 是限制式係數、$b$ 是常數項、$c$ 是目標式係數、
+    $s$ 是真正的鬆弛量、$a$ 是人工變數（在 tableau 裡會標成紫色）。
+
+    > **Remark: **不過下標的意義換了。前面按限制式的「類別」分組，所以只有
+    > $A_L, A_E, A_G$、$b_L, b_E, b_G$、$s_L, s_G$、$a_E, a_G$ 這些向量與矩陣；
+    > 模擬則一律按限制式的「編號」逐條給，於是會看到 $s_1, s_2, \dots$ 和 $a_5, a_6$ 這種。
+    >
+    > 換句話說，模擬裡的 $s_i$ 是 $s_L$ 或 $s_G$ 的其中一個分量（看第 $i$ 條是
+    > $\leq$ 還是 $\geq$），$a_i$ 則是 $a_E$ 或 $a_G$ 的其中一個分量，
+    > $A_{i,\cdot}$ 與 $b_i$ 也是同理。
+    > 所以看到 tableau 裡的 $s_2$ 時，它指的是**第 2 條限制式**的鬆弛變數，
+    > 不是前面那個按類別分組的向量。
+
+    下面的「範例」下拉選單準備了四組輸入，分別對應四條不同的路徑，其中第二組會演出
+    **人工變數逐出**與**刪除冗餘限制式**這兩個步驟。
+
+    > **Remark: **想看逐出的話得付出一點代價：可行域會是扁平的。
+    >
+    > 原因是這樣 —— 人工變數之所以能卡在基底裡，必須是限制式把某個方向**釘死**了。
+    > 但每條*不等式*都會帶自己的 slack 或 surplus 欄，這讓它的列跟其他列線性獨立，
+    > 於是總能用非人工的欄位把 $a_i$ 換出去；真正會出事的是*等式*（或被 $\geq$ 與 $\leq$
+    > 夾出來的等式），而那剛好也把三維可行域壓成一個平面。
+    >
+    > 我讓 AI 隨機掃了兩萬多組例子，**立體可行域的 9143 組裡沒有任何一組發生逐出事件**，
+    > 扁平的 12080 組裡則有 8.12% 會。所以「立體」與「看得到逐出」大概是不能兼得的。
+    >
+    > 可行域被壓成平面時，模擬會省略那層半透明的實體、只保留邊框與路徑。
+    > 另外可行域必須有界，否則沒有封閉的圖形可以畫。
+
+    ### 路徑的顏色
+
+    Phase one 期間的點通常還在**可行域外面**，這時會畫成紅色叉叉與紅色虛線；
+    等到人工變數全部歸零、進入 phase two 之後才會變回橘色。
+    如果 phase one 的最佳值小於 0，模擬會直接停在那裡並說明原問題無可行解。
+
+    ### 限制平面
+
+    每條限制式（連同 $x_i=0$）對應的**整個平面**都會用很淡的灰色畫出來，不只是可行域的那一面。
+    其中通過目前這個點的平面會標成**黃色**。
+
+    這樣就看得出來每一步的點是「哪幾個平面的交點」，以及 pivot operation 換基變數時
+    是沿著哪條交線在滑動 —— 因為某個變數變成非基變數（值為 0），
+    幾何上就等於「這個點貼到了它對應的平面上」。
+    phase one 之所以能在可行域外面移動，正是因為它走的是這些平面的交線，
+    只是還沒走到全部限制式都滿足的那一塊。
+
+    ### 箭頭在 phase one 會改變意義
+
+    Phase two 的綠色箭頭是原目標式的梯度 $\nabla f = c$，指向讓 $z$ 上升最快的方向。
+    但 phase one 根本不在乎 $z$，所以那時候畫 $c$ 是沒有意義的。
+
+    Phase one 表面上是在最大化 $-\sum_i a_i$，而如果把輔助變數消掉，它其實是在最小化**總違反量**
+
+    $$
+    V(x)=\sum_{i \in \geq}\max(0,\; b_i - A_{i,\cdot}x)\;+\sum_{i \in =}\lvert b_i - A_{i,\cdot}x \rvert.
+    $$
+
+    （對一條 $\geq$ 的限制式，固定 $x$ 之後能取到的最小 $a_i$ 就是 $\max(0, b_i - A_{i,\cdot}x)$；
+    等式那項在 phase one 可達的範圍內恆有 $A_{i,\cdot}x \leq b_i$，所以絕對值可以直接拆開）
+
+    所以 $-V$ 的次梯度就是**目前還被違反的那些限制式的法向量之和**
+
+    $$
+    \nabla(-V)(x)=\sum_{i\,:\,a_i>0}A_{i,\cdot},
+    $$
+
+    這正是讓違反量下降最快的方向。因此在 phase one 期間箭頭會改成**紅色**並指向這個方向，
+    也就是字面意義上的「往可行域走」；等到人工變數全部歸零，箭頭才切回綠色的 $\nabla f$。
     """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo, set_simulation_step, simplex_simulation):
+    preset_picker = mo.ui.dropdown(
+        options=list(simplex_simulation.PRESETS),
+        value=next(iter(simplex_simulation.PRESETS)),
+        label="範例",
+        on_change=lambda _: set_simulation_step(0),
+    )
+    preset_picker
+    return (preset_picker,)
+
+
+@app.cell(hide_code=True)
+def _(mo, preset_picker, set_simulation_step, simplex_simulation):
+    preset_objective, preset_constraints = simplex_simulation.PRESETS[
+        preset_picker.value
+    ]
     simulation_input_form = mo.ui.batch(
         mo.md("""
         **目標係數 $c=(c_1,c_2,c_3)$**
 
         {objective}
 
-        **限制式（每行：`a1, a2, a3 <= b`）**
+        **限制式（每行：`A1, A2, A3 <= b`，也支援 `>=` 與 `=`）**
 
         {constraints}
         """),
         elements={
-            "objective": mo.ui.text(
-                value=simplex_simulation.DEFAULT_OBJECTIVE,
-                full_width=True,
-            ),
+            "objective": mo.ui.text(value=preset_objective, full_width=True),
             "constraints": mo.ui.text_area(
-                value=simplex_simulation.DEFAULT_CONSTRAINTS,
+                value=preset_constraints,
                 rows=6,
                 full_width=True,
             ),
@@ -511,21 +608,23 @@ def _(mo, set_simulation_step, simplex_simulation):
         on_change=lambda _: set_simulation_step(0),
     )
     simulation_input_form
-    return (simulation_input_form,)
+    return preset_constraints, preset_objective, simulation_input_form
 
 
 @app.cell(hide_code=True)
-def _(mo, simplex_simulation, simulation_input_form):
+def _(
+    mo,
+    preset_constraints,
+    preset_objective,
+    simplex_simulation,
+    simulation_input_form,
+):
     _submitted = simulation_input_form.value
     _objective_text = (
-        _submitted["objective"]
-        if _submitted is not None
-        else simplex_simulation.DEFAULT_OBJECTIVE
+        _submitted["objective"] if _submitted is not None else preset_objective
     )
     _constraints_text = (
-        _submitted["constraints"]
-        if _submitted is not None
-        else simplex_simulation.DEFAULT_CONSTRAINTS
+        _submitted["constraints"] if _submitted is not None else preset_constraints
     )
     try:
         _program = simplex_simulation.parse_linear_program(
@@ -639,9 +738,11 @@ def _(mo, simplex_simulation, simulation_result, simulation_step_index):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    從模擬跟限制式可以觀察到，當 $A_{i,\cdot}\neq0$ 時，slack variable 除以限制式法向量的 norm，就會是**現在的點**跟**對應限制式的平面**之間的距離，也就是
+    從模擬跟限制式可以觀察到，當 $A_{i,\cdot}\neq0$ 時，$s_i$ 除以限制式法向量的 norm，就會是**現在的點**跟**對應限制式的平面**之間的距離，也就是
 
-    $$\frac{s_i}{\lVert A_{i, \cdot} \rVert} = \frac{b_i - A_{i, \cdot} x}{\lVert A_{i, \cdot} \rVert} = \text{distance between the current point and the constraint plane}.$$
+    $$\frac{s_i}{\lVert A_{i, \cdot} \rVert} = \frac{\lvert b_i - A_{i, \cdot} x \rvert}{\lVert A_{i, \cdot} \rVert} = \text{distance between the current point and the constraint plane}.$$
+
+    這對 slack 和 surplus 都成立 —— $\leq$ 的限制式給出 $s_i = b_i - A_{i,\cdot}x$，$\geq$ 的則是 $s_i = A_{i,\cdot}x - b_i$，兩者都非負，差別只在點落在平面的哪一側。
 
     當 $s_i$ 變成 0 時，代表現在的點正好在對應的限制平面上。$x_i$ 也是同理，只是它對應的邊界平面是 $x_i=0$。
     """)
