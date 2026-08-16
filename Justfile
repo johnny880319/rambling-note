@@ -6,7 +6,7 @@ _default:
 setup:
     uv sync
 
-# Open the Marimo notebook browser (does not auto-launch a browser tab)
+# Open the Marimo notebook browser, e.g. `just edit content/.../index.py`
 edit *ARGS:
     ./scripts/marimo.sh edit {{ARGS}}
 
@@ -22,11 +22,11 @@ build:
 build-fast:
     uv run python scripts/build-site.py --no-execute
 
-# Serve the built site locally
+# Serve the built site locally, e.g. `just serve 9000`
 serve port="8000":
     uv run python -m http.server --directory _site {{port}}
 
-# Build, then serve immediately
+# Build, then serve immediately, e.g. `just preview 9000`
 preview port="8000": build (serve port)
 
 # Lint
