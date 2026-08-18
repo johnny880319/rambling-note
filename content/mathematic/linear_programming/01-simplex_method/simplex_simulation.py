@@ -3,13 +3,13 @@
 The module deliberately supports one teaching-friendly input format:
 
 * exactly three decision variables;
-* maximization problems;
+* minimization problems;
 * constraints of the form ``A1, A2, A3 <= b`` (``>=`` and ``=`` also work);
 * the non-negativity constraints ``x >= 0`` are added automatically.
 
 Constraints that do not hand us a basic feasible solution for free get an
 artificial variable, so the simulation walks through the full two-phase method
-described in the note: phase one drives the artificials to zero, any artificial
+described in the note: phase one minimises the sum of the artificials, any artificial
 still stuck in the basis is expelled, the original objective is restored, and
 phase two optimises.
 
@@ -36,8 +36,10 @@ PHASE_RESTORE = "restore"
 PHASE_TWO = "phase-two"
 
 # Chosen so both phases do real work: phase one needs three pivots to walk in
-# from the outside, and phase two needs three more to reach the optimum.
-DEFAULT_OBJECTIVE = "4, 2, 5"
+# from the outside, and phase two needs three more to reach the optimum.  The
+# objectives are negative because minimising a positive c would just park the
+# optimum at the origin.
+DEFAULT_OBJECTIVE = "-4, -2, -5"
 DEFAULT_CONSTRAINTS = """1, 0, 0 <= 6
 0, 1, 0 <= 3
 0, 0, 1 <= 3
@@ -51,15 +53,15 @@ DEFAULT_CONSTRAINTS = """1, 0, 0 <= 6
 PRESETS: dict[str, tuple[str, str]] = {
     "兩階段各走三步（立體可行域）": (DEFAULT_OBJECTIVE, DEFAULT_CONSTRAINTS),
     "人工變數卡在基底，需要逐出與刪列": (
-        "2, 3, 1",
+        "-2, -3, -1",
         "1, 0, 0 <= 3\n0, 1, 0 <= 3\n0, 0, 1 <= 6\n1, 0, 0 = 3\n2, 0, 0 = 6\n0, 2, 2 >= 3",
     ),
-    "沒有可行解（phase one 停在負值）": (
-        "1, 1, 1",
+    "沒有可行解（phase one 停在正值）": (
+        "-1, -1, -1",
         "1, 0, 0 <= 2\n0, 1, 0 <= 2\n0, 0, 1 <= 2\n1, 1, 1 <= 1\n1, 1, 1 >= 5",
     ),
     "全是 ≤，不需要 phase one": (
-        "3, 2, 1",
+        "-3, -2, -1",
         "1, 0, 0 <= 4\n0, 1, 0 <= 3\n0, 0, 1 <= 2\n1, 1, 1 <= 8",
     ),
 }
@@ -117,7 +119,7 @@ class SimplexSimulation:
 
 
 class InfeasibleProgram(ValueError):
-    """Phase one finished with a negative optimum: no feasible point exists."""
+    """Phase one finished with a positive optimum: no feasible point exists."""
 
 
 def _parse_numbers(text: str) -> tuple[float, ...]:
@@ -442,9 +444,9 @@ def _arrow_direction(
     """Which way the current phase is pushing the point.
 
     Phase one minimises the total violation ``V(x) = sum_i max(0, b_i - A_i x)``
-    over the rows that still carry a positive artificial, so ``-V`` climbs along
-    the sum of those rows' normals.  Once nothing is violated the original
-    objective takes over.
+    over the rows that still carry a positive artificial, so the steepest descent of
+    ``V`` is the sum of those rows' normals.  Once nothing is violated the
+    objective's own descent direction takes over.
     """
     violated = _violated_constraints(tableau)
     if violated:
@@ -453,7 +455,8 @@ def _arrow_direction(
             direction += np.asarray(program.constraints[index].coefficients)
         if np.linalg.norm(direction) > TOLERANCE:
             return tuple(float(value) for value in direction), "violation", violated  # type: ignore[return-value]
-    return tuple(float(value) for value in program.objective), "objective", violated  # type: ignore[return-value]
+    descent = tuple(-float(value) for value in program.objective)
+    return descent, "objective", violated  # type: ignore[return-value]
 
 
 def _snapshot(
@@ -504,12 +507,12 @@ def _run_simplex(
         candidates = [
             tableau.column_of(name)
             for name in tableau.nonbasis
-            if tableau.matrix[0, tableau.column_of(name)] < -TOLERANCE
+            if tableau.matrix[0, tableau.column_of(name)] > TOLERANCE
         ]
         if not candidates:
             return
 
-        pivot_column = min(candidates, key=lambda column: tableau.matrix[0, column])
+        pivot_column = max(candidates, key=lambda column: tableau.matrix[0, column])
         entering = tableau.variables[pivot_column - 1]
 
         valid_rows = [
@@ -518,7 +521,7 @@ def _run_simplex(
             if tableau.matrix[row, pivot_column] > TOLERANCE
         ]
         if not valid_rows:
-            raise ValueError(f"{entering} 可以無限增加，因此目標函數無界。")
+            raise ValueError(f"{entering} 可以無限增加，因此目標函數向下無界。")
 
         ratios = {
             row: tableau.rhs[row] / tableau.matrix[row, pivot_column]
@@ -658,7 +661,7 @@ def _calculate_steps(program: LinearProgram) -> tuple[SimplexStep, ...]:
         return _mark_final(tuple(steps))
 
     # --- Phase one -------------------------------------------------------
-    _set_objective_row(tableau, {name: -1.0 for name in artificials})
+    _set_objective_row(tableau, {name: 1.0 for name in artificials})
     steps.append(
         _snapshot(
             program,
@@ -668,10 +671,10 @@ def _calculate_steps(program: LinearProgram) -> tuple[SimplexStep, ...]:
                 f"$\\geq$ 與 $=$ 的限制式沒辦法直接給出可行的基底，"
                 f"所以替它們加上人工變數 "
                 f"{', '.join(f'${_math_name(name)}$' for name in artificials)}。"
-                f"phase one 先改成最大化 $-\\sum a_i$；"
+                f"phase one 先改成最小化 $\\sum a_i$；"
                 f"此時目標列在人工變數的欄位上還不是 0，尚未是 canonical form。"
             ),
-            operation=r"z=-\sum_i a_i",
+            operation=r"z=\sum_i a_i",
             phase=PHASE_ONE,
         )
     )
@@ -694,17 +697,17 @@ def _calculate_steps(program: LinearProgram) -> tuple[SimplexStep, ...]:
 
     _run_simplex(program, tableau, steps, PHASE_ONE)
 
-    if tableau.rhs[0] < -1e-7:
+    if tableau.rhs[0] > 1e-7:
         steps[-1] = replace(
             steps[-1],
-            title=steps[-1].title + "（phase one 最佳值 < 0）",
+            title=steps[-1].title + "（phase one 最佳值 > 0）",
             explanation=(
                 steps[-1].explanation
-                + " phase one 的最大值小於 0，代表人工變數無法全部歸零，"
+                + " phase one 的最小值大於 0，代表人工變數無法全部歸零，"
                 "也就是原問題根本沒有可行解。"
             ),
         )
-        raise InfeasibleProgram("原規劃問題沒有可行解（phase one 最佳值小於 0）。")
+        raise InfeasibleProgram("原規劃問題沒有可行解（phase one 最佳值大於 0）。")
 
     steps.append(
         _snapshot(
@@ -767,7 +770,7 @@ def _mark_final(steps: tuple[SimplexStep, ...]) -> tuple[SimplexStep, ...]:
             title=final.title + "（最佳解）",
             explanation=(
                 final.explanation
-                + " 所有非基變數的 reduced cost 都非正，因此目前頂點就是最佳解。"
+                + " 所有非基變數的 reduced cost 都非負，因此目前頂點就是最佳解。"
             ),
         ),
     )
@@ -874,7 +877,7 @@ def build_simulation(program: LinearProgram) -> SimplexSimulation:
         # polyhedron is bounded exactly when each coordinate has a finite
         # maximum.
         for coordinate in range(3):
-            probe = tuple(1.0 if index == coordinate else 0.0 for index in range(3))
+            probe = tuple(-1.0 if index == coordinate else 0.0 for index in range(3))
             try:
                 _calculate_steps(
                     LinearProgram(objective=probe, constraints=program.constraints)  # type: ignore[arg-type]
@@ -913,16 +916,16 @@ def _collect_infeasible_steps(program: LinearProgram) -> tuple[SimplexStep, ...]
     """Replay phase one, keeping the steps instead of raising."""
     collected: list[SimplexStep] = []
     tableau, artificials = _build_initial_tableau(program)
-    _set_objective_row(tableau, {name: -1.0 for name in artificials})
+    _set_objective_row(tableau, {name: 1.0 for name in artificials})
     collected.append(
         _snapshot(
             program,
             tableau,
             title="加入人工變數，寫下 phase one 的目標式",
             explanation=(
-                "替沒有現成基底的限制式加上人工變數，phase one 最大化 $-\\sum a_i$。"
+                "替沒有現成基底的限制式加上人工變數，phase one 最小化 $\\sum a_i$。"
             ),
-            operation=r"z=-\sum_i a_i",
+            operation=r"z=\sum_i a_i",
             phase=PHASE_ONE,
         )
     )
@@ -942,14 +945,14 @@ def _collect_infeasible_steps(program: LinearProgram) -> tuple[SimplexStep, ...]
         _snapshot(
             program,
             tableau,
-            title="Phase one 結束：最佳值 < 0（原問題無解）",
+            title="Phase one 結束：最佳值 > 0（原問題無解）",
             explanation=(
                 f"phase one 的最大值是 "
-                f"${_latex_number(tableau.rhs[0])}$，小於 0。"
+                f"${_latex_number(tableau.rhs[0])}$，大於 0。"
                 "代表無論怎麼選點，人工變數都不可能全部歸零，"
                 "也就是原規劃問題**沒有可行解**，不需要進入 phase two。"
             ),
-            operation=r"\max\left(-\sum_i a_i\right)<0",
+            operation=r"\min\left(\sum_i a_i\right)>0",
             phase=PHASE_ONE,
         )
     )
@@ -1023,7 +1026,7 @@ def step_markdown(simulation: SimplexSimulation, step_index: int) -> str:
             f"箭頭指向它們法向量的和，也就是讓總違反量下降最快的方向"
         )
     else:
-        arrow_line = "- 綠色箭頭：原目標函數的梯度 $\\nabla f = c$"
+        arrow_line = "- 綠色箭頭：原目標函數的**負**梯度 $-\\nabla f = -c$（目標值下降最快的方向）"
 
     return f"""
 ### {step_index + 1}/{len(simulation.steps)}　{step.title}
@@ -1083,7 +1086,7 @@ def program_markdown(simulation: SimplexSimulation) -> str:
     return (
         "$$\n"
         "\\begin{aligned}\n"
-        "\\text{maximize}\\quad & "
+        "\\text{minimize}\\quad & "
         + _linear_expression(objective)
         + r" \\"
         + "\n\\text{subject to}\\quad\n"
@@ -1428,10 +1431,10 @@ def make_figure(simulation: SimplexSimulation, step_index: int) -> go.Figure:
         arrow_hover = f"減少違反量最快的方向（{violated_labels} 的法向量之和）"
     else:
         arrow_color = "#22c55e"
-        arrow_name = "目標函數梯度"
-        arrow_hover = "∇f=(" + ", ".join(
-            _plain_number(value) for value in simulation.program.objective
-        ) + ")"
+        arrow_name = "目標函數的負梯度"
+        arrow_hover = "-∇f=(" + ", ".join(
+            _plain_number(-value) for value in simulation.program.objective
+        ) + ")　目標值下降最快的方向"
 
     figure.add_trace(
         go.Scatter3d(
