@@ -9,10 +9,10 @@ def _(mo):
     mo.md(r"""
     # Dual problem
 
-    前一篇文章，我們透過 **simplex method** 來解線性規劃問題。但其實除了從頭開始解規劃問題以外，還有很多議題可以研究，比如:
+    前一篇文章，我們透過 **simplex method** 來解線性規劃問題。但假如我們已經得到了 optimal solution 時，卻突然想對規劃問題做一些改動，那會對 optimal solution 有何影響? 比如
 
     1. 限制式的常數項稍微變動時，對 optimal solution 的影響。 (敏感度分析)
-    2. 在已經求得 optimal solution 的問題哩，加入新的變數or限制式，能否快速找到新的 optimal solution。
+    2. 加入新的變數or限制式，能否快速找到新的 optimal solution。
 
     Dual problem 剛好可以用來處理這些問題。
     """)
@@ -22,7 +22,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## General form
+    ## General Form
 
     雖然之後這篇筆記只會對比較 particular 形式的線性規劃問題去做分析。 但因為 general 版本的 duality 我覺得十分美麗，所以我這裡還是先用 general 版本的 **primal problem** 起頭
 
@@ -240,7 +240,7 @@ def _(mo):
     \tag{dual}
     $$
 
-    假設 $\overline{x}$ 是 primal 的 basic optimal solution，並選取一個 optimal basis $B$，使其 reduced costs 滿足 $c_N^T - c_B^T A_B^{-1} A_N \geq 0$，或者也可以寫成 $A_N^T (A_B^T)^{-1} c_B \leq c_N$ ，此時如果我們令 $\overline{y} = (A_B^T)^{-1} c_B$，我們會發現他是dual feasible 的
+    假設 $\overline{x}$ 是 primal 的 basic optimal solution，並選取一個 optimal basis $B$，使其 reduced costs 滿足 $c_N - A_N^T (A_B^T)^{-1} c_B \geq 0$，此時如果我們令 $\overline{y} = (A_B^T)^{-1} c_B$，我們會發現他是dual feasible 的
 
     $$
     A^T \overline{y} =
@@ -328,7 +328,276 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Shadow prices
+    ## Shadow Prices
+
+    回到文章開頭提到的第一個問題，在特定情境下，我們可以用 dual optimal solution 看出當限制式的常數項稍微變動時，對 optimal solution 的影響。
+
+    回憶一下，以下的線性規劃問題
+
+    $$
+    \begin{aligned}
+        \text{minimize } \quad &
+            c^T x \\
+        \text{subject to } \quad &
+            A x = b \\
+        \text{and } \quad &
+            x \geq 0
+    \end{aligned}
+    $$
+
+    我們可以把它寫成這個形式，我們暫時把他叫成 **basis form**
+
+    $$
+    \begin{aligned}
+        \text{minimize } \quad & z \\
+        \text{subject to } \quad &
+            \left[ \begin{array}{c|c|c}
+                1 & 0 & - (c_N - A_N^T (A_B^T)^{-1} c_B)^T \\
+                \hline
+                0 & I & A_B^{-1} A_N
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                z \\
+                \hline
+                x_B \\
+                \hline
+                x_N
+            \end{array} \right]
+            =
+            \left[ \begin{array}{c}
+                c_B^T A_B^{-1} b \\
+                \hline
+                A_B^{-1} b
+            \end{array} \right] \\
+        \text{and } \quad & x_B, x_N \geq 0
+    \end{aligned}
+    \tag{basis form}
+    $$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    可以觀察到，令 $B$ 為 optimal basis ，代表 $c_B^T A_B^{-1} A_N - c_N^T \leq 0, A_B^{-1} b \geq 0$ 。此時目標式的 optimal value 為 $c_B^T A_B^{-1} b$。
+
+    假如今天限制式的常數擾動了一下 $b \rightarrow b + \Delta b$ 。我們可以看出如果 $A_B^{-1} (b + \Delta b) \geq 0$ 依舊成立的話，那代表 optimal basis 不會變。此時的 optimal value 會變成 $c_B^T A_B^{-1} (b + \Delta b)$ 。
+
+    此時可以發現一件事情，前面有提到過此問題的 dual optimal solution $\overline{y} = (A_B^T)^{-1} c_B$ 。所以 basis form 又可以寫成這樣
+
+    $$
+    \begin{aligned}
+        \text{minimize } \quad & z \\
+        \text{subject to } \quad &
+            \left[ \begin{array}{c|c|c}
+                1 & 0 & - (c_N - A_N^T \overline{y})^T \\
+                \hline
+                0 & I & A_B^{-1} A_N
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                z \\
+                \hline
+                x_B \\
+                \hline
+                x_N
+            \end{array} \right]
+            =
+            \left[ \begin{array}{c}
+                \overline{y}^T b \\
+                \hline
+                A_B^{-1} b
+            \end{array} \right] \\
+        \text{and } \quad & x_B, x_N \geq 0
+    \end{aligned}
+    $$
+
+    我們可以用一個定理來總結這個性質
+
+    > **Theorem (shadow prices):**
+    >
+    > Consider the value function
+    >
+    > $$
+    > v(b)=\min\{c^T x:Ax=b,\ x\geq0\}.
+    > $$
+    >
+    > Let $B$ be an optimal basis and let
+    > $\overline{y}=(A_B^T)^{-1}c_B$.
+    > If
+    >
+    > $$
+    > A_B^{-1}(b+\Delta b)\geq0,
+    > $$
+    >
+    > then $B$ remains optimal and
+    >
+    > $$
+    > v(b+\Delta b)=v(b)+\overline{y}^T\Delta b.
+    > $$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## New Variables or Constraints
+
+    假如今天我們已經找到了 primal 問題的 optimal solution，但我們突然想加入新的變數時，我們可以不用從頭開始解線性規劃，我們可以從現在的 optimal basis 開始，去判斷新的變數是否會改變 optimal solution。
+
+    假設今天 optimal basis 是 $B$ ，此時如果我們加入了一堆新的變數 $x_{N'}$ 以及其對應的係數矩陣 $A_{N'}$ 跟目標式係數 $c_{N'}$，我們可以在 basis form 裡添加他們
+
+    $$
+    \begin{aligned}
+        \text{minimize } \quad & z \\
+        \text{subject to } \quad &
+            \left[ \begin{array}{c|c|cc}
+                1 & 0 & - (c_N - A_N^T (A_B^T)^{-1} c_B)^T &  - (c_{N'} - A_{N'}^T (A_B^T)^{-1} c_B)^T \\
+                \hline
+                0 & I & A_B^{-1} A_N & A_B^{-1} A_{N'}
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                z \\
+                \hline
+                x_B \\
+                \hline
+                x_N \\
+                x_{N'}
+            \end{array} \right]
+            =
+            \left[ \begin{array}{c}
+                c_B^T A_B^{-1} b \\
+                \hline
+                A_B^{-1} b
+            \end{array} \right] \\
+        \text{and } \quad & x_B, x_N, x_N' \geq 0
+    \end{aligned}
+    $$
+
+    此時我們只要對新的 reduced cost $c_{N'} - A_{N'}^T (A_B^T)^{-1} c_B$ 小於 0 的地方對應到的變數，持續進行 pivot operation，就可以找到新的 optimal solution，不需要重算以前已經算好的東西。
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    但如果是新增限制式的話，事情就會變得比較複雜。首先我們要先把限制式轉成 $\leq$ 的型態，目的是為了用 slack variables 擴充單位矩陣。不過不像上一個章節的 canonical form ，我們這次部要求常數項要非負，所以我們只要將 $\geq$ 的式子乘負號，將 $=$ 的式子變成 $\geq, \leq$ 兩個式子就好。
+
+    所以不失一般性，我們可以假設我們在 basis form 新增限制式後，新的規劃問題長這樣
+
+    $$
+    \begin{aligned}
+        \text{minimize } \quad & z \\
+        \text{subject to } \quad &
+            \left[ \begin{array}{c|cc|c}
+                1 & 0 & 0 & - (c_N - A_N^T (A_B^T)^{-1} c_B)^T \\
+                \hline
+                0 & I & 0 & A_B^{-1} A_N \\
+                0 & A_{B'} & I & A_{N'}
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                z \\
+                \hline
+                x_B \\
+                s \\
+                \hline
+                x_N
+            \end{array} \right]
+            =
+            \left[ \begin{array}{c}
+                c_B^T A_B^{-1} b \\
+                \hline
+                A_B^{-1} b \\
+                b_{N'}
+            \end{array} \right] \\
+        \text{and } \quad & x_B, x_N, s \geq 0
+    \end{aligned}
+    $$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    我們可以用高斯消去把底下的 block 消掉
+
+    $$
+    \begin{aligned}
+        \text{minimize } \quad & z \\
+        \text{subject to } \quad &
+            \left[ \begin{array}{c|cc|c}
+                1 & 0 & 0 & - (c_N - A_N^T (A_B^T)^{-1} c_B)^T \\
+                \hline
+                0 & I & 0 & A_B^{-1} A_N \\
+                0 & 0 & I & A_{N'} - A_{B'} A_B^{-1} A_N
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                z \\
+                \hline
+                x_B \\
+                s \\
+                \hline
+                x_N
+            \end{array} \right]
+            =
+            \left[ \begin{array}{c}
+                c_B^T A_B^{-1} b \\
+                \hline
+                A_B^{-1} b \\
+                b_{N'} - A_{B'} A_B^{-1} b
+            \end{array} \right] \\
+        \text{and } \quad & x_B, x_N, s \geq 0
+    \end{aligned}
+    $$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    如果我想要把他轉回 canonical form 的話，就需要想辦法讓 $b_{N'} - A_{B'} A_B^{-1} b$ 這個部分非負。
+
+    此時如果把他轉成 dual problem，就會變成
+
+    $$
+    \begin{aligned}
+        \text{maximize } \quad & z \\
+        \text{subject to } \quad &
+            \left[ \begin{array}{c|cc}
+                1 & - (A_B^{-1} b)^T & - (b_{N'} - A_{B'} A_B^{-1} b)^T  \\
+                \hline
+                0 & I & 0 \\
+                0 & 0 & I \\
+                0 & (A_B^{-1} A_N)^T & (A_{N'} - A_{B'} A_B^{-1} A_N)^T
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                z \\
+                \hline
+                y_U \\
+                y_V
+            \end{array} \right]
+            \leq
+            \left[ \begin{array}{c}
+                c_B^T A_B^{-1} b \\
+                \hline
+                0 \\
+                0 \\
+                c_N - A_N^T (A_B^T)^{-1} c_B
+            \end{array} \right] \\
+        \text{and } \quad &
+            \left[ \begin{array}{c}
+                    y_U \\
+                    y_V
+                \end{array} \right]
+                \in \mathbb{R}^{dim(y)}
+    \end{aligned}
+    $$
+
+    後續待編輯
     """)
     return
 
