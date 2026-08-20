@@ -24,6 +24,21 @@ A file is never wholly one or the other. A notebook under `content/` holds
 rendered Chinese prose and English code comments side by side, and
 `scripts/build-site.py` is English code that emits Chinese markup.
 
+# Maths in conversation
+
+Chat replies reach the reader through a terminal that renders markdown but has
+no KaTeX, so inline `$\bar{c}_N^T = c_N^T - c_B^TA_B^{-1}A_N$` arrives as that
+literal string, backslashes and all.
+
+When discussing the maths, put expressions in code spans or fenced code blocks
+and write them in readable ASCII: `c_N - A_N^T (A_B^T)^-1 c_B` rather than the
+LaTeX source. Keep subscripts as `x_B`, superscripts as `A^-1`, and use `>=`
+and `<=` where a symbol would otherwise need escaping. Multi-line derivations
+belong in a fenced block.
+
+This applies to conversation only. Files under `content/` are rendered through
+KaTeX, so they keep real LaTeX.
+
 # Article authorization
 
 Do not edit anything under `content/` unless the user explicitly asks for the
