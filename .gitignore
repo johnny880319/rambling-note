@@ -7,3 +7,4 @@ __marimo__/
 .agents/*
 !.agents/skills/
 !.agents/skills/**
+tmp/

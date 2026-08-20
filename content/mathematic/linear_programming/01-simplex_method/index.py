@@ -512,7 +512,7 @@ def _(mo):
 
     $$
     \begin{aligned}
-    \text{minimize } \quad & z = - (c_B^T A_B^{-1} A_N - c_N^T) x_N + c_B^T A_B^{-1} b \\
+    \text{minimize } \quad & z = (c_N - A_N^T (A_B^T)^{-1} c_B)^T x_N + c_B^T A_B^{-1} b \\
     \text{subject to } \quad & x_B + A_B^{-1} A_N x_N = A_B^{-1} b \\
     \text{and } \quad & x_B, x_N \geq 0.
     \end{aligned}
@@ -531,7 +531,7 @@ def _(mo):
         \text{minimize } \quad & z \\
         \text{subject to } \quad &
             \left[ \begin{array}{c|c|c}
-                1 & 0 & c_B^T A_B^{-1} A_N - c_N^T \\
+                1 & 0 & - (c_N - A_N^T (A_B^T)^{-1} c_B)^T \\
                 \hline
                 0 & I & A_B^{-1} A_N
             \end{array} \right]
@@ -558,20 +558,20 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    也就是前幾段說的 $\bar{c}_N^T$ 其實就是 $c_N^T - c_B^T A_B^{-1} A_N$ 。我們稱他為 **reduced cost** 。
+    也就是前幾段說的 $\bar{c}_N$ 其實就是 $c_N - A_N^T (A_B^T)^{-1} c_B$ 。我們稱他為 **reduced cost** 。
 
     > **Remark: **reduced cost 的符號有兩種慣例，對照別的教材時要小心。
     >
     > 本文跟隨凸最佳化的慣例（目標式取 $\min$），所以
-    > $\bar{c}_N^T = c_N^T - c_B^TA_B^{-1}A_N$，最佳性條件是 $\bar{c}_N \geq 0$。
-    > 但有些教材用 $\max$，並把 $c_B^TA_B^{-1}A_N - c_N^T$ 稱為 reduced cost ，跟本文差一個負號。
+    > $\bar{c}_N = c_N - A_N^T (A_B^T)^{-1} c_B$，最佳性條件是 $\bar{c}_N \geq 0$。
+    > 但有些教材用 $\max$，並把 $A_N^T (A_B^T)^{-1} c_B - c_N$ 稱為 reduced cost ，跟本文差一個負號。
 
     這個表達式告訴我們，** canonical form 裡的矩陣形式完全由基底決定**，跟你經過哪一連串列運算走到這裡完全無關。
     於是整個 simplex method 可以重新表述成
 
     > 在所有「選 $m$ 個線性獨立欄位」的基底之間搜尋，
     > 直到找到一組同時滿足 $A_B^{-1}b \geq 0$（原始可行）
-    > 與 $c_N^T - c_B^TA_B^{-1}A_N \geq 0$（最佳性）的基底。
+    > 與 $c_N - A_N^T (A_B^T)^{-1} c_B \geq 0$（最佳性）的基底。
 
     之後我們探討 dual simplex 等主題時，這個表達式會很好用。
     """)
