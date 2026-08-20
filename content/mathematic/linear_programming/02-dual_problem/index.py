@@ -284,8 +284,12 @@ def _(mo):
 
     by weak duality, 我們可以得到 $\overline{y} = (A_B^T)^{-1} c_B$ 是 dual optimal solution，並且 primal-dual optimal value 相等。於是我們就有了 primal-dual 的 strong duality theorem:
 
-    > Theorem: For primal-dual pairs defined above, $\overline{x}, \overline{y}$ are primal-dual optimal if
+    > **Theorem:** For primal-dual pairs defined above, $\overline{x}, \overline{y}$ are primal-dual optimal if
     and only if $\overline{x}, \overline{y}$ are primal-dual feasible and $c^T \overline{x} = b^T \overline{y}$
+
+    <!-- -->
+
+    > **Remark:** 前面的論證有用到 **當 primal 可行、最佳值有限、且變數有 $x \geq 0$ 時，必存在一個 basic optimal solution** 這件我們沒有證的事實。
     """)
     return
 
@@ -319,6 +323,8 @@ def _(mo):
     > - $x, (y, s)$ are primal-dual optimal
     > - $c^T x = b^T y$
     > - $s^T x = 0$
+
+    <!-- -->
 
     > **Remark:** Duality 會交換限制式與變數的角色；在特定問題結構與求解方法下，解 dual 可能更有效率，但不能只從限制式數量判斷。
     """)
@@ -442,7 +448,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## New Variables or Constraints
+    ## New Variables or constraints
 
     假如今天我們已經找到了 primal 問題的 optimal solution，但我們突然想加入新的變數時，我們可以不用從頭開始解線性規劃，我們可以從現在的 optimal basis 開始，去判斷新的變數是否會改變 optimal solution。
 
