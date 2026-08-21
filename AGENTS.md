@@ -14,7 +14,7 @@ comments inside the notebooks under `content/`.
 Text that reaches the reader is content, and stays in Chinese to match the
 articles:
 
-- Markdown inside `mo.md(r"""...""")` — prose, headings, tables
+- Markdown inside `mo.md(r"""...""")` — prose and tables
 - site UI strings in `scripts/build-site.py`: navigation and control labels
   (`導覽`, `主題`, `亮色`, `深色`, `關閉`), the tagline, the meta description
 - `aria-label` and other accessibility text, in any file
@@ -23,6 +23,19 @@ articles:
 A file is never wholly one or the other. A notebook under `content/` holds
 rendered Chinese prose and English code comments side by side, and
 `scripts/build-site.py` is English code that emits Chinese markup.
+
+## Headings are English, in Title Case
+
+Headings are the exception to the rule above. The site's navigation is already
+English — it is built from the directory names — so a reader reaches a note
+through `Mathematics > Linear Programming > Simplex Method`, and a `#` or `##`
+just continues that same spine. They are structural labels, closer to the
+navigation than to the prose beneath them.
+
+So write `## Canonical Form and Pivot Operation`, not
+`## Canonical form 與轉軸操作`. The same applies to a series' opening note: it
+is titled `# Introduction`, because the navigation already says which series it
+opens.
 
 # Maths in conversation
 
