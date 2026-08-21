@@ -318,7 +318,7 @@ def _(mo):
 
     於是我們可以擴充 strong duality 的內容
 
-    > **Theorem (complementary slackness):**For primal, slack dual pairs defined above and $x, (y, s)$ are feasible solution, then the following are equivalent
+    > **Theorem (complementary slackness):** For primal, slack dual pairs defined above and $x, (y, s)$ are feasible solution, then the following are equivalent
     >
     > - $x, (y, s)$ are primal-dual optimal
     > - $c^T x = b^T y$
@@ -448,7 +448,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## New Variables or constraints
+    ## New Variables or Constraints
 
     假如今天我們已經找到了 primal 問題的 optimal solution，但我們突然想加入新的變數時，我們可以不用從頭開始解線性規劃，我們可以從現在的 optimal basis 開始，去判斷新的變數是否會改變 optimal solution。
 
@@ -489,25 +489,24 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    但如果是新增限制式的話，事情就會變得比較複雜。首先我們要先把限制式轉成 $\leq$ 的型態，目的是為了用 slack variables 擴充單位矩陣。不過不像上一個章節的 canonical form ，我們這次部要求常數項要非負，所以我們只要將 $\geq$ 的式子乘負號，將 $=$ 的式子變成 $\geq, \leq$ 兩個式子就好。
+    至於如何新增限制式，就可以用 dual simplex 去處理，因為新增限制式對於 dual problem 來說，等價於新增變數 (反之亦然)。
 
-    所以不失一般性，我們可以假設我們在 basis form 新增限制式後，新的規劃問題長這樣
+    這裡我先示範一個實務上其實不會這樣操作的方法，一樣假設 optimal basis 是 $B$ ，此時我們可以新增新的限制式，他們的係數矩陣分別為 $A_B', A_N'$ ，限制式的常數項為 $b'$
 
     $$
     \begin{aligned}
         \text{minimize } \quad & z \\
         \text{subject to } \quad &
-            \left[ \begin{array}{c|cc|c}
-                1 & 0 & 0 & - (c_N - A_N^T (A_B^T)^{-1} c_B)^T \\
+            \left[ \begin{array}{c|c|c}
+                1 & 0 & - (c_N - A_N^T (A_B^T)^{-1} c_B)^T \\
                 \hline
-                0 & I & 0 & A_B^{-1} A_N \\
-                0 & A_{B'} & I & A_{N'}
+                0 & I & A_B^{-1} A_N \\
+                0 & A_B' & A_N'
             \end{array} \right]
             \left[ \begin{array}{c}
                 z \\
                 \hline
                 x_B \\
-                s \\
                 \hline
                 x_N
             \end{array} \right]
@@ -516,9 +515,10 @@ def _(mo):
                 c_B^T A_B^{-1} b \\
                 \hline
                 A_B^{-1} b \\
-                b_{N'}
+                \hline
+                b'
             \end{array} \right] \\
-        \text{and } \quad & x_B, x_N, s \geq 0
+        \text{and } \quad & x_B, x_N \geq 0
     \end{aligned}
     $$
     """)
@@ -528,57 +528,17 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    我們可以用高斯消去把底下的 block 消掉
-
-    $$
-    \begin{aligned}
-        \text{minimize } \quad & z \\
-        \text{subject to } \quad &
-            \left[ \begin{array}{c|cc|c}
-                1 & 0 & 0 & - (c_N - A_N^T (A_B^T)^{-1} c_B)^T \\
-                \hline
-                0 & I & 0 & A_B^{-1} A_N \\
-                0 & 0 & I & A_{N'} - A_{B'} A_B^{-1} A_N
-            \end{array} \right]
-            \left[ \begin{array}{c}
-                z \\
-                \hline
-                x_B \\
-                s \\
-                \hline
-                x_N
-            \end{array} \right]
-            =
-            \left[ \begin{array}{c}
-                c_B^T A_B^{-1} b \\
-                \hline
-                A_B^{-1} b \\
-                b_{N'} - A_{B'} A_B^{-1} b
-            \end{array} \right] \\
-        \text{and } \quad & x_B, x_N, s \geq 0
-    \end{aligned}
-    $$
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    如果我想要把他轉回 canonical form 的話，就需要想辦法讓 $b_{N'} - A_{B'} A_B^{-1} b$ 這個部分非負。
-
-    此時如果把他轉成 dual problem，就會變成
+    此時如果我們把他轉為 dual problem
 
     $$
     \begin{aligned}
         \text{maximize } \quad & z \\
         \text{subject to } \quad &
             \left[ \begin{array}{c|cc}
-                1 & - (A_B^{-1} b)^T & - (b_{N'} - A_{B'} A_B^{-1} b)^T  \\
+                1 & - (A_B^{-1} b)^T & - (b')^T  \\
                 \hline
-                0 & I & 0 \\
-                0 & 0 & I \\
-                0 & (A_B^{-1} A_N)^T & (A_{N'} - A_{B'} A_B^{-1} A_N)^T
+                0 & I & (A_B')^T \\
+                0 & (A_B^{-1} A_N)^T & (A_N')^T
             \end{array} \right]
             \left[ \begin{array}{c}
                 z \\
@@ -591,7 +551,6 @@ def _(mo):
                 c_B^T A_B^{-1} b \\
                 \hline
                 0 \\
-                0 \\
                 c_N - A_N^T (A_B^T)^{-1} c_B
             \end{array} \right] \\
         \text{and } \quad &
@@ -602,8 +561,53 @@ def _(mo):
                 \in \mathbb{R}^{dim(y)}
     \end{aligned}
     $$
+    """)
+    return
 
-    後續待編輯
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    這時只要加入 slack variables 並把 $y$ 變數拆成正負兩個部分，就可以得到 canonical form 了
+
+    $$
+    \begin{aligned}
+        \text{maximize } \quad & z \\
+        \text{subject to } \quad &
+            \left[ \begin{array}{c|cc|cccc}
+                1 & 0 & 0 & - (A_B^{-1} b)^T & - (b')^T & (A_B^{-1} b)^T & (b')^T  \\
+                \hline
+                0 & I & 0 & I & (A_B')^T & - I & - (A_B')^T \\
+                0 & 0 & I & (A_B^{-1} A_N)^T & (A_N')^T & - (A_B^{-1} A_N)^T & - (A_N')^T
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                z \\
+                \hline
+                s_U \\
+                s_V \\
+                \hline
+                y_U^+ \\
+                y_V^+ \\
+                y_U^- \\
+                y_V^-
+            \end{array} \right]
+            =
+            \left[ \begin{array}{c}
+                c_B^T A_B^{-1} b \\
+                \hline
+                0 \\
+                c_N - A_N^T (A_B^T)^{-1} c_B
+            \end{array} \right] \\
+        \text{and } \quad &
+            s_U, s_V, y_U^+, y_V^+, y_U^-, y_V^- \geq 0
+    \end{aligned}
+    $$
+
+    因為 $B$ 已經是原問題對應的 optimal basis ，reduced cost $c_N - A_N^T (A_B^T)^{-1} c_B \geq 0$，所以我們就成功把對應的 dual problem 轉換成 canonical form 。只是因為是 maximization problem ，所以會選擇新問題的 reduced cost $> 0$ 的變數做 pivot operation 。而最後我們得到的 optimal value 會跟原問題的 optimal value 相同。
+
+    除此之外還可以看出，primal 的非可行解會對應到 dual 的非最佳解，這也是為何加了限制式之後，雖然可能會變成 infeasible solution ，但可以透過 dual simplex 去慢慢移回feasible solution 。
+
+    不過就像剛剛說的，實務上不會這樣做，這裡只是給個直覺而已。事實上我們可以在 primal 的矩陣直接操作 dual simplex ，而且進行的處理也會差很多。所以有些教材說 dual simplex 其實是在 primal form 上解 dual problem ，個人覺得這說法不完全正確，不過這部分或許以後再詳細展開來談談。
     """)
     return
 
