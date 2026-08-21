@@ -7,7 +7,7 @@ app = marimo.App(width="medium")
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # Dual problem
+    # Dual Problem
 
     前一篇文章，我們透過 **simplex method** 來解線性規劃問題。但假如我們已經得到了 optimal solution 時，卻突然想對規劃問題做一些改動，那會對 optimal solution 有何影響? 比如
 

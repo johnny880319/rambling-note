@@ -7,12 +7,12 @@ app = marimo.App(width="medium")
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # 甚麼是dirac delta函數
+    # What Is the Dirac Delta Function
 
 
     ---
 
-    ## 傅立葉積分的不足之處
+    ## Where the Fourier Integral Falls Short
 
     有碰過傅立葉的朋友們可能會知道，傅立葉變換根據作用的值域可以分為四種。
     分別是離散週期、離散非週期、連續週期、連續非週期的傅立葉變換。
@@ -51,7 +51,7 @@ def _(mo):
     > 我這裡使用 $\mathcal{F}(f)$ 而不用 $\widehat{f}$ 是因為我發現不管是 `MathJax` 還是 `KateX` 都沒辦法渲染\\widecheck，好生氣。
     > 考慮到之後還要用到逆變換，我就先用這個符號吧。
 
-    ## 擴充傅立葉變換的定義
+    ## Extending the Definition of the Fourier Transform
 
     除了常數函數外，其實你會發現有一堆函數都是無法用積分去算傅立葉變換的。比如 $x, \sin x, \log x$ 等等。
     明明這些都是常見的函數，卻都沒辦法算，這或許在暗示我們需要一個更廣義的傅立葉變換定義。
@@ -176,7 +176,7 @@ def _(mo):
 
     ---
 
-    ## 回到常數函數的傅立葉變換
+    ## Back to the Fourier Transform of a Constant
 
 
     雖然這離真正完成廣義版的傅立葉變換還差了一些，

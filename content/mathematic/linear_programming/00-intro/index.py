@@ -7,7 +7,7 @@ app = marimo.App(width="medium")
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # 線性規劃
+    # Introduction
 
 
     還記得高中學線性規劃的時候，覺得線性規劃是一個不嚴謹，很依賴作圖的東西，而且作圖法基本上超過三個變數就無法使用了。而後來讀數學系時也沒有碰到線性規劃，所以就漸漸地淡忘掉他。

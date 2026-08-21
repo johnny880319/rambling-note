@@ -32,7 +32,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Canonical form 與轉軸操作 (pivot operation)
+    ## Canonical Form and Pivot Operation
 
     在具體說明如何拆成兩階段之前，先來看一下如何做**轉軸操作 (pivot operation) **。考慮以下的 `canonical form`
 
@@ -170,7 +170,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Two-phase implementation
+    ## Two-Phase Implementation
 
     從上述討論來看，我們接下來只要煩惱如何把任意的最佳化問題都轉成 canonical form 就好了。考慮以下 general 版本的線性規劃問題
 
@@ -475,7 +475,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## 更精簡的表示法
+    ## A More Compact Formulation
 
     前面整套流程都是用 row operation 跟 column operation 進行描述的。透過這樣一步步操作我們才能知道現在的 basic variables, non-basic variables, 以及矩陣裡的各個係數為何。
 
@@ -581,7 +581,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Simplex method 的視覺化模擬
+    ## Visualizing the Simplex Method
 
     這個章節我讓 AI 完全照著我前面寫的內容生成 simplex method 的視覺化模擬。目前效果感覺還不錯，不過之後的一些細節跟用詞我可能還會再親自修。
 
@@ -594,7 +594,7 @@ def _(mo):
 
     同時程式也會自動加入 $x_1,x_2,x_3\geq0$ 的條件。
 
-    ### 跟上述章節的對照
+    ### Mapping Back to the Earlier Sections
 
     模擬會依輸入自動選擇路徑，每一步的標籤會標示目前在哪個階段：
 
@@ -634,13 +634,13 @@ def _(mo):
     > 可行域被壓成平面時，模擬會省略那層半透明的實體、只保留邊框與路徑。
     > 另外可行域必須有界，否則沒有封閉的圖形可以畫。
 
-    ### 路徑的顏色
+    ### Path Colors
 
     Phase one 期間的點通常還在**可行域外面**，這時會畫成紅色叉叉與紅色虛線；
     等到人工變數全部歸零、進入 phase two 之後才會變回橘色。
     如果 phase one 的最佳值小於 0，模擬會直接停在那裡並說明原問題無可行解。
 
-    ### 限制平面
+    ### Constraint Planes
 
     每條限制式（連同 $x_i=0$）對應的**整個平面**都會用很淡的灰色畫出來，不只是可行域的那一面。
     其中通過目前這個點的平面會標成**黃色**。
@@ -651,7 +651,7 @@ def _(mo):
     phase one 之所以能在可行域外面移動，正是因為它走的是這些平面的交線，
     只是還沒走到全部限制式都滿足的那一塊。
 
-    ### 箭頭在 phase one 會改變意義
+    ### The Arrow Changes Meaning in Phase One
 
     Phase two 的綠色箭頭指向 $-\nabla f = -c$，也就是讓 $z$ 下降最快的方向。
     但 phase one 根本不在乎 $z$，所以那時候畫 $c$ 是沒有意義的。

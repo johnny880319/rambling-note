@@ -7,11 +7,11 @@ app = marimo.App(width="medium")
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # 傅立葉變換的完整定義
+    # The Complete Definition of the Fourier Transform
 
     ---
 
-    ## 完成傅立葉變換的定義
+    ## Completing the Definition
 
     前一篇文章我們介紹了dirac delta function的本質，並嘗試擴充了一下傅立葉變換的定義，將他理解成把分佈轉換成另一個分佈的變換。雖然我們當時的定義還是不完整的，但其實也已經幾乎要完成了。接下來我們會先用一些篇幅來把傅立葉變換的定義補完。
 
@@ -74,13 +74,13 @@ def _(mo):
     mo.md(r"""
     以上就是傅立葉變換的完整定義了。
 
-    ## 後記
+    ## Afterword
 
-    ### 關於bounded linear functional
+    ### On Bounded Linear Functionals
 
     首先有個的小細節是(如果你是數學系的可能才會在意)，其實$\mathcal{S}'(\mathbb{R}; \mathbb{C})$不能寫成$\mathcal{B}(\mathcal{S}(\mathbb{R}; \mathbb{C}); \mathbb{C})$，因為 Schwartz space 不是 Banach space，我們通常不用 Norm bounded 來描述，而是用 Semi-norm 來描述其連續性。
 
-    ### injective的部分
+    ### On Injectivity
 
     像前面說的，我們必須確保Schwartz space不會小到讓distribution無法做為函數的代表。也就是我們需要:
 
@@ -98,11 +98,11 @@ def _(mo):
 
     最後一步可以用分析常用的dense argument來證明，這裡不多做贅述。
 
-    ### Schwartz function的例子
+    ### An Example of a Schwartz Function
 
     一個簡單的Schwartz function的例子是$g(x) = e^{-x^{2}}$，我們可以看到他的所有導數都是多項式乘上$e^{-x^{2}}$，而這個函數衰減的速度比任何多項式都快，所以他是Schwartz function。
 
-    ### Schwartz space在傅立葉變換下的封閉性
+    ### Closure of Schwartz Space Under the Fourier Transform
 
     待補充。
     """)

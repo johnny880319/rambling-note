@@ -7,9 +7,7 @@ app = marimo.App(width="medium")
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # 關於傅立葉
-
-    ## 這系列的動機
+    # Introduction
 
     之前因為有做語音相關的專案，被指派要去理解信號處理的一些知識跟大家分享。
     於是去看了李琳山老師的
@@ -29,7 +27,7 @@ def _(mo):
 
     ---
 
-    ## 如果你想看其它傅立葉的資源:
+    ## Other Fourier Resources
 
     - 簡單的介紹影片:
       - [3Blue1Brown](https://www.youtube.com/@3blue1brown): 三藍一棕剛好在推出新的一系列傅立葉的影片，等他出完我再補上來。
