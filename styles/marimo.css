@@ -120,3 +120,13 @@ button[data-testid="marimo-plugin-button"] :where(.prose, .paragraph) {
 .prose blockquote strong {
   color: var(--notes-emphasis);
 }
+
+/* A proof ends with the tombstone flush right on a line of its own, the way it
+   is set in print.  It has to live outside the display math for that: KaTeX
+   centres a \tag against the whole equation instead of dropping it to the
+   last line. */
+.prose blockquote .qed {
+  display: block;
+  margin-top: 0.4rem;
+  text-align: right;
+}

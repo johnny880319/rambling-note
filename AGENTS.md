@@ -74,6 +74,27 @@ belong in a fenced block.
 This applies to conversation only. Files under `content/` are rendered through
 KaTeX, so they keep real LaTeX.
 
+# Maths in the notebooks
+
+Displayed alignment uses `align*`. It never numbers, and it accepts a `\tag` on
+every row when rows need labels. The alternatives each have a trap: `aligned`
+allows only one `\tag` per display and fails with `Multiple \tag` on the
+second, and the unstarred `align` silently numbers every row through a CSS
+counter, so the numbers appear in the browser but not in the rendered text.
+
+Use `aligned` only where the block nests inside other maths, such as
+`\left\{ ... \right.` or a matrix cell. KaTeX accepts `align*` there too, but
+real LaTeX does not, and keeping those few places portable costs nothing.
+
+A proof ends with `<span class="qed">$\square$</span>` on its own line, after
+the closing `$$`. The marker has to sit outside the maths: a `\tag` is centred
+against the whole display rather than dropped to the last line. `styles/marimo.css`
+right-aligns it. Use a `<span>`, not a `<p>` — marimo wraps each paragraph in a
+`<span class="paragraph">`, and a block element nested there breaks the markup.
+
+`scripts/check-notebooks.py` does not run KaTeX, so none of these mistakes are
+caught by `just check`. Render the notebook to see them.
+
 # Article authorization
 
 Do not edit anything under `content/` unless the user explicitly asks for the
