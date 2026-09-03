@@ -37,6 +37,28 @@ So write `## Canonical Form and Pivot Operation`, not
 is titled `# Introduction`, because the navigation already says which series it
 opens.
 
+## Blockquotes are English, except remarks
+
+A `>` block sets a statement apart from the prose: a definition, theorem,
+proposition, lemma, corollary. All of them are written in English, the way the
+sources a note draws on state them. Such a block is a portable object — a
+reader checking it against Polster or a paper compares the two sentences
+directly, and a reader quoting it carries the English along.
+
+```markdown
+> **Theorem (Permutation Test):** Let $T$ be a causal, $p$-periodic juggling
+> function. Then $T$ is a juggling pattern if and only if, over a single
+> period, the multiset of landing slots and the multiset of throwing slots
+> coincide in $\mathcal{H} \times \mathbb{Z}/p$, counted with multiplicity.
+```
+
+`Remark` is the exception. It comments on the prose around it rather than
+standing on its own, so it follows the article and stays Chinese.
+
+The boundary is the block, not the subject matter. A definition folded into
+running prose is prose, and stays Chinese; the same definition set off in a
+`>` block is English.
+
 # Maths in conversation
 
 Chat replies reach the reader through a terminal that renders markdown but has
