@@ -165,15 +165,9 @@ def _(mo):
     > \end{align*}
     > $$
     >
+    > Note that the terms are all non-negative, so the sums may be regrouped and reordered freely.
+    >
     > <span class="qed">$\square$</span>
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    > **Remark:** 上述計算都是對非負數字取和，交換求和順序不會影響計算結果。
     """)
     return
 
@@ -223,7 +217,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    當我們要驗證一個 matrices 是否是 juggling matrices 時，只要把 juggling pattern 的條件翻譯過來即可。而前面提及過，causality 的條件因 co-domain 的性質會自動滿足，所以只要翻譯 balance 的條件即可。
+    當我們要驗證一個 matrix 是否是 juggling matrix 時，只要把 juggling pattern 的條件翻譯過來即可。而前面提及過，causality 的條件因 co-domain 的性質會自動滿足，所以只要翻譯 balance 的條件即可。
 
     $$
     \sum_{x \in \mathcal{F}} J(i, t)(x)
@@ -235,7 +229,7 @@ def _(mo):
     另外 periodic 的性質也可以翻譯成 juggling matrices 的語言，可以看出其意義就是每隔一個週期，就會拋出拋接時長、拋出手跟接入手一模一樣的物件
 
     $$
-    J(i, t)(j, u) = J(i, t + p)(j, u), \quad \forall (i, t), (j, u) \in \mathcal{S}, \quad \tag{periodic}
+    J(i, t)(j, u) = J(i, t + p)(j, u), \quad \forall (i, t), (j, u) \in \mathcal{F}, \quad \tag{periodic}
     $$
 
     上述兩性質的翻譯因過於顯然，所以就讀者自證吧。
@@ -303,8 +297,10 @@ def _(mo):
     > **Proposition:**
     >
     > $$
+    > \begin{align*}
     > \sum_{\substack{i \in \mathcal{H},\, (j, u) \in \mathcal{S}}} T(i, t)(j, u) \leq N, \quad \forall t \in \mathbb{Z} \\
     > \sum_{\substack{i \in \mathcal{H},\, (j, u) \in \mathcal{F}}} J(i, t)(j, u) \leq N, \quad \forall t \in \mathbb{Z}
+    > \end{align*}
     > $$
     """)
     return
@@ -359,7 +355,7 @@ def _(mo):
     mo.md(r"""
     當然，通常雜耍玩家只會去算週期性的 pattern 需要多少道具
 
-    > **Corollary:** Let $T$ be a juggling pattern with period $p$. Then the number of juggling items
+    > **Corollary:** Let $T$ be a juggling pattern with period $p$. Then the number of juggling items satisfies
     >
     > $$
     > N = \frac{1}{p} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ 0 \leq \tau < p}} J(i, \tau)(j, u) \, u.
@@ -371,7 +367,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    > **Proof:** Apply average theorem with $a = 0$ and $b = p$.
+    > **Proof:** Apply the average theorem with $a = 0$ and $b = p$.
     >
     > $$
     > \begin{align*}
@@ -416,7 +412,7 @@ def _(mo):
     mo.md(r"""
     如果道具的滯空時間有 upper bound ，那也可以透過取極限的方式去計算道具數量
 
-    > **Corollary:** Let $T$ be a juggling pattern. Suppose there exists $U \in \mathbb{Z}_{>0}$ such that $J(i, t)(j, u) = 0$ for all $u > U$. Then the number of juggling items
+    > **Corollary:** Let $T$ be a juggling pattern. Suppose there exists $U \in \mathbb{Z}_{>0}$ such that $J(i, t)(j, u) = 0$ for all $u > U$. Then the number of juggling items satisfies
     >
     > $$
     > N = \lim_{\substack{a \to -\infty \\ b \to \infty }} \frac{1}{b - a} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ a \leq \tau < b}} J(i, \tau)(j, u) \, u
@@ -441,8 +437,8 @@ def _(mo):
     > $$
     > \begin{align*}
     > & E(a, b) \\
-    > = & \sum_{\substack{i \in \mathcal{H} \\ a - u < \tau < b}} \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \, \lambda_{a, b}(\tau, u) \\
-    > \leq & \sum_{\substack{i \in \mathcal{H} \\ a - u < \tau < b}} U \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \\
+    > = & \sum_{\substack{i \in \mathcal{H} \\ a - U < \tau < b}} \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \, \lambda_{a, b}(\tau, u) \\
+    > \leq & \sum_{\substack{i \in \mathcal{H} \\ a - U < \tau < b}} U \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \\
     > < & \infty
     > \end{align*}
     > $$
@@ -457,7 +453,7 @@ def _(mo):
     > \end{align*}
     > $$
     >
-    > The sumation above can be spilt into several parts, in particular, the following part equal to $0$
+    > where $I_{[a, b)}$ is the indicator function of $[a, b)$. The summation above can be split into several parts, in particular, the following part equals $0$
     >
     > $$
     > \begin{align*}
@@ -473,12 +469,12 @@ def _(mo):
     > \begin{align*}
     > & \left\lvert\, A(a, b) - E(a, b) \,\right\rvert \\
     > = & \left\lvert\, \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[a,b)}(\tau) - \lambda_{a, b}(\tau, u))  \,\right\rvert \\
-    > \leq & \left\lvert\, \sum_{a - u < \tau < a} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[a,b)}(\tau) - \lambda_{a, b}(\tau, u))  \,\right\rvert +
-    > \left\lvert\, \sum_{b - u < \tau < b} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[a,b)}(\tau) - \lambda_{a, b}(\tau, u))  \,\right\rvert \\
-    > \leq & \left\lvert\, \sum_{a - u < \tau < a} 2U \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u)  \,\right\rvert +
-    > \left\lvert\, \sum_{b - u < \tau < b} 2U \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \,\right\rvert \\
-    > \leq & \left\lvert\, \sum_{a - u < \tau < a} 2UN \,\right\rvert +
-    > \left\lvert\, \sum_{b - u < \tau < b} 2UN \,\right\rvert \\
+    > \leq & \left\lvert\, \sum_{a - U < \tau < a} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[a,b)}(\tau) - \lambda_{a, b}(\tau, u))  \,\right\rvert +
+    > \left\lvert\, \sum_{b - U < \tau < b} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[a,b)}(\tau) - \lambda_{a, b}(\tau, u))  \,\right\rvert \\
+    > \leq & \left\lvert\, \sum_{a - U < \tau < a} 2U \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u)  \,\right\rvert +
+    > \left\lvert\, \sum_{b - U < \tau < b} 2U \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \,\right\rvert \\
+    > \leq & \left\lvert\, \sum_{a - U < \tau < a} 2UN \,\right\rvert +
+    > \left\lvert\, \sum_{b - U < \tau < b} 2UN \,\right\rvert \\
     > \leq & 4U^2N
     > \end{align*}
     > $$
@@ -486,10 +482,10 @@ def _(mo):
     > finally
     >
     > $$
-    > \left\lvert \lim_{\substack{a \to -\infty \\ b \to \infty}} \frac{A(a, b)}{b - a} - N \right\rvert
-    > = \lim_{\substack{a \to -\infty \\ b \to \infty}} \frac{\lvert A(a, b) - E(a, b) \rvert}{b - a}
-    > \leq \lim_{\substack{a \to -\infty \\ b \to \infty}} \frac{4U^2N}{b - a}
-    > = 0
+    > \left\lvert \frac{A(a, b)}{b - a} - N \right\rvert
+    > = \frac{\lvert A(a, b) - E(a, b) \rvert}{b - a}
+    > \leq \frac{4U^2N}{b - a}
+    > \xrightarrow[\; \substack{a \to -\infty \\ b \to \infty} \;]{} 0 .
     > $$
     >
     > <span class="qed">$\square$</span>
