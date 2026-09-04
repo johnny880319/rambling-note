@@ -86,6 +86,14 @@ Use `aligned` only where the block nests inside other maths, such as
 `\left\{ ... \right.` or a matrix cell. KaTeX accepts `align*` there too, but
 real LaTeX does not, and keeping those few places portable costs nothing.
 
+Delimiters default to `\left` and `\right`, which size themselves to their
+contents.  Reach for the `\bigl` family only where delimiters nest and the
+contents are not tall.  `\left` measures height, not nesting depth, so
+`\left( \min(b, \tau + u) - \max(a, \tau) \right)` sets its outer parentheses at
+exactly the size of the inner ones and the levels stop being legible.  Both
+exceptions in this section are the same shape: the general tool gives way to
+the manual one where the maths nests.
+
 A proof ends with `<span class="qed">$\square$</span>` on its own line, after
 the closing `$$`. The marker has to sit outside the maths: a `\tag` is centred
 against the whole display rather than dropped to the last line. `styles/marimo.css`
