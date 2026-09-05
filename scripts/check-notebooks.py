@@ -16,6 +16,7 @@ anything is reported.
 import ast
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -26,6 +27,16 @@ DOUBLED_PUNCTUATION = re.compile(r"[。，、：；]{2,}")
 # A LaTeX subscript or command that escaped its math delimiters.
 BARE_LATEX = re.compile(r"[A-Za-z]_\{|\\[a-zA-Z]+")
 # marimo hands KaTeX its input inside this element; everything else is prose.
+# pymdownx's block syntax: an opener `/// admonition | Title`, its options
+# indented four spaces, and a bare `///` to close.  Every way of getting it
+# wrong degrades quietly instead of failing, so the checks below compare what
+# the source asked for against what came out of the renderer.
+BLOCK_OPEN = re.compile(r"^[ \t]*/{3}[ \t]+\S.*$", re.MULTILINE)
+BLOCK_CLOSE = re.compile(r"^[ \t]*/{3}[ \t]*$", re.MULTILINE)
+BLOCK_TYPE = re.compile(r"^[ \t]+type:[ \t]*(\S+)[ \t]*$", re.MULTILINE)
+# One or two slashes is a typo for three; four or more is legal nesting.
+BLOCK_TYPO = re.compile(r"^[ \t]*/{1,2}[ \t]*admonition\b", re.MULTILINE)
+RENDERED_BLOCK = re.compile(r'<div class="admonition([^"]*)"')
 MATH_ELEMENT = re.compile(r"<marimo-tex.*?</marimo-tex>", re.DOTALL)
 HTML_TAG = re.compile(r"<[^>]+>")
 CODE_SPAN_WITH_MATH = re.compile(r"<code>[^<]*\$")
@@ -91,6 +102,30 @@ def check_block(path: Path, start: int, source: str, render) -> list[Finding]:
         if fragment.startswith("\\") and "\\" + fragment in source:
             continue
         report(start, f"LaTeX {fragment!r} outside math delimiters")
+
+    for match in BLOCK_TYPO.finditer(source):
+        report(
+            line_of(start, source, match.start()),
+            "a block opener needs three slashes",
+        )
+
+    opened = len(BLOCK_OPEN.findall(source))
+    if opened != len(BLOCK_CLOSE.findall(source)):
+        # An unclosed block runs to the end of the cell, swallowing whatever
+        # follows it into the panel.
+        report(start, f"{opened} /// block(s) opened, but the /// fences do not pair up")
+
+    rendered = RENDERED_BLOCK.findall(html)
+    if opened != len(rendered):
+        report(start, f"{opened} /// block(s) opened but {len(rendered)} rendered")
+
+    wanted = Counter(BLOCK_TYPE.findall(source))
+    got = Counter(kind.strip() for kind in rendered if kind.strip())
+    for kind, count in wanted.items():
+        if got[kind] < count:
+            # Almost always the option line lost its four-space indent, which
+            # turns it into body text and drops the type from the class list.
+            report(start, f"block type {kind!r} did not reach the rendered class list")
 
     return findings
 
