@@ -26,60 +26,64 @@ def _(mo):
 
     雖然之後這篇筆記只會對比較 particular 形式的線性規劃問題去做分析。 但因為 general 版本的 duality 我覺得十分美麗，所以我這裡還是先用 general 版本的 **primal problem** 起頭。
 
-    > **Definition (Primal Problem, General Form):** The **primal problem** in general form is
-    >
-    > $$
-    > \begin{aligned}
-    >     \text{minimize } \quad &
-    >         \left[ \begin{array}{ccc}
-    >             c_P^T & c_N^T & c_R^T
-    >         \end{array} \right]
-    >         \left[ \begin{array}{c}
-    >             x_P \\
-    >             x_N \\
-    >             x_R
-    >         \end{array} \right]
-    >         \\
-    >     \text{subject to } \quad &
-    >         \left[ \begin{array}{ccc}
-    >             A_{P, P} & A_{P, N} & A_{P, R} \\
-    >             A_{N, P} & A_{N, N} & A_{N, R} \\
-    >             A_{R, P} & A_{R, N} & A_{R, R}
-    >         \end{array} \right]
-    >         \left[ \begin{array}{c}
-    >             x_P \\
-    >             x_N \\
-    >             x_R
-    >         \end{array} \right]
-    >         \left\{ \begin{array}{c}
-    >             \geq \\
-    >             \leq \\
-    >             =
-    >         \end{array} \right\}
-    >         \left[ \begin{array}{c}
-    >             b_P \\
-    >             b_N \\
-    >             b_R
-    >         \end{array} \right]
-    >         \\
-    >     \text{and } \quad &
-    >     \left[ \begin{array}{c}
-    >         x_P \\
-    >         x_N \\
-    >         x_R
-    >     \end{array} \right]
-    >     \left\{ \begin{array}{c}
-    >         \geq \\
-    >         \leq \\
-    >         \in
-    >     \end{array} \right\}
-    >     \left[ \begin{array}{c}
-    >         0 \\
-    >         0 \\
-    >         \mathbb{R}^{\dim{x_R}}
-    >     \end{array} \right]
-    > \end{aligned}
-    > $$
+    /// admonition | Definition (Primal Problem, General Form)
+        type: definition
+
+    The **primal problem** in general form is
+
+    $$
+    \begin{aligned}
+        \text{minimize } \quad &
+            \left[ \begin{array}{ccc}
+                c_P^T & c_N^T & c_R^T
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                x_P \\
+                x_N \\
+                x_R
+            \end{array} \right]
+            \\
+        \text{subject to } \quad &
+            \left[ \begin{array}{ccc}
+                A_{P, P} & A_{P, N} & A_{P, R} \\
+                A_{N, P} & A_{N, N} & A_{N, R} \\
+                A_{R, P} & A_{R, N} & A_{R, R}
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                x_P \\
+                x_N \\
+                x_R
+            \end{array} \right]
+            \left\{ \begin{array}{c}
+                \geq \\
+                \leq \\
+                =
+            \end{array} \right\}
+            \left[ \begin{array}{c}
+                b_P \\
+                b_N \\
+                b_R
+            \end{array} \right]
+            \\
+        \text{and } \quad &
+        \left[ \begin{array}{c}
+            x_P \\
+            x_N \\
+            x_R
+        \end{array} \right]
+        \left\{ \begin{array}{c}
+            \geq \\
+            \leq \\
+            \in
+        \end{array} \right\}
+        \left[ \begin{array}{c}
+            0 \\
+            0 \\
+            \mathbb{R}^{\dim{x_R}}
+        \end{array} \right]
+    \end{aligned}
+    $$
+    ///
     """)
     return
 
@@ -89,60 +93,64 @@ def _(mo):
     mo.md(r"""
     則他對應的 **dual problem** 如下。
 
-    > **Definition (Dual Problem, General Form):** The **dual problem** of the above is
-    >
-    > $$
-    > \begin{aligned}
-    >     \text{maximize } \quad &
-    >         \left[ \begin{array}{ccc}
-    >             b_P^T & b_N^T & b_R^T
-    >         \end{array} \right]
-    >         \left[ \begin{array}{c}
-    >             y_P \\
-    >             y_N \\
-    >             y_R
-    >         \end{array} \right]
-    >         \\
-    >     \text{subject to } \quad &
-    >         \left[ \begin{array}{ccc}
-    >             A_{P, P}^T & A_{N, P}^T & A_{R, P}^T \\
-    >             A_{P, N}^T & A_{N, N}^T & A_{R, N}^T \\
-    >             A_{P, R}^T & A_{N, R}^T & A_{R, R}^T
-    >         \end{array} \right]
-    >         \left[ \begin{array}{c}
-    >             y_P \\
-    >             y_N \\
-    >             y_R
-    >         \end{array} \right]
-    >         \left\{ \begin{array}{c}
-    >             \leq \\
-    >             \geq \\
-    >             =
-    >         \end{array} \right\}
-    >         \left[ \begin{array}{c}
-    >             c_P \\
-    >             c_N \\
-    >             c_R
-    >         \end{array} \right]
-    >         \\
-    >     \text{and } \quad &
-    >     \left[ \begin{array}{c}
-    >         y_P \\
-    >         y_N \\
-    >         y_R
-    >     \end{array} \right]
-    >     \left\{ \begin{array}{c}
-    >         \geq \\
-    >         \leq \\
-    >         \in
-    >     \end{array} \right\}
-    >     \left[ \begin{array}{c}
-    >         0 \\
-    >         0 \\
-    >         \mathbb{R}^{\dim{y_R}}
-    >     \end{array} \right]
-    > \end{aligned}
-    > $$
+    /// admonition | Definition (Dual Problem, General Form)
+        type: definition
+
+    The **dual problem** of the above is
+
+    $$
+    \begin{aligned}
+        \text{maximize } \quad &
+            \left[ \begin{array}{ccc}
+                b_P^T & b_N^T & b_R^T
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                y_P \\
+                y_N \\
+                y_R
+            \end{array} \right]
+            \\
+        \text{subject to } \quad &
+            \left[ \begin{array}{ccc}
+                A_{P, P}^T & A_{N, P}^T & A_{R, P}^T \\
+                A_{P, N}^T & A_{N, N}^T & A_{R, N}^T \\
+                A_{P, R}^T & A_{N, R}^T & A_{R, R}^T
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                y_P \\
+                y_N \\
+                y_R
+            \end{array} \right]
+            \left\{ \begin{array}{c}
+                \leq \\
+                \geq \\
+                =
+            \end{array} \right\}
+            \left[ \begin{array}{c}
+                c_P \\
+                c_N \\
+                c_R
+            \end{array} \right]
+            \\
+        \text{and } \quad &
+        \left[ \begin{array}{c}
+            y_P \\
+            y_N \\
+            y_R
+        \end{array} \right]
+        \left\{ \begin{array}{c}
+            \geq \\
+            \leq \\
+            \in
+        \end{array} \right\}
+        \left[ \begin{array}{c}
+            0 \\
+            0 \\
+            \mathbb{R}^{\dim{y_R}}
+        \end{array} \right]
+    \end{aligned}
+    $$
+    ///
     """)
     return
 
@@ -201,10 +209,14 @@ def _(mo):
     mo.md(r"""
     於是我們就有了 primal-dual 的 weak duality theorem:
 
-    > **Theorem** For primal-dual pairs defined above, if $x, y$ are primal-dual feasible, then
-    >
-    > - $c^T x \geq b^T y$
-    > - If $c^T x = b^T y$, then $x, y$ are primal-dual optimal.
+    /// admonition
+        type: theorem
+
+    For primal-dual pairs defined above, if $x, y$ are primal-dual feasible, then
+
+    - $c^T x \geq b^T y$
+    - If $c^T x = b^T y$, then $x, y$ are primal-dual optimal.
+    ///
     """)
     return
 
@@ -218,31 +230,35 @@ def _(mo):
 
     考慮以下 primal-dual problem 。
 
-    > **Definition (Primal-Dual Problem):** The **primal problem** is
-    >
-    > $$
-    > \begin{aligned}
-    >     \text{minimize } \quad &
-    >         c^T x \\
-    >     \text{subject to } \quad &
-    >         A x = b \\
-    >     \text{and } \quad &
-    >         x \geq 0
-    > \end{aligned}
-    > $$
+    /// admonition | Definition (Primal-Dual Problem)
+        type: definition
 
-    > Its **dual problem** is
-    >
-    > $$
-    > \begin{aligned}
-    >     \text{maximize } \quad &
-    >         b^T y \\
-    >     \text{subject to } \quad &
-    >         A^T y \leq c \\
-    >     \text{and } \quad &
-    >         y \in \mathbb{R}^{\dim{y}}
-    > \end{aligned}
-    > $$
+    The **primal problem** is
+
+    $$
+    \begin{aligned}
+        \text{minimize } \quad &
+            c^T x \\
+        \text{subject to } \quad &
+            A x = b \\
+        \text{and } \quad &
+            x \geq 0
+    \end{aligned}
+    $$
+
+    Its **dual problem** is
+
+    $$
+    \begin{aligned}
+        \text{maximize } \quad &
+            b^T y \\
+        \text{subject to } \quad &
+            A^T y \leq c \\
+        \text{and } \quad &
+            y \in \mathbb{R}^{\dim{y}}
+    \end{aligned}
+    $$
+    ///
 
     假設 $\overline{x}$ 是 primal 的 basic optimal solution，並選取一個 optimal basis $B$，使其 reduced costs 滿足 $c_N - A_N^T (A_B^T)^{-1} c_B \geq 0$，此時如果我們令 $\overline{y} = (A_B^T)^{-1} c_B$，我們會發現他是dual feasible 的
 
@@ -288,12 +304,20 @@ def _(mo):
 
     by weak duality, 我們可以得到 $\overline{y} = (A_B^T)^{-1} c_B$ 是 dual optimal solution，並且 primal-dual optimal value 相等。於是我們就有了 primal-dual 的 strong duality theorem:
 
-    > **Theorem:** For primal-dual pairs defined above, $\overline{x}, \overline{y}$ are primal-dual optimal if
+    /// admonition
+        type: theorem
+
+    For primal-dual pairs defined above, $\overline{x}, \overline{y}$ are primal-dual optimal if
+    ///
     and only if $\overline{x}, \overline{y}$ are primal-dual feasible and $c^T \overline{x} = b^T \overline{y}$
 
     <!-- -->
 
-    > **Remark:** 前面的論證有用到 **當 primal 可行、最佳值有限、且變數有 $x \geq 0$ 時，必存在一個 basic optimal solution** 這件我們沒有證的事實。
+    /// admonition
+        type: remark
+
+    前面的論證有用到 **當 primal 可行、最佳值有限、且變數有 $x \geq 0$ 時，必存在一個 basic optimal solution** 這件我們沒有證的事實。
+    ///
     """)
     return
 
@@ -303,17 +327,21 @@ def _(mo):
     mo.md(r"""
     假如今天我們為 dual problem 加入 slack variable 。
 
-    > **Definition (Slack Dual):** Adding a slack variable to the dual problem gives the **slack dual**
-    >
-    > $$
-    > \begin{aligned}
-    >     \text{maximize } \quad &
-    >         b^T y \\
-    >     \text{subject to } \quad &
-    >         A^T y + s = c \\
-    >     \text{and } \quad & y \in \mathbb{R}^{\dim{y}}, s \geq 0
-    > \end{aligned}
-    > $$
+    /// admonition | Definition (Slack Dual)
+        type: definition
+
+    Adding a slack variable to the dual problem gives the **slack dual**
+
+    $$
+    \begin{aligned}
+        \text{maximize } \quad &
+            b^T y \\
+        \text{subject to } \quad &
+            A^T y + s = c \\
+        \text{and } \quad & y \in \mathbb{R}^{\dim{y}}, s \geq 0
+    \end{aligned}
+    $$
+    ///
 
     則對於任意 feasible 的 $x, y, s$ ，我們有
 
@@ -323,15 +351,23 @@ def _(mo):
 
     於是我們可以擴充 strong duality 的內容
 
-    > **Theorem (complementary slackness):** For primal, slack dual pairs defined above and $x, (y, s)$ are feasible solution, then the following are equivalent
-    >
-    > - $x, (y, s)$ are primal-dual optimal
-    > - $c^T x = b^T y$
-    > - $s^T x = 0$
+    /// admonition | Theorem (complementary slackness)
+        type: theorem
+
+    For primal, slack dual pairs defined above and $x, (y, s)$ are feasible solution, then the following are equivalent
+
+    - $x, (y, s)$ are primal-dual optimal
+    - $c^T x = b^T y$
+    - $s^T x = 0$
+    ///
 
     <!-- -->
 
-    > **Remark:** Duality 會交換限制式與變數的角色；在特定問題結構與求解方法下，解 dual 可能更有效率，但不能只從限制式數量判斷。
+    /// admonition
+        type: remark
+
+    Duality 會交換限制式與變數的角色；在特定問題結構與求解方法下，解 dual 可能更有效率，但不能只從限制式數量判斷。
+    ///
     """)
     return
 
@@ -358,33 +394,37 @@ def _(mo):
 
     我們可以把它寫成以下形式。
 
-    > **Definition (Basis Form):** The program can be written in **basis form**
-    >
-    > $$
-    > \begin{aligned}
-    >     \text{minimize } \quad & z \\
-    >     \text{subject to } \quad &
-    >         \left[ \begin{array}{c|c|c}
-    >             1 & 0 & - (c_N - A_N^T (A_B^T)^{-1} c_B)^T \\
-    >             \hline
-    >             0 & I & A_B^{-1} A_N
-    >         \end{array} \right]
-    >         \left[ \begin{array}{c}
-    >             z \\
-    >             \hline
-    >             x_B \\
-    >             \hline
-    >             x_N
-    >         \end{array} \right]
-    >         =
-    >         \left[ \begin{array}{c}
-    >             c_B^T A_B^{-1} b \\
-    >             \hline
-    >             A_B^{-1} b
-    >         \end{array} \right] \\
-    >     \text{and } \quad & x_B, x_N \geq 0
-    > \end{aligned}
-    > $$
+    /// admonition | Definition (Basis Form)
+        type: definition
+
+    The program can be written in **basis form**
+
+    $$
+    \begin{aligned}
+        \text{minimize } \quad & z \\
+        \text{subject to } \quad &
+            \left[ \begin{array}{c|c|c}
+                1 & 0 & - (c_N - A_N^T (A_B^T)^{-1} c_B)^T \\
+                \hline
+                0 & I & A_B^{-1} A_N
+            \end{array} \right]
+            \left[ \begin{array}{c}
+                z \\
+                \hline
+                x_B \\
+                \hline
+                x_N
+            \end{array} \right]
+            =
+            \left[ \begin{array}{c}
+                c_B^T A_B^{-1} b \\
+                \hline
+                A_B^{-1} b
+            \end{array} \right] \\
+        \text{and } \quad & x_B, x_N \geq 0
+    \end{aligned}
+    $$
+    ///
     """)
     return
 
@@ -426,27 +466,30 @@ def _(mo):
 
     我們可以用一個定理來總結這個性質
 
-    > **Theorem (shadow prices):**
-    >
-    > Consider the value function
-    >
-    > $$
-    > v(b)=\min\{c^T x:Ax=b,\ x\geq0\}.
-    > $$
-    >
-    > Let $B$ be an optimal basis and let
-    > $\overline{y}=(A_B^T)^{-1}c_B$.
-    > If
-    >
-    > $$
-    > A_B^{-1}(b+\Delta b)\geq0,
-    > $$
-    >
-    > then $B$ remains optimal and
-    >
-    > $$
-    > v(b+\Delta b)=v(b)+\overline{y}^T\Delta b.
-    > $$
+    /// admonition | Theorem (shadow prices)
+        type: theorem
+
+
+    Consider the value function
+
+    $$
+    v(b)=\min\{c^T x:Ax=b,\ x\geq0\}.
+    $$
+
+    Let $B$ be an optimal basis and let
+    $\overline{y}=(A_B^T)^{-1}c_B$.
+    If
+
+    $$
+    A_B^{-1}(b+\Delta b)\geq0,
+    $$
+
+    then $B$ remains optimal and
+
+    $$
+    v(b+\Delta b)=v(b)+\overline{y}^T\Delta b.
+    $$
+    ///
     """)
     return
 

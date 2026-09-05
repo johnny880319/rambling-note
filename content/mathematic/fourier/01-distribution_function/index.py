@@ -47,9 +47,12 @@ def _(mo):
     但事實上，這個dirac $\delta$ 函數背後有著非常嚴謹的數學理論基礎。
 
 
-    > Remark:
-    > 我這裡使用 $\mathcal{F}(f)$ 而不用 $\widehat{f}$ 是因為我發現不管是 `MathJax` 還是 `KateX` 都沒辦法渲染\\widecheck，好生氣。
-    > 考慮到之後還要用到逆變換，我就先用這個符號吧。
+    /// admonition
+        type: remark
+
+    我這裡使用 $\mathcal{F}(f)$ 而不用 $\widehat{f}$ 是因為我發現不管是 `MathJax` 還是 `KateX` 都沒辦法渲染\\widecheck，好生氣。
+    考慮到之後還要用到逆變換，我就先用這個符號吧。
+    ///
 
     ## Extending the Definition of the Fourier Transform
 

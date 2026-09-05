@@ -18,9 +18,17 @@ def _(mo):
 
     Simplex Method的核心思想是，當線性規劃的限制式圍成的凸多面體至少有一個頂點、問題可行且最佳值有限時，至少會有一個頂點是最佳解 (高中數學課本裡用的圖形法也是利用了此性質)。因此如果我們能先找到一個頂點，然後沿著邊走到另一個能讓目標式變得更好的頂點，就有機會逐步抵達最佳頂點。
 
-    > **Remark: **關於為何一定存在一個頂點使得目標式達到最佳解，這裡暫不做嚴謹的證明。不過直覺的想法其實跟圖形法一樣，因目標式是一個線性函數，它的梯度是固定的，所以我們在凸多面體裡朝著梯度的反方向（也就是讓目標值下降的方向）走時，碰壁後就沿著牆壁繼續朝那個方向走；若最佳值有限，最終要嘛會碰到一個最佳頂點，要嘛會碰到一個與梯度垂直的面，這時這個面上的頂點也會是最佳解。
-    >
-    > **Remark: **後面我們會把所有變數都轉成非負，那時可行域就一定會有頂點。
+    /// admonition
+        type: remark
+
+    關於為何一定存在一個頂點使得目標式達到最佳解，這裡暫不做嚴謹的證明。不過直覺的想法其實跟圖形法一樣，因目標式是一個線性函數，它的梯度是固定的，所以我們在凸多面體裡朝著梯度的反方向（也就是讓目標值下降的方向）走時，碰壁後就沿著牆壁繼續朝那個方向走；若最佳值有限，最終要嘛會碰到一個最佳頂點，要嘛會碰到一個與梯度垂直的面，這時這個面上的頂點也會是最佳解。
+    ///
+
+    /// admonition
+        type: remark
+
+    後面我們會把所有變數都轉成非負，那時可行域就一定會有頂點。
+    ///
 
     現在大部分線性規劃求解器，都會使用 `two-phase-implementation` 的方法來求解，第一階段先找出滿足限制式的**可行解 (feasible solution) **，第二階段再找出滿足限制式且讓目標式attain最小值的**最佳解 (optimal solution) **。而兩個階段的演算法其實幾乎是一樣的，都是先想辦法把規畫問題 formulate 成某種 canonical form，然後利用能夠 preserve canonical form 的**轉軸操作 (pivot operation) **來達成目標。
 
@@ -36,30 +44,34 @@ def _(mo):
 
     在具體說明如何拆成兩階段之前，先來看一下如何做**轉軸操作 (pivot operation) **。
 
-    > **Definition (Canonical Form):** A linear program is in **canonical form** when it is written as
-    >
-    > $$
-    > \begin{aligned}
-    >     \text{minimize } \quad & z \\
-    >     \text{subject to } \quad &
-    >         \begin{bmatrix}
-    >             1 & 0 & -\bar{c}_N^T \\
-    >             0 & I_m & D
-    >         \end{bmatrix}
-    >         \begin{bmatrix}
-    >             z \\
-    >             x_B \\
-    >             x_N
-    >         \end{bmatrix}
-    >         =
-    >         \begin{bmatrix}
-    >             z_0 \\
-    >             b_B
-    >         \end{bmatrix} \\
-    >     \text{and } \quad & x_N, x_B, b_B \geq 0 \\
-    >     \text{where } \quad & z, x_B, x_N \text{ are variables.}
-    > \end{aligned}
-    > $$
+    /// admonition | Definition (Canonical Form)
+        type: definition
+
+    A linear program is in **canonical form** when it is written as
+
+    $$
+    \begin{aligned}
+        \text{minimize } \quad & z \\
+        \text{subject to } \quad &
+            \begin{bmatrix}
+                1 & 0 & -\bar{c}_N^T \\
+                0 & I_m & D
+            \end{bmatrix}
+            \begin{bmatrix}
+                z \\
+                x_B \\
+                x_N
+            \end{bmatrix}
+            =
+            \begin{bmatrix}
+                z_0 \\
+                b_B
+            \end{bmatrix} \\
+        \text{and } \quad & x_N, x_B, b_B \geq 0 \\
+        \text{where } \quad & z, x_B, x_N \text{ are variables.}
+    \end{aligned}
+    $$
+    ///
 
     如果將 $z$ 用 $x_B, x_N$ 來表示，那他就是一個** $n$ 變數 $m$ 限制式**的特別的線性規劃問題，其中
 
@@ -70,8 +82,12 @@ def _(mo):
     - $D \in \mathbf{R}^{m \times (n - m)}$ 是非基變數在限制式中的係數
     - $b_B \in \mathbf{R}_{\geq 0}^m$ 是限制式的常數項
 
-    > **Remark: **$\bar{c}_N$ 上面那一橫是要強調它是**把基變數消掉之後**才剩下的係數
-    > （也就是所謂的 **reduced cost**），跟原本目標式裡的係數不是同一回事。
+    /// admonition
+        type: remark
+
+    $\bar{c}_N$ 上面那一橫是要強調它是**把基變數消掉之後**才剩下的係數
+    （也就是所謂的 **reduced cost**），跟原本目標式裡的係數不是同一回事。
+    ///
     """)
     return
 
@@ -81,9 +97,17 @@ def _(mo):
     mo.md(r"""
     可以發現在這種形式之中， $(x_B, x_N) = (b_B, 0)$ 一定會是一組可行解，我們稱這種解叫**基本可行解 (basic feasible solution) **。特別的，假如今天  $\bar{c}_N \geq 0$ ，此時 basic feasible solution 就會是讓 $z$ attain 最小值 $z_0$ 的**最佳解 (optimal solution) **。那我們就解開了這個 canonical form 的最佳化問題。
 
-    > **Remark: **`canonical form` 是我在這篇文章為了方便先暫時取的名稱。學術圈似乎對此形式沒有一個統一的名稱。
-    >
-    > **Remark: **一般來說，如果不考慮 $b_B \geq 0$ 這個條件， $(x_B, x_N) = (b_B, 0)$ 都叫**基本解 (basic solution) **；而 canonical form 中因為要求 $b_B \geq 0$，所以這裡的基本解一定是基本可行解。
+    /// admonition
+        type: remark
+
+    `canonical form` 是我在這篇文章為了方便先暫時取的名稱。學術圈似乎對此形式沒有一個統一的名稱。
+    ///
+
+    /// admonition
+        type: remark
+
+    一般來說，如果不考慮 $b_B \geq 0$ 這個條件， $(x_B, x_N) = (b_B, 0)$ 都叫**基本解 (basic solution) **；而 canonical form 中因為要求 $b_B \geq 0$，所以這裡的基本解一定是基本可行解。
+    ///
 
     而 pivot operation 就是一個可以將 canonical form 轉換成另一個 canonical form，並將 $\bar{c}_N$ 慢慢轉換成非負向量的一個步驟。具體操作大概遵循下列流程
 
@@ -158,12 +182,20 @@ def _(mo):
 
     這個條件叫 `minimum ratio test` 。此時我們可以說在這次 pivot operation 之中， $x_{N, 1}$ **進基 (Entering variable) **，而 $x_{B, 1}$ **離基 (Leaving variable) **。
 
-    > **Remark:** 這裡有個小細節是，今天選好 $\bar{c}_{N, 1}$ 並準備開始 pivot operation 時，如果 $b_{B, 1} > 0$ 且 $D_{1, 1}, D_{2, 1} \cdots D_{m, 1}$ 皆小於等於 0 的話，似乎就沒辦法做 minimum ratio test 了。
-    >
-    > 但這種情況其實代表，令 $x_{N, \geq 2} = 0$ 後，對任意 $x_{N,1} \geq 0$ 都可取
-    > $x_B = b_B - D_{\cdot, 1} x_{N, 1}$ ，所以仍是可行解。讓 $x_{N,1}$ 趨近無窮大時，$z$ 會趨近負無窮大；此時問題向下無界，也就不用再做 pivot operation 了。
+    /// admonition
+        type: remark
 
-    > **Remark:** 通常我們會優先選擇 $b_{B, i} > 0$ 的 row 來進行 pivot operation，這樣我們目標式所對應的常數才會持續下降，讓我們盡快達到 optimal solution 。不過可能還是會遇到所有可行的 row 的 $b_{B, i}$ 皆為 0 的狀況。此時就需要一些其他手法來保證演算法可以在有限步 pivot operation 內停止。
+    這裡有個小細節是，今天選好 $\bar{c}_{N, 1}$ 並準備開始 pivot operation 時，如果 $b_{B, 1} > 0$ 且 $D_{1, 1}, D_{2, 1} \cdots D_{m, 1}$ 皆小於等於 0 的話，似乎就沒辦法做 minimum ratio test 了。
+
+    但這種情況其實代表，令 $x_{N, \geq 2} = 0$ 後，對任意 $x_{N,1} \geq 0$ 都可取
+    $x_B = b_B - D_{\cdot, 1} x_{N, 1}$ ，所以仍是可行解。讓 $x_{N,1}$ 趨近無窮大時，$z$ 會趨近負無窮大；此時問題向下無界，也就不用再做 pivot operation 了。
+    ///
+
+    /// admonition
+        type: remark
+
+    通常我們會優先選擇 $b_{B, i} > 0$ 的 row 來進行 pivot operation，這樣我們目標式所對應的常數才會持續下降，讓我們盡快達到 optimal solution 。不過可能還是會遇到所有可行的 row 的 $b_{B, i}$ 皆為 0 的狀況。此時就需要一些其他手法來保證演算法可以在有限步 pivot operation 內停止。
+    ///
     """)
     return
 
@@ -184,8 +216,12 @@ def _(mo):
     \end{aligned}
     $$
 
-    > **Remark: **下標 $L, E, G$ 分別代表 less、equal、greater，用來區分三類限制式。
-    > $x, b_L, b_E, b_G, c$ 皆為向量， $A_L, A_E, A_G$ 皆為矩陣，只有 $z$ 是一維變數。
+    /// admonition
+        type: remark
+
+    下標 $L, E, G$ 分別代表 less、equal、greater，用來區分三類限制式。
+    $x, b_L, b_E, b_G, c$ 皆為向量， $A_L, A_E, A_G$ 皆為矩陣，只有 $z$ 是一維變數。
+    ///
     """)
     return
 
@@ -229,9 +265,13 @@ def _(mo):
     \end{aligned}
     $$
 
-    > **Remark: **這裡用兩組字母分辨兩種角色：$s$ 是真正的鬆弛量（$s_L$ 是 slack、$s_G$ 是 surplus），
-    > $a$ 則是為了湊出基底而硬加的**人工變數 (artificial variables)**。
-    > 人工變數不屬於原問題，所以要額外要求 $a_E, a_G = 0$。
+    /// admonition
+        type: remark
+
+    這裡用兩組字母分辨兩種角色：$s$ 是真正的鬆弛量（$s_L$ 是 slack、$s_G$ 是 surplus），
+    $a$ 則是為了湊出基底而硬加的**人工變數 (artificial variables)**。
+    人工變數不屬於原問題，所以要額外要求 $a_E, a_G = 0$。
+    ///
     """)
     return
 
@@ -561,11 +601,15 @@ def _(mo):
     mo.md(r"""
     也就是前幾段說的 $\bar{c}_N$ 其實就是 $c_N - A_N^T (A_B^T)^{-1} c_B$ 。我們稱他為 **reduced cost** 。
 
-    > **Remark: **reduced cost 的符號有兩種慣例，對照別的教材時要小心。
-    >
-    > 本文跟隨凸最佳化的慣例（目標式取 $\min$），所以
-    > $\bar{c}_N = c_N - A_N^T (A_B^T)^{-1} c_B$，最佳性條件是 $\bar{c}_N \geq 0$。
-    > 但有些教材用 $\max$，並把 $A_N^T (A_B^T)^{-1} c_B - c_N$ 稱為 reduced cost ，跟本文差一個負號。
+    /// admonition
+        type: remark
+
+    reduced cost 的符號有兩種慣例，對照別的教材時要小心。
+
+    本文跟隨凸最佳化的慣例（目標式取 $\min$），所以
+    $\bar{c}_N = c_N - A_N^T (A_B^T)^{-1} c_B$，最佳性條件是 $\bar{c}_N \geq 0$。
+    但有些教材用 $\max$，並把 $A_N^T (A_B^T)^{-1} c_B - c_N$ 稱為 reduced cost ，跟本文差一個負號。
+    ///
 
     這個表達式告訴我們，** canonical form 裡的矩陣形式完全由基底決定**，跟你經過哪一連串列運算走到這裡完全無關。
     於是整個 simplex method 可以重新表述成
@@ -609,31 +653,39 @@ def _(mo):
     模擬沿用前面的字母：$A$ 是限制式係數、$b$ 是常數項、$c$ 是目標式係數、
     $s$ 是真正的鬆弛量、$a$ 是人工變數（在 tableau 裡會標成紫色）。
 
-    > **Remark: **不過下標的意義換了。前面按限制式的「類別」分組，所以只有
-    > $A_L, A_E, A_G$、$b_L, b_E, b_G$、$s_L, s_G$、$a_E, a_G$ 這些向量與矩陣；
-    > 模擬則一律按限制式的「編號」逐條給，於是會看到 $s_1, s_2, \dots$ 和 $a_5, a_6$ 這種。
-    >
-    > 換句話說，模擬裡的 $s_i$ 是 $s_L$ 或 $s_G$ 的其中一個分量（看第 $i$ 條是
-    > $\leq$ 還是 $\geq$），$a_i$ 則是 $a_E$ 或 $a_G$ 的其中一個分量，
-    > $A_{i,\cdot}$ 與 $b_i$ 也是同理。
-    > 所以看到 tableau 裡的 $s_2$ 時，它指的是**第 2 條限制式**的鬆弛變數，
-    > 不是前面那個按類別分組的向量。
+    /// admonition
+        type: remark
+
+    不過下標的意義換了。前面按限制式的「類別」分組，所以只有
+    $A_L, A_E, A_G$、$b_L, b_E, b_G$、$s_L, s_G$、$a_E, a_G$ 這些向量與矩陣；
+    模擬則一律按限制式的「編號」逐條給，於是會看到 $s_1, s_2, \dots$ 和 $a_5, a_6$ 這種。
+
+    換句話說，模擬裡的 $s_i$ 是 $s_L$ 或 $s_G$ 的其中一個分量（看第 $i$ 條是
+    $\leq$ 還是 $\geq$），$a_i$ 則是 $a_E$ 或 $a_G$ 的其中一個分量，
+    $A_{i,\cdot}$ 與 $b_i$ 也是同理。
+    所以看到 tableau 裡的 $s_2$ 時，它指的是**第 2 條限制式**的鬆弛變數，
+    不是前面那個按類別分組的向量。
+    ///
 
     下面的「範例」下拉選單準備了四組輸入，分別對應四條不同的路徑，其中第二組會演出
     **人工變數逐出**與**刪除冗餘限制式**這兩個步驟。
 
-    > **Remark: **想看逐出的話得付出一點代價：可行域會是扁平的。
-    >
-    > 原因是這樣 —— 人工變數之所以能卡在基底裡，必須是限制式把某個方向**釘死**了。
-    > 但每條*不等式*都會帶自己的 slack 或 surplus 欄，這讓它的列跟其他列線性獨立，
-    > 於是總能用非人工的欄位把 $a_i$ 換出去；真正會出事的是*等式*（或被 $\geq$ 與 $\leq$
-    > 夾出來的等式），而那剛好也把三維可行域壓成一個平面。
-    >
-    > 我讓 AI 隨機掃了兩萬多組例子，**立體可行域的 9143 組裡沒有任何一組發生逐出事件**，
-    > 扁平的 12080 組裡則有 8.12% 會。所以「立體」與「看得到逐出」大概是不能兼得的。
-    >
-    > 可行域被壓成平面時，模擬會省略那層半透明的實體、只保留邊框與路徑。
-    > 另外可行域必須有界，否則沒有封閉的圖形可以畫。
+    /// admonition
+        type: remark
+
+    想看逐出的話得付出一點代價：可行域會是扁平的。
+
+    原因是這樣 —— 人工變數之所以能卡在基底裡，必須是限制式把某個方向**釘死**了。
+    但每條*不等式*都會帶自己的 slack 或 surplus 欄，這讓它的列跟其他列線性獨立，
+    於是總能用非人工的欄位把 $a_i$ 換出去；真正會出事的是*等式*（或被 $\geq$ 與 $\leq$
+    夾出來的等式），而那剛好也把三維可行域壓成一個平面。
+
+    我讓 AI 隨機掃了兩萬多組例子，**立體可行域的 9143 組裡沒有任何一組發生逐出事件**，
+    扁平的 12080 組裡則有 8.12% 會。所以「立體」與「看得到逐出」大概是不能兼得的。
+
+    可行域被壓成平面時，模擬會省略那層半透明的實體、只保留邊框與路徑。
+    另外可行域必須有界，否則沒有封閉的圖形可以畫。
+    ///
 
     ### Path Colors
 
