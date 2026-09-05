@@ -94,6 +94,15 @@ exactly the size of the inner ones and the levels stop being legible.  Both
 exceptions in this section are the same shape: the general tool gives way to
 the manual one where the maths nests.
 
+Labels on a display go in an alignment column, `&& \text{(balance)}`, never in
+a `\tag`.  KaTeX positions a tag absolutely at `right: 0` and centres the
+equation as though the tag were not there, so once the maths grows towards the
+edge of the column the two overlap, and a wide display is guaranteed to collide
+with its own label.  A label in an alignment column is part of the layout and
+moves with the maths; the worst it can do is widen the block until it scrolls,
+which stays readable.  A display with nowhere to hang a column takes the label
+after the maths instead, `\qquad \text{(balance)}`.
+
 A proof ends with `<span class="qed">$\square$</span>` on its own line, after
 the closing `$$`. The marker has to sit outside the maths: a `\tag` is centred
 against the whole display rather than dropped to the last line. `styles/marimo.css`
