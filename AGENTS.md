@@ -37,27 +37,34 @@ So write `## Canonical Form and Pivot Operation`, not
 is titled `# Introduction`, because the navigation already says which series it
 opens.
 
-## Blockquotes are English, except remarks
+## Set-off statements are English, except remarks
 
-A `>` block sets a statement apart from the prose: a definition, theorem,
-proposition, lemma, corollary. All of them are written in English, the way the
-sources a note draws on state them. Such a block is a portable object — a
-reader checking it against Polster or a paper compares the two sentences
-directly, and a reader quoting it carries the English along.
+A definition, theorem, proposition, lemma or corollary is set apart from the
+prose in a block of its own, written with pymdownx's block syntax:
 
 ```markdown
-> **Theorem (Permutation Test):** Let $T$ be a causal, $p$-periodic juggling
-> function. Then $T$ is a juggling pattern if and only if, over a single
-> period, the multiset of landing slots and the multiset of throwing slots
-> coincide in $\mathcal{H} \times \mathbb{Z}/p$, counted with multiplicity.
+/// admonition | Theorem (Permutation Test)
+    type: theorem
+
+Let $T$ be a causal, $p$-periodic juggling function. Then $T$ is a juggling
+pattern if and only if ...
+///
 ```
 
-`Remark` is the exception. It comments on the prose around it rather than
+The `type:` line carries the kind and must be indented four spaces; the title
+after `|` is optional and defaults to the type, which is what a `proof` or a
+bare `remark` wants. All of these are written in English, the way the sources a
+note draws on state them. Such a block is a portable object — a reader checking
+it against Polster or a paper compares the two sentences directly, and a reader
+quoting it carries the English along.
+
+`remark` is the exception. It comments on the prose around it rather than
 standing on its own, so it follows the article and stays Chinese.
 
 The boundary is the block, not the subject matter. A definition folded into
 running prose is prose, and stays Chinese; the same definition set off in a
-`>` block is English.
+block is English. A `>` quotation is neither: it is a passage of the article
+restated, so it follows the article too.
 
 # Maths in conversation
 
@@ -102,6 +109,13 @@ with its own label.  A label in an alignment column is part of the layout and
 moves with the maths; the worst it can do is widen the block until it scrolls,
 which stays readable.  A display with nowhere to hang a column takes the label
 after the maths instead, `\qquad \text{(balance)}`.
+
+Every way of mistyping the block syntax degrades quietly rather than failing:
+an option line that lost its four-space indent drops the type, an opener with
+two slashes turns the whole block into prose, and an unclosed `///` swallows
+the rest of the cell into the panel. `scripts/check-notebooks.py` renders each
+block and compares the result against what the source asked for, so all three
+are caught by `just check`.
 
 A proof ends with `<span class="qed">$\square$</span>` on its own line, after
 the closing `$$`. The marker has to sit outside the maths: a `\tag` is centred

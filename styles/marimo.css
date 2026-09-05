@@ -92,6 +92,57 @@ button[data-testid="marimo-plugin-button"] :where(.prose, .paragraph) {
   font-weight: 500;
 }
 
+/* Set-off statements are written with pymdownx's block syntax rather than a
+   blockquote, so the maths inside stays ordinary markdown and no line needs a
+   `>`.  A `>` is left to mean what it means in markdown: a quotation. */
+.prose .admonition {
+  background: var(--notes-remark-background);
+  border-inline-start: 0.22rem solid var(--notes-remark-border);
+  padding: 0.7rem 1rem;
+  margin: 1.1rem 0;
+}
+
+.prose .admonition > :first-child {
+  margin-top: 0;
+}
+
+.prose .admonition > :last-child {
+  margin-bottom: 0;
+}
+
+/* marimo paints a warning icon before the title and colours it blue; these
+   blocks are definitions and theorems, so both go. */
+.prose .admonition-title::before {
+  content: none;
+}
+
+.prose .admonition-title {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-weight: 600;
+  color: var(--notes-emphasis);
+}
+
+/* A proof runs long, and a tinted panel around thirty lines of algebra reads
+   as a warning rather than as prose.  It keeps the heading and the tombstone
+   and gives up the panel, the way a proof is set in print. */
+.prose .admonition.proof {
+  background: none;
+  border-inline-start: 0;
+  padding-inline: 0;
+}
+
+.prose .admonition.proof .admonition-title {
+  font-style: italic;
+  font-weight: 500;
+}
+
+.prose .admonition .qed {
+  display: block;
+  margin-top: 0.4rem;
+  text-align: right;
+}
+
 /* Remarks use the visual language of a margin note, not a rounded card. */
 .prose blockquote {
   color: inherit;
@@ -119,14 +170,4 @@ button[data-testid="marimo-plugin-button"] :where(.prose, .paragraph) {
 
 .prose blockquote strong {
   color: var(--notes-emphasis);
-}
-
-/* A proof ends with the tombstone flush right on a line of its own, the way it
-   is set in print.  It has to live outside the display math for that: KaTeX
-   centres a \tag against the whole equation instead of dropping it to the
-   last line. */
-.prose blockquote .qed {
-  display: block;
-  margin-top: 0.4rem;
-  text-align: right;
 }
