@@ -37,6 +37,13 @@ BLOCK_TYPE = re.compile(r"^[ \t]+type:[ \t]*(\S+)[ \t]*$", re.MULTILINE)
 # One or two slashes is a typo for three; four or more is legal nesting.
 BLOCK_TYPO = re.compile(r"^[ \t]*/{1,2}[ \t]*admonition\b", re.MULTILINE)
 RENDERED_BLOCK = re.compile(r'<div class="admonition([^"]*)"')
+# A label belongs in an alignment column; KaTeX floats a tag over the maths.
+DISPLAY_TAG = re.compile(r"\\tag\b")
+# The starred form never numbers; the unstarred one numbers through a CSS
+# counter, so the numbers show in a browser but not in the rendered text.
+NUMBERED_ALIGN = re.compile(r"\\begin\{align\}")
+# Backticked text is naming a command, not typesetting one.
+CODE_SPAN = re.compile(r"`[^`]*`")
 MATH_ELEMENT = re.compile(r"<marimo-tex.*?</marimo-tex>", re.DOTALL)
 HTML_TAG = re.compile(r"<[^>]+>")
 CODE_SPAN_WITH_MATH = re.compile(r"<code>[^<]*\$")
@@ -102,6 +109,18 @@ def check_block(path: Path, start: int, source: str, render) -> list[Finding]:
         if fragment.startswith("\\") and "\\" + fragment in source:
             continue
         report(start, f"LaTeX {fragment!r} outside math delimiters")
+
+    outside_code = CODE_SPAN.sub("", source)
+    for match in DISPLAY_TAG.finditer(outside_code):
+        report(
+            line_of(start, outside_code, match.start()),
+            "\\tag floats over the maths; put the label in an alignment column",
+        )
+    for match in NUMBERED_ALIGN.finditer(outside_code):
+        report(
+            line_of(start, outside_code, match.start()),
+            "align numbers every row; use align* unless the numbers are wanted",
+        )
 
     for match in BLOCK_TYPO.finditer(source):
         report(
