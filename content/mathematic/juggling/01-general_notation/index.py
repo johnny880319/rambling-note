@@ -53,8 +53,8 @@ def _(mo):
 
     $$
     \begin{align*}
-    & T(i,t)(j,u) > 0 \implies u > t, && \tag{causality} \\
-    & \sum_{x \in \mathcal{S}} T(s)(x) \;=\; \sum_{x \in \mathcal{S}} T(x)(s), \quad \forall s \in \mathcal{S}. && \tag{balance}
+    & T(i,t)(j,u) > 0 \implies u > t, && \text{(causality)} \\
+    & \sum_{x \in \mathcal{S}} T(s)(x) \;=\; \sum_{x \in \mathcal{S}} T(x)(s), \quad \forall s \in \mathcal{S}. && \text{(balance)}
     \end{align*}
     $$
 
@@ -135,8 +135,8 @@ def _(mo):
     >
     > $$
     > \begin{align*}
-    > \sum_{x \in \mathcal{S}} T(s)(x) \;=\; \sum_{\overline{x} \in \mathcal{S}_p} T_p(\overline{s})(\overline{x}), \quad \forall s \in \mathcal{S}. && \tag{1} \\
-    > \sum_{x \in \mathcal{S}} T(x)(s) \;=\; \sum_{\overline{x} \in \mathcal{S}_p} T_p(\overline{x})(\overline{s}), \quad \forall s \in \mathcal{S}. && \tag{2}
+    > \sum_{x \in \mathcal{S}} T(s)(x) \;=\; \sum_{\overline{x} \in \mathcal{S}_p} T_p(\overline{s})(\overline{x}), \quad \forall s \in \mathcal{S}. && \text{(1)} \\
+    > \sum_{x \in \mathcal{S}} T(x)(s) \;=\; \sum_{\overline{x} \in \mathcal{S}_p} T_p(\overline{x})(\overline{s}), \quad \forall s \in \mathcal{S}. && \text{(2)}
     > \end{align*}
     > $$
     >
@@ -223,13 +223,13 @@ def _(mo):
     \sum_{x \in \mathcal{F}} J(i, t)(x)
     \;=\;
     \sum_{\substack{(j, u) \in \mathcal{S} \\ u < t}} J(j, u)(i, t - u),
-    \qquad \forall (i, t) \in \mathcal{S} \tag{balance}
+    \qquad \forall (i, t) \in \mathcal{S} \qquad \text{(balance)}
     $$
 
     另外 periodic 的性質也可以翻譯成 juggling matrices 的語言，可以看出其意義就是每隔一個週期，就會拋出拋接時長、拋出手跟接入手一模一樣的物件
 
     $$
-    J(i, t)(j, u) = J(i, t + p)(j, u), \quad \forall (i, t), (j, u) \in \mathcal{F}, \quad \tag{periodic}
+    J(i, t)(j, u) = J(i, t + p)(j, u), \quad \forall (i, t), (j, u) \in \mathcal{F}, \qquad \text{(periodic)}
     $$
 
     上述兩性質的翻譯因過於顯然，所以就讀者自證吧。
@@ -274,9 +274,9 @@ def _(mo):
     > = & \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t - 1 < r}} T(i, l)(j, r) \\
     > = & \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t < r}} T(i, l)(j, r) + \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l < t = r}} T(i, l)(j, r) - \underbrace{\sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t < r}} T(i, l)(j, r)}_{(1)}\\
     > = & N(t) + \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l < t = r}} T(i, l)(j, r) - \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t < r}} T(i, l)(j, r) \\
-    > = & N(t) + \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ r = t}} T(i, l)(j, r) - \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t}} T(i, l)(j, r) \tag{by causality} \\
+    > = & N(t) + \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ r = t}} T(i, l)(j, r) - \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t}} T(i, l)(j, r) && \text{(by causality)} \\
     > = & N(t) + \sum_{k \in \mathcal{H},\, x \in \mathcal{S}} T(x)(k, t)  - \sum_{k \in \mathcal{H},\, x \in \mathcal{S}} T(k, t)(x)\\
-    > = & N(t) \tag{by balance} \\
+    > = & N(t) && \text{(by balance)} \\
     > \end{align*}
     > $$
     >
@@ -376,7 +376,7 @@ def _(mo):
     > J(i, \tau)(j, u) \, \lambda_{0, p}(\tau, u) \\
     > = & \frac{1}{p} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} \sum_{\tau \in \mathbb{Z}} J(i, \tau)(j, u) \, \lambda_{0, p}(\tau, u) \\
     > = &  \frac{1}{p} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} \sum_{k \in \mathbb{Z}} J(i, \tau_0 + kp)(j, u) \, \lambda_{0, p}(\tau_0 + kp, u) \\
-    > = &  \frac{1}{p} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} J(i, \tau_0)(j, u) \underbrace{\sum_{k \in \mathbb{Z}} \lambda_{0, p}(\tau_0 + kp, u)}_{(1)} \tag{by periodic}
+    > = &  \frac{1}{p} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} J(i, \tau_0)(j, u) \underbrace{\sum_{k \in \mathbb{Z}} \lambda_{0, p}(\tau_0 + kp, u)}_{(1)} && \text{(by periodic)}
     > \end{align*}
     > $$
     >
