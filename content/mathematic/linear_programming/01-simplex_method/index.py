@@ -34,31 +34,32 @@ def _(mo):
     mo.md(r"""
     ## Canonical Form and Pivot Operation
 
-    在具體說明如何拆成兩階段之前，先來看一下如何做**轉軸操作 (pivot operation) **。考慮以下的 `canonical form`
+    在具體說明如何拆成兩階段之前，先來看一下如何做**轉軸操作 (pivot operation) **。
 
-    $$
-    \begin{aligned}
-        \text{minimize } \quad & z \\
-        \text{subject to } \quad &
-            \begin{bmatrix}
-                1 & 0 & -\bar{c}_N^T \\
-                0 & I_m & D
-            \end{bmatrix}
-            \begin{bmatrix}
-                z \\
-                x_B \\
-                x_N
-            \end{bmatrix}
-            =
-            \begin{bmatrix}
-                z_0 \\
-                b_B
-            \end{bmatrix} \\
-        \text{and } \quad & x_N, x_B, b_B \geq 0 \\
-        \text{where } \quad & z, x_B, x_N \text{ are variables.}
-    \end{aligned}
-    \tag{canonical form}
-    $$
+    > **Definition (Canonical Form):** A linear program is in **canonical form** when it is written as
+    >
+    > $$
+    > \begin{aligned}
+    >     \text{minimize } \quad & z \\
+    >     \text{subject to } \quad &
+    >         \begin{bmatrix}
+    >             1 & 0 & -\bar{c}_N^T \\
+    >             0 & I_m & D
+    >         \end{bmatrix}
+    >         \begin{bmatrix}
+    >             z \\
+    >             x_B \\
+    >             x_N
+    >         \end{bmatrix}
+    >         =
+    >         \begin{bmatrix}
+    >             z_0 \\
+    >             b_B
+    >         \end{bmatrix} \\
+    >     \text{and } \quad & x_N, x_B, b_B \geq 0 \\
+    >     \text{where } \quad & z, x_B, x_N \text{ are variables.}
+    > \end{aligned}
+    > $$
 
     如果將 $z$ 用 $x_B, x_N$ 來表示，那他就是一個** $n$ 變數 $m$ 限制式**的特別的線性規劃問題，其中
 
