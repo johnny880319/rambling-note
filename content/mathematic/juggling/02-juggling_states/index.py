@@ -21,7 +21,11 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo, set_beat):
     pattern_input = mo.ui.text(
-        value="{(1,1)}|{(1,2)}|{(3,3)}|{(2,1)} {(3,1)}|{(2,3)}|{(4,2)}|{(4,1)}",
+        value=(
+            "{(1,1),(2,2),(3,3)}|{(3,2)}|{} {(3,1)}|{}|{} "
+            "{}|{(2,3)}|{(3,2),(3,3)} {}|{}|{(2,3)} "
+            "{}|{}|{(1,2)} {}|{(1,1)}|{(1,1)}"
+        ),
         label="pattern",
         full_width=True,
         on_change=lambda _: set_beat(0),
