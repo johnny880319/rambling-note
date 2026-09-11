@@ -23,17 +23,14 @@ small enough to help.
 from __future__ import annotations
 
 import itertools
-import re
 from dataclasses import dataclass
 
 import numpy as np
 import plotly.graph_objects as go
+from pattern_parser import Throw, parse_throws
 
 # A state is indexed [hand][beats_from_now - 1] and counts objects due to land.
 State = tuple[tuple[int, ...], ...]
-# A throw is indexed [hand] and lists the slots that hand's objects fly to,
-# each slot a (destination hand, beats of flight) pair.
-Throw = tuple[tuple[tuple[int, int], ...], ...]
 
 # The surrounding graph is drawn whole or not at all.  Half of one is worth
 # less than none: unlabelled dots with no edges between them say nothing the
@@ -57,12 +54,8 @@ _MUTED = "#64748b"
 
 
 def digit(value: int) -> str:
-    """Render a flight time the way siteswap does.
-
-    >>> digit(3), digit(11), digit(40)
-    ('3', 'b', '(40)')
-    """
-    return _DIGITS[value] if value < len(_DIGITS) else f"({value})"
+    """Format a duration as one siteswap symbol or decimal digits."""
+    return _DIGITS[value] if value < 36 else str(value)
 
 
 def state_label(state: State) -> str:
@@ -80,31 +73,22 @@ def state_label(state: State) -> str:
 
 
 def throw_label(throw: Throw, hands: int) -> str:
-    """A throw written the way the notes write an element of ``M(F)``.
-
-    One beat is one column of a juggling matrix, so it carries a multiset per
-    hand and the hands are separated by a bar.  A slot is the pair ``(hand,
-    flight)`` the notes use; with a single hand ``F`` is canonically
-    ``Z_{>0}``, so the hand is dropped rather than written as noise.  Throwing
-    nothing is the empty multiset, which says what it means in a way siteswap's
-    ``0`` does not.
-
-    >>> throw_label((((0, 5),),), hands=1)
-    '{5}'
-    >>> throw_label((((0, 3), (0, 4)),), hands=1)
-    '{3,4}'
-    >>> throw_label(((),), hands=1)
-    '{}'
-    >>> throw_label((((1, 3),), ()), hands=2)
-    '{(2,3)}|{}'
-    """
+    """Format a canonical throw for display and round-trip parsing."""
     columns = []
     for slots in throw:
         parts = [
-            digit(flight) if hands == 1 else f"({hand + 1},{digit(flight)})"
+            digit(flight)
+            if hands == 1
+            else f"{digit(flight)}_{hand + 1}"
             for hand, flight in slots
         ]
-        columns.append("{" + ",".join(parts) + "}")
+        columns.append(
+            "0"
+            if not parts
+            else parts[0]
+            if len(parts) == 1
+            else "[" + ",".join(parts) + "]"
+        )
     return "|".join(columns)
 
 
@@ -156,35 +140,13 @@ class Pattern:
 
 
 def read_pattern(text: str) -> Pattern:
-    """Read a pattern and work out the shape of the space it lives in.
+    """Parse input, then validate and trace its canonical throws."""
+    return build_pattern(parse_throws(text))
 
-    A beat is one column of a juggling matrix: a multiset per hand, the hands
-    separated by a bar.  A slot is ``(hand, flight)``; with a single hand ``F``
-    is canonically ``Z_{>0}`` and the hand may be dropped.  Whitespace is only
-    ever cosmetic; the braces and bars carry the structure.
 
-    >>> pattern = read_pattern("{5} {3} {1}")
-    >>> pattern.hands, pattern.height, pattern.capacity, pattern.objects
-    (1, 5, 1, 3)
-    >>> [state_label(state) for state in pattern.states]
-    ['11100', '11001', '10110']
-
-    With one hand a run of flight times is the same pattern without the braces,
-    one beat per character, which is how a juggler says it.
-
-    >>> read_pattern("531") == read_pattern("{5} {3} {1}")
-    True
-
-    A throw that lands where nothing was caught is refused, and so is a hand
-    that catches without throwing: that is balance, and it is what makes the
-    state decide which throws are available.
-
-    >>> read_pattern("532")
-    Traceback (most recent call last):
-    ValueError: on beat 0 hand 1 catches 0 objects but throws 1, so the objects do not balance
-    """
-    hands = _count_hands(text)
-    throws = _parse(text, hands)
+def build_pattern(throws: tuple[Throw, ...]) -> Pattern:
+    """Validate balance and trace normalized throws independently of input syntax."""
+    hands = len(throws[0])
     height = max(
         (flight for throw in throws for slots in throw for _, flight in slots),
         default=1,
@@ -234,99 +196,6 @@ def _walk(throws: list[Throw], hands: int, height: int) -> list[State]:
     return states
 
 
-def _count_hands(text: str) -> int:
-    """How many hands the text mentions, so the slots can be read at all."""
-    mentioned = [int(match) for match in re.findall(r"\(\s*(\d+)\s*,", text)]
-    return max(mentioned) if mentioned else 1
-
-
-def _parse(text: str, hands: int) -> list[Throw]:
-    """Beats, each a multiset per hand."""
-    beats: list[Throw] = []
-    position = 0
-    while position < len(text):
-        if text[position].isspace():
-            position += 1
-            continue
-        columns: list[tuple[tuple[int, int], ...]] = []
-        while True:
-            slots, position = _parse_column(text, position, hands)
-            columns.append(slots)
-            # Whitespace never carries meaning here: the braces close a hand and
-            # the bar joins the hands of one beat, so a reader may lay a pattern
-            # out however it reads best.
-            after = position
-            while after < len(text) and text[after].isspace():
-                after += 1
-            if after < len(text) and text[after] == "|":
-                position = after + 1
-                while position < len(text) and text[position].isspace():
-                    position += 1
-                continue
-            break
-        if len(columns) > hands:
-            raise ValueError(
-                f"a beat has {len(columns)} columns but there are {hands} hands"
-            )
-        beats.append(tuple(columns) + ((),) * (hands - len(columns)))
-    if not beats:
-        raise ValueError("nothing to read")
-    return beats
-
-
-def _parse_column(
-    text: str, position: int, hands: int
-) -> tuple[tuple[tuple[int, int], ...], int]:
-    """One hand's multiset on one beat, and where reading stopped."""
-    if text[position] == "{":
-        end = text.find("}", position)
-        if end < 0:
-            raise ValueError("a multiset is never closed")
-        slots = [
-            _parse_slot(token, hands)
-            for token in _split_slots(text[position + 1 : end])
-        ]
-        return tuple(sorted(slot for slot in slots if slot)), end + 1
-
-    # The brace-free shorthand: one flight time, one beat.
-    character = text[position]
-    if character not in _DIGITS:
-        raise ValueError(f"cannot read a throw at {text[position:][:8]!r}")
-    if hands > 1:
-        raise ValueError("with more than one hand every beat needs its braces")
-    flight = int(character, 36)
-    return (((0, flight),) if flight else ()), position + 1
-
-
-def _split_slots(inside: str) -> list[str]:
-    """Split a multiset on commas that are not inside a ``(hand, flight)``."""
-    tokens, current, depth = [], "", 0
-    for character in inside:
-        depth += (character == "(") - (character == ")")
-        if character == "," and depth == 0:
-            tokens.append(current)
-            current = ""
-            continue
-        current += character
-    tokens.append(current)
-    return [token for token in tokens if token.strip()]
-
-
-def _parse_slot(token: str, hands: int) -> tuple[int, int] | None:
-    """``(2,3)``, or just the flight time when there is one hand."""
-    token = token.strip()
-    if token.startswith("("):
-        if not token.endswith(")"):
-            raise ValueError(f"cannot read the slot {token!r}")
-        head, _, tail = token[1:-1].partition(",")
-        hand, flight = int(head) - 1, int(tail.strip(), 36)
-    else:
-        hand, flight = 0, int(token, 36)
-    if not 0 <= hand < hands:
-        raise ValueError(f"a throw lands in hand {hand + 1}, but there are {hands}")
-    return (hand, flight) if flight else None
-
-
 # --------------------------------------------------------------------------
 # The space of states
 # --------------------------------------------------------------------------
@@ -365,9 +234,9 @@ def throws_from(state: State, capacity: int) -> list[Throw]:
     is only where they go.
 
     >>> [throw_label(t, 1) for t in throws_from(((1, 1, 1, 0, 0),), 1)]
-    ['{3}', '{4}', '{5}']
+    ['3', '4', '5']
     >>> [throw_label(t, 1) for t in throws_from(((0, 1, 1, 1, 0),), 1)]
-    ['{}']
+    ['0']
     """
     hands, height = len(state), len(state[0])
     room = [[*hand[1:], 0] for hand in state]
@@ -513,9 +382,7 @@ def surrounding(pattern: Pattern) -> StateGraph | None:
         return None
 
     ground = index[
-        ground_state(
-            pattern.objects, pattern.hands, pattern.height, pattern.capacity
-        )
+        ground_state(pattern.objects, pattern.hands, pattern.height, pattern.capacity)
     ]
     return StateGraph(tuple(states), pairs, index, ground)
 
@@ -730,7 +597,9 @@ def make_figure(
             text=labels,
             textposition="middle right",
             textfont={
-                "size": [13 if index in visited else 11 for index in range(len(states))],
+                "size": [
+                    13 if index in visited else 11 for index in range(len(states))
+                ],
                 "color": [
                     _ACCENT if index in visited else "rgba(100,116,139,0.45)"
                     for index in range(len(states))

@@ -542,11 +542,81 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Juggling Simulation
+
+    下面是我讓 AI vibe 出來的雜耍模擬。
+
+    因為 Juggling matrices 只能描述拋接相隔幾拍跟拋接的手。而這些拍子在整個時間軸上怎麼分布，及拋接的手何時會在哪個位置的資訊並不會包含在其中。為了簡單起見，以下模擬都會先假設時間是被這些拍子均勻切割，且所有拋接使用相同、可調整的持球時長。而對於每步驟，我們都用滑鼠去拖曳指定拋接球的位置。
+
+    /// admonition
+        type: remark
+
+    模擬將整數拍作為接球的時間點，持球 $d$ 拍後拋出，因此拋接時長 $u$ 包含持球時間，實際滯空時間為 $u-d$。關於持球的討論未來有機會可以跟 claude 的雜耍三大定理一起討論。
+    ///
+
+    當然在模擬之中，我們不太可能直接輸入 juggling matrices 的函數形式，但用玩家間流行的符號，在某些情境又會容易造成混淆，所以以下會用這裡自創但足夠簡潔的符號去表示我們的 juggling matrices 。另外，因為我們也不可能輸入無限長的 juggling matrices ，所以以下我們都考慮 periodic 的 juggling matrices 以循環播放。
+
+    我們用以下符號代表某個球的拋接時長跟落回的手
+
+    $$
+    u\_j \simeq (j, u) \in \mathcal{F}
+    $$
+
+    而 multiplex 就可以用中括號列出零個或多個元素來表示
+
+    $$
+    [x_1, x_2, \cdots, x_c] \simeq m \in M(\mathcal{F}), \quad m(x) = \#\{i \in \{1, \cdots, c\} : x_i = x\}
+    $$
+
+    在同一個瞬間，對不同的拋出手，我們用 $|$ 來做為分隔符
+
+    $$
+    m_1 | m_2 | \cdots | m_h \simeq (m_1, m_2, \cdots, m_h) \in M(\mathcal{F})^{\mathcal{H}}
+    $$
+
+    最後，我們只要用空白或換行隔開 juggling matrices 的不同時間點即可
+
+    $$
+    f_{\overline{0}} \quad f_{\overline{1}} \quad \cdots \quad f_{\overline{p - 1}} \simeq (f_{\overline{0}}, f_{\overline{1}}, \cdots, f_{\overline{p - 1}}) \in M(\mathcal{F})^{\mathcal{H} \times \mathbb{Z}/p\mathbb{Z}}
+    $$
+
+    具體例子可以看以下模擬的預設範例。
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    另外為了因應雜耍玩家的習慣，一些簡化的符號也可以用在這裡的模擬
+
+    | 寫法 | 意義或使用條件 |
+    | --- | --- |
+    | `0` | 空 multiset，等同 `[]` |
+    | `a`~`z` | 時長 10~35 |
+    | `u` | 僅在單手時，可省略 `u_1` 的 `_1`；`u` 可為數字或單字母 |
+    | `u_j` | 單顆球可省略中括號，等同 `[u_j]` |
+
+    此外輸入中的連續數字一律視為一個十進位整數，所以不同拍的內容務必用空白或換行分開。不同手跟 multiplex 也要各自用 `|` 跟 `,` 隔開。
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(juggling_simulation, mo):
+    mo.iframe(juggling_simulation.HTML, height="1050px")
+    return
+
+
 @app.cell
 def _():
+    import juggling_simulation
     import marimo as mo
 
-    return (mo,)
+    return juggling_simulation, mo
 
 
 if __name__ == "__main__":
