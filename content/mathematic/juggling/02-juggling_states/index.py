@@ -176,6 +176,36 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    ## Constraint on Juggling State
+
+    我們實際雜耍的時候總是會遇到一些物理限制。比如人的力量與地球的重力加速度，幾乎不太可能讓拋出去的物件的滯空時長達到 40 以上，除非你是玩彈力球之類的。同理，以人手掌的大小， multiplex 同時拋出 5 個物件應該也算蠻多的了。所以我們有時會加上一些限制，除了原本的 $b$ 顆球 $h$ 隻手之外，我們可以限制滯空時長不能超過 $k$ 且 multiplex 數量最多為 $c$ 。
+
+    對於 juggling matrices ，其可以表述成以下形式
+
+    $$
+    \begin{align*}
+    & J(s)(j, u) = 0 \quad && \forall s \in \mathcal{S}, j \in [h], u > k \qquad && \text{(constraint on height)} \\
+    & \sum_{x \in \mathcal{F}} J(s)(x) \leq c \quad && \forall s \in \mathcal{S} \qquad && \text{(constraint on multiplex)}
+    \end{align*}
+    $$
+
+    而對於 juggling state ，則可以這樣表述
+
+    $$
+    \begin{align*}
+    & \sigma(t)(j, u) = 0 \quad && \forall t \in \mathbb{Z}, j \in [h], u > k \qquad && \text{(constraint on height)} \\
+    & \sigma(t)(x) \leq c \quad && \forall t \in \mathbb{Z}, x \in \mathcal{F} \qquad && \text{(constraint on multiplex)}
+    \end{align*}
+    $$
+
+    juggling matrices 跟 juggling state 的 constraint 的等價性質沒有那麼顯然，讀者可以自行嘗試論證看看。
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     關於 juggling state ，還有幾個性質可以探討。以下先把有界化的設定寫清楚，接著給出幾個能當場證完的結果，最後再把我還沒能給出夠短證明的敘述連同來源一起列出來。
 
     到目前為止 $\mathcal{F} = [h] \times \mathbb{Z}_{>0}$ 沒有上界，狀態有無窮多個。以下固定兩個上限：滯空不超過 $k$，且一隻手在一拍最多接住 $c$ 個物件。記
