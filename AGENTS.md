@@ -61,6 +61,13 @@ quoting it carries the English along.
 `remark` is the exception. It comments on the prose around it rather than
 standing on its own, so it follows the article and stays Chinese.
 
+The English inside a block is terse: the statement, and in a proof the steps
+with a short label on each. Motivation, intuition, caveats and anything that
+would take a sentence to explain belong to the Chinese prose around the block
+or to a `remark` after it, not inside the block. A proof line reads
+`(by balance)`, not a sentence about why balance applies; if the why is worth
+saying, say it in Chinese once the block is closed.
+
 The boundary is the block, not the subject matter. A definition folded into
 running prose is prose, and stays Chinese; the same definition set off in a
 block is English. A `>` quotation is neither: it is a passage of the article

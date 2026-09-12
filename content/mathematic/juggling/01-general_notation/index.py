@@ -32,13 +32,13 @@ def _(mo):
     /// admonition
         type: remark
 
-    $[n]$ 為組合數學常用記號，代表 $\{1, 2, \cdots, n\}$
+    $[n]$ 為組合數學常用記號，代表 $\{1, 2, \cdots, n\}$ ，此外定義 $[\infty] := \mathbb{Z}_{>0}$ 。
     ///
 
     /// admonition
         type: remark
 
-    在這系列的文章， $h \in \mathbb{Z}_{>0},\, b, k, c, p \in \mathbb{Z}_{>0} \cup \{\infty\}$ 將作為保留字，分別代表著雜耍的手數、物件數量、物件滯空時間上界、 multiplex 的上界、雜耍的週期。而如果這些值是 $\infty$ 或是沒特別指出來，那就是沒有上界或週期。
+    在這系列的文章， $h, b, k, c, p \in \mathbb{Z}_{>0} \cup \{\infty\}$ 將作為保留字，分別代表著雜耍的手數、物件數量、物件滯空時間上界、 multiplex 的上界、雜耍的週期。而如果這些值是 $\infty$ 或是沒特別指出來，那就是沒有上界或週期。
     ///
 
     接著我們考慮前者，同一隻手可能會有多顆但有限數量的物件被拋出，此時一個拋的動作可以用 $\mathcal{S}$ 的有限 multiset 表示
@@ -289,7 +289,7 @@ def _(mo):
     /// admonition
         type: proposition
 
-    Let $T$ be a juggling pattern. Then $b(t)$ is a constant function.
+    Let $T$ be a juggling pattern. Then $b(t)$ is constant in $t$. Hence, we write $b \in \mathbb{Z}_{> 0} \cup \{\infty\}$ for the common value.
     ///
     """)
     return
@@ -301,20 +301,29 @@ def _(mo):
     /// admonition
         type: proof
 
+    Split $b(t - 1), b(t)$ into two parts
 
     $$
     \begin{align*}
-    & b(t - 1) \\
-    = & \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t - 1 < r}} T(i, l)(j, r) \\
-    = & \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t < r}} T(i, l)(j, r) + \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l < t = r}} T(i, l)(j, r) - \underbrace{\sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t < r}} T(i, l)(j, r)}_{(1)}\\
-    = & b(t) + \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l < t = r}} T(i, l)(j, r) - \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t < r}} T(i, l)(j, r) \\
-    = & b(t) + \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ r = t}} T(i, l)(j, r) - \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t}} T(i, l)(j, r) && \text{(by causality)} \\
-    = & b(t) + \sum_{j \in [h],\, x \in \mathcal{S}} T(x)(j, t)  - \sum_{j \in [h],\, x \in \mathcal{S}} T(j, t)(x)\\
-    = & b(t) && \text{(by balance)} \\
+    b(t - 1)
+    & = \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l < t < r}} T(i, l)(j, r)
+        \;+\; \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l < t,\; r = t}} T(i, l)(j, r) \\
+    b(t)
+    & = \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l < t < r}} T(i, l)(j, r)
+        \;+\; \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t,\; t < r}} T(i, l)(j, r)
     \end{align*}
     $$
 
-    Note that (1) is finite since $h < \infty$ and co-domain of juggling function is finite multiset.
+    All terms are non-negative, so the splittings hold in $\mathbb{Z}_{\geq 0} \cup \{\infty\}$; the first parts agree, and so do the second:
+
+    $$
+    \begin{align*}
+    & \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l < t,\; r = t}} T(i, l)(j, r) \\
+    =& \sum_{(i, l) \in \mathcal{S},\; j \in [h]} T(i, l)(j, t) && \text{(by causality)} \\
+    =& \sum_{(i, l) \in \mathcal{S},\; j \in [h]} T(j, t)(i, l) && \text{(by balance)} \\
+    =& \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t,\; t < r}} T(i, l)(j, r) && \text{(by causality and change of variables)} \\
+    \end{align*}
+    $$
 
     <span class="qed">$\square$</span>
     ///
@@ -325,8 +334,6 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    由上述性質可知，當我們考慮的是一個 juggling pattern 時，我們可以省略變數 $t$ ，直接將球數記為 $b$ 。
-
     另外從定義還可以看出，任何時間點拋出的物件總數都不會超過 $b$ 。
 
     /// admonition
@@ -463,12 +470,26 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    如果道具的滯空時間有 upper bound ，那也可以透過取極限的方式去計算道具數量
+    如果今天只有有限隻手，且道具的滯空時間有 upper bound ，那也可以透過取極限的方式去計算道具數量。以下我們定義何為滯空時間的有界及如何取極限計算。
+
+    /// admonition
+        type: notation
+
+    In what follows, define
+    $$
+    k := \sup \{\, u : J(i, t)(j, u) > 0 \,\},
+    $$
+    so
+
+    $$
+    J(i, t)(j, u) = 0, \forall u > k.
+    $$
+    ///
 
     /// admonition
         type: corollary
 
-    Let $T$ be a juggling pattern. Suppose there exists $k \in \mathbb{Z}_{>0}$ such that $J(i, t)(j, u) = 0$ for all $u > k$. Then the number of juggling items satisfies
+    Let $T$ be a juggling pattern with $h < \infty$ and $k < \infty$. Then the number of juggling items satisfies
 
     $$
     b = \lim_{\substack{m \to -\infty \\ n \to \infty }} \frac{1}{n - m} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ m \leq \tau < n}} J(i, \tau)(j, u) \, u
@@ -499,7 +520,7 @@ def _(mo):
     & E(m, n) \\
     = & \sum_{\substack{i \in [h] \\ m - k < \tau < n}} \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \, \lambda_{m, n}(\tau, u) \\
     \leq & \sum_{\substack{i \in [h] \\ m - k < \tau < n}} k \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \\
-    < & \infty
+    < & \infty && \text{(by $h, k < \infty$ and definition of finite multiset.)}
     \end{align*}
     $$
 
