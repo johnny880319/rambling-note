@@ -1,3 +1,6 @@
+# /// script
+# dependencies = ["numpy>=2", "plotly>=6.1.0"]
+# ///
 """State graphs for juggling patterns.
 
 A state records what a pattern has already committed to.  For each hand, and

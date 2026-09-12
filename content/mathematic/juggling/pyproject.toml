@@ -1,0 +1,5 @@
+[tool.marimo.runtime]
+pythonpath = ["."]
+
+[tool.marimo.display]
+custom_css = ["../../../styles/marimo.css"]

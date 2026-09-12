@@ -10,6 +10,9 @@ newlines while serializing srcdoc.
 """
 
 from animation_parser import JAVASCRIPT
+from juggling_editor import CSS as EDITOR_CSS
+from juggling_editor import DEFAULT_PATTERN_JSON
+from juggling_editor import JAVASCRIPT as EDITOR_JAVASCRIPT
 
 HTML = r"""<!doctype html>
 <html lang="zh-Hant">
@@ -39,7 +42,7 @@ input[type=number] { width: 72px; }
 #clock { margin-left: auto; font-variant-numeric: tabular-nums; }
 p { margin: 7px 0 12px; }
 .hint { font-size: 13px; color: var(--muted); }
-#editor { width: 100%; min-height: 112px; resize: vertical; font-family: ui-monospace, monospace; white-space: pre; tab-size: 4; }
+__EDITOR_CSS__
 #message { margin: 8px 0; min-height: 22px; overflow-wrap: anywhere; }
 #message.error { color: light-dark(#b42318, #ffada5); }
 details { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
@@ -51,9 +54,7 @@ summary { cursor: pointer; font-weight: 600; }
 </style>
 </head>
 <body>
-<label for="editor">一個週期的拋接資料</label>
-<p id="editorHint" class="hint">Tab 可對齊欄位；先按 Esc 再按 Tab 可離開輸入框。修改後按「套用並播放」。</p>
-<textarea id="editor" rows="6" wrap="off" spellcheck="false" aria-describedby="editorHint message"></textarea>
+<div id="patternEditor"></div>
 <div class="row">
   <button id="apply" class="primary">套用並播放</button>
   <button id="restore">還原目前資料</button>
@@ -219,12 +220,9 @@ globalThis.Juggling = {parseThrows, buildPattern, defaultGeometry, handPosition,
 <script>
 "use strict";
 const $ = id => document.getElementById(id);
-const defaultPattern = "[1_1, 2_2, 3_3]\t|\t[2_3]\t|\t[]\n"
-  + "[1_3]\t\t\t|\t[]\t\t|\t[]\n"
-  + "[]\t\t\t\t|\t[3_2]\t|\t[2_3, 3_3]\n"
-  + "[]\t\t\t\t|\t[]\t\t|\t[3_2]\n"
-  + "[]\t\t\t\t|\t[]\t\t|\t[2_1]\n"
-  + "[]\t\t\t\t|\t[1_1]\t|\t[1_1]";
+__EDITOR_JAVASCRIPT__
+const defaultPattern = __DEFAULT_PATTERN__;
+createPatternEditor($("patternEditor"), {value: defaultPattern, hint: "修改後按「套用並播放」。", describedBy: "message"});
 let pattern, geometry, source, time = 0, lastStamp = null;
 let running = !matchMedia("(prefers-reduced-motion: reduce)").matches;
 let drag = null, resumeAfterDrag = false, frame = null;
@@ -357,22 +355,6 @@ $("apply").onclick = () => {
   catch (error) { message(error.message, true); }
 };
 $("restore").onclick = () => { $("editor").value = source; message("已還原目前播放的拋接資料。"); };
-let allowEditorTabExit = false;
-$("editor").onkeydown = event => {
-  if (event.key === "Escape") { allowEditorTabExit = true; return; }
-  if (event.key !== "Tab") { allowEditorTabExit = false; return; }
-  if (allowEditorTabExit || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey || event.isComposing) {
-    allowEditorTabExit = false;
-    return;
-  }
-  event.preventDefault();
-  /* Native insertion preserves undo history; setRangeText is the fallback. */
-  if (typeof document.execCommand !== "function" || !document.execCommand("insertText", false, "\t")) {
-    event.currentTarget.setRangeText("\t", event.currentTarget.selectionStart, event.currentTarget.selectionEnd, "end");
-    event.currentTarget.dispatchEvent(new InputEvent("input", {bubbles: true, inputType: "insertText", data: "\t"}));
-  }
-};
-$("editor").onblur = () => { allowEditorTabExit = false; };
 for (const kind of ["catch", "throw"]) for (const axis of ["x", "y"]) {
   const input = $(kind + axis.toUpperCase());
   input.onchange = () => {
@@ -418,4 +400,6 @@ load(defaultPattern); schedule();
 </script>
 </body>
 </html>
-""".replace("__PARSER__", JAVASCRIPT)
+""".replace("__PARSER__", JAVASCRIPT).replace("__EDITOR_CSS__", EDITOR_CSS).replace(
+    "__EDITOR_JAVASCRIPT__", EDITOR_JAVASCRIPT
+).replace("__DEFAULT_PATTERN__", DEFAULT_PATTERN_JSON)

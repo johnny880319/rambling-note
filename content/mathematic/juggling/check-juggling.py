@@ -1,6 +1,7 @@
 """Check browser trajectories and parity with the state-graph input notation.
 
-Run with `uv run python scripts/check-juggling.py`; Node.js is also required.
+Run with `uv run python content/mathematic/juggling/check-juggling.py`.
+Node.js is also required.
 No browser or npm packages are needed for these mathematical checks.
 """
 
@@ -15,8 +16,7 @@ from pathlib import Path
 
 import marimo as mo
 
-ROOT = Path(__file__).resolve().parents[1]
-JUGGLING = ROOT / "content/mathematic/juggling"
+JUGGLING = Path(__file__).resolve().parent
 
 
 def load_module(name, path):
@@ -30,10 +30,23 @@ def load_module(name, path):
 parser = load_module(
     "pattern_parser", JUGGLING / "02-juggling_states/pattern_parser.py"
 )
+editor = load_module("juggling_editor", JUGGLING / "juggling_editor.py")
+widget_adapter = load_module("pattern_editor", JUGGLING / "02-juggling_states/pattern_editor.py")
 load_module("animation_parser", JUGGLING / "01-general_notation/animation_parser.py")
 state_graph = load_module("state_graph", JUGGLING / "02-juggling_states/state_graph.py")
 simulation = load_module(
     "juggling_simulation", JUGGLING / "01-general_notation/juggling_simulation.py"
+)
+
+# Both frontends must keep the same tab stops and initial canonical pattern.
+for line in editor.DEFAULT_PATTERN.splitlines():
+    assert [i for i, char in enumerate(line.expandtabs(4)) if char == "|"] == [16, 28]
+assert widget_adapter.PatternEditor.class_traits()["value"].default_value == editor.DEFAULT_PATTERN
+subprocess.run(
+    ["node", "--input-type=module", "--check"],
+    input=widget_adapter.PatternEditor._esm,
+    text=True,
+    check=True,
 )
 
 
@@ -52,6 +65,7 @@ scripts = re.findall(r"<script>(.*?)</script>", iframe.source, re.DOTALL)
 engine = scripts[0]
 
 examples = [
+    editor.DEFAULT_PATTERN,
     "9 7 5 3 1",
     "[9] [7] [5] [3] [1]",
     "9 7 5 31",
