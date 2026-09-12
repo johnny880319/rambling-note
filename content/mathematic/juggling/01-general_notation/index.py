@@ -21,13 +21,25 @@ def _(mo):
 
     當我們描述拋接雜耍時，可以把物件的行為拆成**如何被拋出**與**如何落入手中**。
 
-    先考慮後者，對於每個物件，我們可以用兩個物理量來描述他落下時的行為: **落到哪隻手**跟**落入手的時間點**。我們用以下的集合來刻畫此性質
+    先考慮後者，對於每個物件，我們可以用兩個物理量來描述他落下時的行為: **落到哪隻手**跟**落入手的時間點**。假設共有 $h$ 隻手，則我們可以用以下的集合來刻畫此性質
 
     $$
-    \mathcal{S} := \mathcal{H} \times \mathbb{Z}, \quad \mathcal{H} := \{1, 2, \cdots, h\}
+    \mathcal{S} := [h] \times \mathbb{Z}
     $$
 
     其中 $(i,t) \in \mathcal{S}$ 表示物件在時間 $t$ 落在第 $i$ 隻手。
+
+    /// admonition
+        type: remark
+
+    $[n]$ 為組合數學常用記號，代表 $\{1, 2, \cdots, n\}$
+    ///
+
+    /// admonition
+        type: remark
+
+    在這系列的文章， $h, b, k, c, p \in \mathbb{Z}_{>0} \cup \{\infty\}$ 將作為保留字，分別代表著雜耍的手數、物件數量、物件滯空時間上界、 multiplex 的上界、雜耍的週期。而如果這些值是 $\infty$ 或是沒特別指出來，那就是沒有上界或週期。
+    ///
 
     接著我們考慮前者，同一隻手可能會有多顆但有限數量的物件被拋出，此時一個拋的動作可以用 $\mathcal{S}$ 的有限 multiset 表示
 
@@ -80,9 +92,9 @@ def _(mo):
 
     $$
     \begin{align*}
-    & \mathcal{S}_p := \mathcal{H} \times \mathbb{Z}/p\mathbb{Z} \\
+    & \mathcal{S}_p := [h] \times \mathbb{Z}/p\mathbb{Z} \\
     & T_p: \mathcal{S}_p \to M(\mathcal{S}_p) \\
-    & T_p(i, \overline{t})(j, \overline{u}) := \sum_{k \in \mathbb{Z}}T(i, t)(j, u + kp)
+    & T_p(i, \overline{t})(j, \overline{u}) := \sum_{q \in \mathbb{Z}}T(i, t)(j, u + qp)
     \end{align*}
     $$
     """)
@@ -92,14 +104,14 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    注意到對於任意 $t_1 = t_2 + k_t p, u_1 = u_2 + k_u p, \quad k_t, k_u \in \mathbb{Z}$ ，我們有
+    注意到對於任意 $t_1 = t_2 + q_t p, u_1 = u_2 + q_u p, \quad q_t, q_u \in \mathbb{Z}$ ，我們有
 
     $$
     \begin{align*}
     & T_p(i, \overline{t_1})(j, \overline{u_1}) \\
-    = & \sum_{k \in \mathbb{Z}}T(i, t_1)(j, u_1 + kp) \\
-    = & \sum_{k \in \mathbb{Z}}T(i, t_2 + k_t p)(j, u_2 + k_u p + kp) \\
-    = & \sum_{k \in \mathbb{Z}}T(i, t_2)(j, u_2 + (k + k_u - k_t)p) \\
+    = & \sum_{q \in \mathbb{Z}}T(i, t_1)(j, u_1 + qp) \\
+    = & \sum_{q \in \mathbb{Z}}T(i, t_2 + q_t p)(j, u_2 + q_u p + qp) \\
+    = & \sum_{q \in \mathbb{Z}}T(i, t_2)(j, u_2 + (q + q_u - q_t)p) \\
     = &  T_p(i, \overline{t_2})(j, \overline{u_2})
     \end{align*}
     $$
@@ -154,8 +166,8 @@ def _(mo):
     $$
     \begin{align*}
     & \sum_{(j, u) \in \mathcal{S}} T(i, t)(j, u) \\
-    = & \sum_{j \in \mathcal{H}} \sum_{u_0 = 0}^{p - 1} \sum_{k \in \mathbb{Z}} T(i, t)(j, u_0 + kp) \\
-    = & \sum_{j \in \mathcal{H}} \sum_{u_0 = 0}^{p - 1} T_p(i, \overline{t})(j, \overline{u_0}) \\
+    = & \sum_{j \in [h]} \sum_{u_0 = 0}^{p - 1} \sum_{q \in \mathbb{Z}} T(i, t)(j, u_0 + qp) \\
+    = & \sum_{j \in [h]} \sum_{u_0 = 0}^{p - 1} T_p(i, \overline{t})(j, \overline{u_0}) \\
     = & \sum_{(j, \overline{u}) \in \mathcal{S}_p} T_p(i, \overline{t})(j, \overline{u})
     \end{align*}
     $$
@@ -165,9 +177,9 @@ def _(mo):
     $$
     \begin{align*}
     & \sum_{(j, u) \in \mathcal{S}} T(j, u)(i, t) \\
-    = & \sum_{j \in \mathcal{H}} \sum_{u_0 = 0}^{p - 1} \sum_{k \in \mathbb{Z}} T(j, u_0 + kp)(i, t) \\
-    = & \sum_{j \in \mathcal{H}} \sum_{u_0 = 0}^{p - 1} \sum_{k \in \mathbb{Z}} T(j, u_0)(i, t - kp) \\
-    = & \sum_{j \in \mathcal{H}} \sum_{u_0 = 0}^{p - 1} T_p(j, \overline{u_0})(i, \overline{t}) \\
+    = & \sum_{j \in [h]} \sum_{u_0 = 0}^{p - 1} \sum_{q \in \mathbb{Z}} T(j, u_0 + qp)(i, t) \\
+    = & \sum_{j \in [h]} \sum_{u_0 = 0}^{p - 1} \sum_{q \in \mathbb{Z}} T(j, u_0)(i, t - qp) \\
+    = & \sum_{j \in [h]} \sum_{u_0 = 0}^{p - 1} T_p(j, \overline{u_0})(i, \overline{t}) \\
     = & \sum_{(j, \overline{u}) \in \mathcal{S}_p} T_p(j, \overline{u})(i, \overline{t})
     \end{align*}
     $$
@@ -200,7 +212,7 @@ def _(mo):
     在實際場景中，雜耍玩家們比起描述球落下的時間點，描述拋出後球滯空的時間會更直覺。所以實務場景裡，我們會用經過 affine transformation 後的記號來描述雜耍 pattern
 
     $$
-    \mathcal{F} := \mathcal{H} \times \mathbb{Z}_{>0}
+    \mathcal{F} := [h] \times \mathbb{Z}_{>0}
     $$
 
     $$
@@ -263,10 +275,10 @@ def _(mo):
     不過我們要先定義甚麼是一個雜耍招的物件數量，我們可以將某一時刻 $t$ 的雜耍物件數量定成**在 $t$ 或比 $t$ 早拋出去，並比 $t$ 晚落下的物件數量**，寫成數學式會長這樣
 
     $$
-    N(t) := \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t < r}} T(i, l)(j, r)
+    b(t) := \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t < r}} T(i, l)(j, r)
     $$
 
-    當然我們總不能雜耍招做到一半，球的數量突然就變多或變少，事實上今天 $T$ 如果是一個 juggling pattern ，那 $N(t)$ 確實會是一個常數函數。
+    當然我們總不能雜耍招做到一半，球的數量突然就變多或變少，事實上今天 $T$ 如果是一個 juggling pattern ，那 $b(t)$ 確實會是一個常數函數。
     """)
     return
 
@@ -277,7 +289,7 @@ def _(mo):
     /// admonition
         type: proposition
 
-    Let $T$ be a juggling pattern. Then $N(t)$ is a constant function.
+    Let $T$ be a juggling pattern. Then $b(t)$ is a constant function.
     ///
     """)
     return
@@ -292,17 +304,17 @@ def _(mo):
 
     $$
     \begin{align*}
-    & N(t - 1) \\
+    & b(t - 1) \\
     = & \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t - 1 < r}} T(i, l)(j, r) \\
     = & \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t < r}} T(i, l)(j, r) + \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l < t = r}} T(i, l)(j, r) - \underbrace{\sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t < r}} T(i, l)(j, r)}_{(1)}\\
-    = & N(t) + \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l < t = r}} T(i, l)(j, r) - \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t < r}} T(i, l)(j, r) \\
-    = & N(t) + \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ r = t}} T(i, l)(j, r) - \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t}} T(i, l)(j, r) && \text{(by causality)} \\
-    = & N(t) + \sum_{k \in \mathcal{H},\, x \in \mathcal{S}} T(x)(k, t)  - \sum_{k \in \mathcal{H},\, x \in \mathcal{S}} T(k, t)(x)\\
-    = & N(t) && \text{(by balance)} \\
+    = & b(t) + \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l < t = r}} T(i, l)(j, r) - \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t < r}} T(i, l)(j, r) \\
+    = & b(t) + \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ r = t}} T(i, l)(j, r) - \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t}} T(i, l)(j, r) && \text{(by causality)} \\
+    = & b(t) + \sum_{j \in [h],\, x \in \mathcal{S}} T(x)(j, t)  - \sum_{j \in [h],\, x \in \mathcal{S}} T(j, t)(x)\\
+    = & b(t) && \text{(by balance)} \\
     \end{align*}
     $$
 
-    Note that (1) is finite since $| \mathcal{H} | < \infty$ and co-domain of juggling function is finite multiset.
+    Note that (1) is finite since $h < \infty$ and co-domain of juggling function is finite multiset.
 
     <span class="qed">$\square$</span>
     ///
@@ -313,9 +325,9 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    由上述性質可知，當我們考慮的是一個 juggling pattern 時，我們可以省略變數 $t$ ，直接將球數記為 $N$ 。
+    由上述性質可知，當我們考慮的是一個 juggling pattern 時，我們可以省略變數 $t$ ，直接將球數記為 $b$ 。
 
-    另外從定義還可以看出，任何時間點拋出的物件總數都不會超過 $N$ 。
+    另外從定義還可以看出，任何時間點拋出的物件總數都不會超過 $b$ 。
 
     /// admonition
         type: proposition
@@ -323,8 +335,8 @@ def _(mo):
 
     $$
     \begin{align*}
-    \sum_{\substack{i \in \mathcal{H},\, (j, u) \in \mathcal{S}}} T(i, t)(j, u) \leq N, \quad \forall t \in \mathbb{Z} \\
-    \sum_{\substack{i \in \mathcal{H},\, (j, u) \in \mathcal{F}}} J(i, t)(j, u) \leq N, \quad \forall t \in \mathbb{Z}
+    \sum_{\substack{i \in [h],\, (j, u) \in \mathcal{S}}} T(i, t)(j, u) \leq b, \quad \forall t \in \mathbb{Z} \\
+    \sum_{\substack{i \in [h],\, (j, u) \in \mathcal{F}}} J(i, t)(j, u) \leq b, \quad \forall t \in \mathbb{Z}
     \end{align*}
     $$
     ///
@@ -340,17 +352,17 @@ def _(mo):
     /// admonition | Theorem (Average Theorem)
         type: theorem
 
-    Let $T$ be a juggling pattern and $a, b \in \mathbb{Z}, a < b$. Let
+    Let $T$ be a juggling pattern and $m, n \in \mathbb{Z}, m < n$. Let
 
     $$
-    \lambda_{a, b}(\tau, u) := \bigl\lvert\, [\tau,\, \tau + u) \cap [a,\, b) \,\bigr\rvert = \bigl( \min(b,\, \tau + u) - \max(a,\, \tau) \bigr)^{+}
+    \lambda_{m, n}(\tau, u) := \bigl\lvert\, [\tau,\, \tau + u) \cap [m,\, n) \,\bigr\rvert = \bigl( \min(n,\, \tau + u) - \max(m,\, \tau) \bigr)^{+}
     $$
 
-    be the number of beats that $[\tau, \, \tau + u)$ spends inside $[a, \, b)$. Then the number of objects satisfies
+    be the number of beats that $[\tau, \, \tau + u)$ spends inside $[m, \, n)$. Then the number of objects satisfies
 
     $$
-    N \;=\; \frac{1}{b - a} \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}}
-    J(i, \tau)(j, u) \, \lambda_{a, b}(\tau, u).
+    b \;=\; \frac{1}{n - m} \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}}
+    J(i, \tau)(j, u) \, \lambda_{m, n}(\tau, u).
     $$
     ///
     """)
@@ -367,13 +379,13 @@ def _(mo):
     $$
     \begin{align*}
     & \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}}
-    J(i, \tau)(j, u) \, \lambda_{a, b}(\tau, u) \\
-    = & \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} T(i, \tau)(j, \tau + u) \, \bigl\lvert\, [\tau,\, \tau + u) \cap [a,\, b) \,\bigr\rvert \\
-    = & \sum_{\substack{(i, l) \in \mathcal{S} \\ (j, r) \in \mathcal{S}}} \, \bigl\lvert\, [l,\, r) \cap [a,\, b) \,\bigr\rvert \, T(i, l)(j, r) \\
-    = & \sum_{(i, l),\, (j, r) \in \mathcal{S}}  \sum_{\substack{a \leq t < b\\ l \leq t < r}} T(i, l)(j, r) \\
-    = & \sum_{a \leq t < b}  \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t < r}} T(i, l)(j, r) \\
-    = & \sum_{a \leq t < b} N(t) \\
-    = & (b - a) \cdot N
+    J(i, \tau)(j, u) \, \lambda_{m, n}(\tau, u) \\
+    = & \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} T(i, \tau)(j, \tau + u) \, \bigl\lvert\, [\tau,\, \tau + u) \cap [m,\, n) \,\bigr\rvert \\
+    = & \sum_{\substack{(i, l) \in \mathcal{S} \\ (j, r) \in \mathcal{S}}} \, \bigl\lvert\, [l,\, r) \cap [m,\, n) \,\bigr\rvert \, T(i, l)(j, r) \\
+    = & \sum_{(i, l),\, (j, r) \in \mathcal{S}}  \sum_{\substack{m \leq t < n\\ l \leq t < r}} T(i, l)(j, r) \\
+    = & \sum_{m \leq t < n}  \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t < r}} T(i, l)(j, r) \\
+    = & \sum_{m \leq t < n} b(t) \\
+    = & (n - m) \cdot b
     \end{align*}
     $$
 
@@ -394,7 +406,7 @@ def _(mo):
     Let $T$ be a juggling pattern with period $p$. Then the number of juggling items satisfies
 
     $$
-    N = \frac{1}{p} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ 0 \leq \tau < p}} J(i, \tau)(j, u) \, u.
+    b = \frac{1}{p} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ 0 \leq \tau < p}} J(i, \tau)(j, u) \, u.
     $$
     ///
     """)
@@ -407,16 +419,16 @@ def _(mo):
     /// admonition
         type: proof
 
-    Apply the average theorem with $a = 0$ and $b = p$.
+    Apply the average theorem with $m = 0$ and $n = p$.
 
     $$
     \begin{align*}
-    & N \\
+    & b \\
     = & \frac{1}{p} \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}}
     J(i, \tau)(j, u) \, \lambda_{0, p}(\tau, u) \\
-    = & \frac{1}{p} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} \sum_{\tau \in \mathbb{Z}} J(i, \tau)(j, u) \, \lambda_{0, p}(\tau, u) \\
-    = &  \frac{1}{p} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} \sum_{k \in \mathbb{Z}} J(i, \tau_0 + kp)(j, u) \, \lambda_{0, p}(\tau_0 + kp, u) \\
-    = &  \frac{1}{p} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} J(i, \tau_0)(j, u) \underbrace{\sum_{k \in \mathbb{Z}} \lambda_{0, p}(\tau_0 + kp, u)}_{(1)} && \text{(by periodic)}
+    = & \frac{1}{p} \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} \sum_{\tau \in \mathbb{Z}} J(i, \tau)(j, u) \, \lambda_{0, p}(\tau, u) \\
+    = &  \frac{1}{p} \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} \sum_{q \in \mathbb{Z}} J(i, \tau_0 + qp)(j, u) \, \lambda_{0, p}(\tau_0 + qp, u) \\
+    = &  \frac{1}{p} \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} J(i, \tau_0)(j, u) \underbrace{\sum_{q \in \mathbb{Z}} \lambda_{0, p}(\tau_0 + qp, u)}_{(1)} && \text{(by periodic)}
     \end{align*}
     $$
 
@@ -424,9 +436,9 @@ def _(mo):
 
     $$
     \begin{align*}
-    & \sum_{k \in \mathbb{Z}} \lambda_{0, p}(\tau_0 + kp, u) \\
-    = & \sum_{k \in \mathbb{Z}}  \bigl\lvert\, [\tau_0 + kp,\, \tau_0 + kp + u) \cap [0,\, p) \,\bigr\rvert \\
-    = & \sum_{k \in \mathbb{Z}}  \bigl\lvert\, [0 ,\, u) \cap [- \tau_0 - kp,\, -\tau_0 - kp + p) \,\bigr\rvert \\
+    & \sum_{q \in \mathbb{Z}} \lambda_{0, p}(\tau_0 + qp, u) \\
+    = & \sum_{q \in \mathbb{Z}}  \bigl\lvert\, [\tau_0 + qp,\, \tau_0 + qp + u) \cap [0,\, p) \,\bigr\rvert \\
+    = & \sum_{q \in \mathbb{Z}}  \bigl\lvert\, [0 ,\, u) \cap [- \tau_0 - qp,\, -\tau_0 - qp + p) \,\bigr\rvert \\
     = & \bigl\lvert\, [0 ,\, u) \cap (-\infty,\, \infty) \,\bigr\rvert \\
     = & u
     \end{align*}
@@ -436,8 +448,8 @@ def _(mo):
 
     $$
     \begin{align*}
-    & N \\
-    = &  \frac{1}{p} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} J(i, \tau_0)(j, u) \, u \\
+    & b \\
+    = &  \frac{1}{p} \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} J(i, \tau_0)(j, u) \, u \\
     = & \frac{1}{p} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ 0 \leq \tau < p}} J(i, \tau)(j, u) \, u
     \end{align*}
     $$
@@ -456,10 +468,10 @@ def _(mo):
     /// admonition
         type: corollary
 
-    Let $T$ be a juggling pattern. Suppose there exists $U \in \mathbb{Z}_{>0}$ such that $J(i, t)(j, u) = 0$ for all $u > U$. Then the number of juggling items satisfies
+    Let $T$ be a juggling pattern. Suppose there exists $k \in \mathbb{Z}_{>0}$ such that $J(i, t)(j, u) = 0$ for all $u > k$. Then the number of juggling items satisfies
 
     $$
-    N = \lim_{\substack{a \to -\infty \\ b \to \infty }} \frac{1}{b - a} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ a \leq \tau < b}} J(i, \tau)(j, u) \, u
+    b = \lim_{\substack{m \to -\infty \\ n \to \infty }} \frac{1}{n - m} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ m \leq \tau < n}} J(i, \tau)(j, u) \, u
     $$
     ///
     """)
@@ -475,39 +487,39 @@ def _(mo):
     Write
 
     $$
-    A(a, b) := \sum_{\substack{(i, \tau) \in \mathcal{S},\, (j, u) \in \mathcal{F} \\ a \leq \tau < b}} J(i, \tau)(j, u) \, u,
+    A(m, n) := \sum_{\substack{(i, \tau) \in \mathcal{S},\, (j, u) \in \mathcal{F} \\ m \leq \tau < n}} J(i, \tau)(j, u) \, u,
     \qquad
-    E(a, b) := \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, \lambda_{a, b}(\tau, u).
+    E(m, n) := \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, \lambda_{m, n}(\tau, u).
     $$
 
-    Note that $E(a, b) = N \cdot (b - a)$ and
+    Note that $E(m, n) = b \cdot (n - m)$ and
 
     $$
     \begin{align*}
-    & E(a, b) \\
-    = & \sum_{\substack{i \in \mathcal{H} \\ a - U < \tau < b}} \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \, \lambda_{a, b}(\tau, u) \\
-    \leq & \sum_{\substack{i \in \mathcal{H} \\ a - U < \tau < b}} U \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \\
+    & E(m, n) \\
+    = & \sum_{\substack{i \in [h] \\ m - k < \tau < n}} \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \, \lambda_{m, n}(\tau, u) \\
+    \leq & \sum_{\substack{i \in [h] \\ m - k < \tau < n}} k \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \\
     < & \infty
     \end{align*}
     $$
 
-    We have both $E(a, b), \, N < \infty$. Now we can compute
+    We have both $E(m, n), \, b < \infty$. Now we can compute
 
     $$
     \begin{align*}
-    &  A(a, b) - E(a, b) \\
-    = & \sum_{\substack{(i, \tau) \in \mathcal{S},\, (j, u) \in \mathcal{F} \\ a \leq \tau < b}} J(i, \tau)(j, u) \, u - \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, \lambda_{a, b}(\tau, u) \\
-    = & \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[a,b)}(\tau) - \lambda_{a, b}(\tau, u)) \\
+    &  A(m, n) - E(m, n) \\
+    = & \sum_{\substack{(i, \tau) \in \mathcal{S},\, (j, u) \in \mathcal{F} \\ m \leq \tau < n}} J(i, \tau)(j, u) \, u - \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, \lambda_{m, n}(\tau, u) \\
+    = & \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u)) \\
     \end{align*}
     $$
 
-    where $I_{[a, b)}$ is the indicator function of $[a, b)$. The summation above can be split into several parts, in particular, the following part equals $0$
+    where $I_{[m, n)}$ is the indicator function of $[m, n)$. The summation above can be split into several parts, in particular, the following part equals $0$
 
     $$
     \begin{align*}
-    & \tau \leq a - u & \implies & u \, I_{[a, b)} (\tau) = 0, \, \lambda_{a, b} (\tau, u) = 0 \\
-    & a \leq \tau \leq b - u & \implies & u \, I_{[a, b)} (\tau) = u, \, \lambda_{a, b} (\tau, u) = u \\
-    & b \leq \tau & \implies & u \, I_{[a, b)} (\tau) = 0, \, \lambda_{a, b} (\tau, u) = 0
+    & \tau \leq m - u & \implies & u \, I_{[m, n)} (\tau) = 0, \, \lambda_{m, n} (\tau, u) = 0 \\
+    & m \leq \tau \leq n - u & \implies & u \, I_{[m, n)} (\tau) = u, \, \lambda_{m, n} (\tau, u) = u \\
+    & n \leq \tau & \implies & u \, I_{[m, n)} (\tau) = 0, \, \lambda_{m, n} (\tau, u) = 0
     \end{align*}
     $$
 
@@ -515,25 +527,25 @@ def _(mo):
 
     $$
     \begin{align*}
-    & \left\lvert\, A(a, b) - E(a, b) \,\right\rvert \\
-    = & \left\lvert\, \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[a,b)}(\tau) - \lambda_{a, b}(\tau, u))  \,\right\rvert \\
-    \leq & \left\lvert\, \sum_{a - U < \tau < a} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[a,b)}(\tau) - \lambda_{a, b}(\tau, u))  \,\right\rvert +
-    \left\lvert\, \sum_{b - U < \tau < b} \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[a,b)}(\tau) - \lambda_{a, b}(\tau, u))  \,\right\rvert \\
-    \leq & \left\lvert\, \sum_{a - U < \tau < a} 2U \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u)  \,\right\rvert +
-    \left\lvert\, \sum_{b - U < \tau < b} 2U \sum_{\substack{i \in \mathcal{H} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \,\right\rvert \\
-    \leq & \left\lvert\, \sum_{a - U < \tau < a} 2UN \,\right\rvert +
-    \left\lvert\, \sum_{b - U < \tau < b} 2UN \,\right\rvert \\
-    \leq & 4U^2N
+    & \left\lvert\, A(m, n) - E(m, n) \,\right\rvert \\
+    = & \left\lvert\, \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert \\
+    \leq & \left\lvert\, \sum_{m - k < \tau < m} \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert +
+    \left\lvert\, \sum_{n - k < \tau < n} \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert \\
+    \leq & \left\lvert\, \sum_{m - k < \tau < m} 2k \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u)  \,\right\rvert +
+    \left\lvert\, \sum_{n - k < \tau < n} 2k \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \,\right\rvert \\
+    \leq & \left\lvert\, \sum_{m - k < \tau < m} 2kb \,\right\rvert +
+    \left\lvert\, \sum_{n - k < \tau < n} 2kb \,\right\rvert \\
+    \leq & 4k^2 b
     \end{align*}
     $$
 
     finally
 
     $$
-    \left\lvert \frac{A(a, b)}{b - a} - N \right\rvert
-    = \frac{\lvert A(a, b) - E(a, b) \rvert}{b - a}
-    \leq \frac{4U^2N}{b - a}
-    \xrightarrow[\; \substack{a \to -\infty \\ b \to \infty} \;]{} 0 .
+    \left\lvert \frac{A(m, n)}{n - m} - b \right\rvert
+    = \frac{\lvert A(m, n) - E(m, n) \rvert}{n - m}
+    \leq \frac{4k^2 b}{n - m}
+    \xrightarrow[\; \substack{m \to -\infty \\ n \to \infty} \;]{} 0 .
     $$
 
     <span class="qed">$\square$</span>
@@ -568,19 +580,19 @@ def _(mo):
     而 multiplex 就可以用中括號列出零個或多個元素來表示
 
     $$
-    [x_1, x_2, \cdots, x_c] \simeq m \in M(\mathcal{F}), \quad m(x) = \#\{i \in \{1, \cdots, c\} : x_i = x\}
+    [x_1, x_2, \cdots, x_c] \simeq m \in M(\mathcal{F}), \quad m(x) = \#\{i \in [c] : x_i = x\}
     $$
 
     在同一個瞬間，對不同的拋出手，我們用 $|$ 來做為分隔符
 
     $$
-    m_1 | m_2 | \cdots | m_h \simeq (m_1, m_2, \cdots, m_h) \in M(\mathcal{F})^{\mathcal{H}}
+    m_1 | m_2 | \cdots | m_h \simeq (m_1, m_2, \cdots, m_h) \in M(\mathcal{F})^{[h]}
     $$
 
     最後，我們只要用空白或換行隔開 juggling matrices 的不同時間點即可
 
     $$
-    f_{\overline{0}} \quad f_{\overline{1}} \quad \cdots \quad f_{\overline{p - 1}} \simeq (f_{\overline{0}}, f_{\overline{1}}, \cdots, f_{\overline{p - 1}}) \in M(\mathcal{F})^{\mathcal{H} \times \mathbb{Z}/p\mathbb{Z}}
+    f_{\overline{0}} \quad f_{\overline{1}} \quad \cdots \quad f_{\overline{p - 1}} \simeq (f_{\overline{0}}, f_{\overline{1}}, \cdots, f_{\overline{p - 1}}) \in M(\mathcal{F})^{[h] \times \mathbb{Z}/p\mathbb{Z}}
     $$
 
     具體例子可以看以下模擬的預設範例。

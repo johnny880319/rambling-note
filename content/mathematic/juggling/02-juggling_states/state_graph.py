@@ -6,7 +6,7 @@
 A state records what a pattern has already committed to.  For each hand, and
 each number of beats still to run, it counts the objects due to land there --
 in the notation of the previous note an element of ``M(F)``, the same type as
-one entry of a juggling matrix, whose total is the object count ``N``.
+one entry of a juggling matrix, whose total is the object count ``b``.
 
 Advancing one beat shifts every object one place closer and adds whatever the
 hands throw on the new beat.  Balance is what makes this a graph rather than a

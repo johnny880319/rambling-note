@@ -257,7 +257,7 @@ function load(text) {
   $("hand").replaceChildren(...Array.from({length: pattern.hands}, (_, h) => option(h, `手 ${h + 1}`)));
   $("phase").replaceChildren(option("all", "所有拍"), ...Array.from({length: pattern.period}, (_, t) => option(t, `第 ${t} 拍`)));
   $("scrub").max = pattern.period;
-  message(`已通過 causality 與 balance 檢查；N = ${pattern.edges.reduce((n, edge) => n + edge.duration, 0)} / ${pattern.period} = ${pattern.objects}。`);
+  message(`已通過 causality 與 balance 檢查；b = ${pattern.edges.reduce((n, edge) => n + edge.duration, 0)} / ${pattern.period} = ${pattern.objects}。`);
   syncCoordinates(); updatePlay(); draw();
 }
 
