@@ -19,26 +19,36 @@ def _(mo):
     mo.md(r"""
     ## Notation
 
-    回顧上一個章節， $M(\mathcal{F})$ 用來刻劃著某個瞬間拋出的物件們的性質。包括**滯空時長**和**落入哪隻手**。但其實他不只可以刻畫拋出的物件的性質，他可以刻畫空中所有物件的性質。
+    在某個瞬間，對於每個物件，他的狀態能簡要用**將落入哪隻手**和**還有多久會落入手中**這兩個性質概括，可以發現此剛好我們能用上一章定義的 $\mathcal{F}$ 來描述。此外，我們會有多個物件，所以我們一樣可以用 multiset 來描述有多少物件屬於哪些狀態。只是跟 juggling function 的值域不同的是，我們有可能允許物件有無限多個 (但要注意我們每隻手每個瞬間能拋接的物件的數量有限)。綜上所述，我們可以用以下集合來描述各種可能的狀態
 
-    每一個瞬間 $t$，我們可以將狀態表述為 $\sigma(t) \in M(\mathcal{F})$ ，其代表在 $u$ 單位時間過後，會有 $\sigma(t)(j, u)$ 個物件落回第 $j$ 隻手中。
+    $$
+    M_{\infty}(\mathcal{F}) := \left\{ m : \mathcal{F} \to \mathbb{Z}_{\geq 0} \right\}, \qquad M(\mathcal{F}) \subset M_{\infty}(\mathcal{F}).
+    $$
 
-    juggling matrix 其實就是做一次狀態轉移。他將 $1$ 單位時間後落回手中的物件，再重新拋回空中，整個過程消耗了 $1$ 單位時間，我們可以將此狀態轉移表示成此形式
+    當我們遵循一個 juggling matrices 執行雜耍動作時，每一個瞬間都會有一個狀態，所以我們這樣描述其對應到的 juggling state
+
+    $$
+    \sigma: \mathbb{Z} \to M_{\infty}(\mathcal{F}).
+    $$
+
+    這裡的時間 $t$ 指第 $t - 1$ 拍拋接完成的瞬間，也就是第 $t$ 拍接球之前。$\sigma(t)$ 代表若從此刻起不再做任何拋接，則再經過 $u$ 單位時間，會有 $\sigma(t)(j, u)$ 個物件落回第 $j$ 隻手中；特別地，第 $1$ 格就是第 $t$ 拍要接的球。
+
+    Juggling matrix 其實就是做一次狀態轉移。他將 $1$ 單位時間後落回手中的物件，再重新拋回空中，整個過程消耗了 $1$ 單位時間，我們可以將此狀態轉移表示成此形式
 
     $$
     \begin{align*}
     & \sigma(t + 1) = \sigma(t)^{\downarrow} + \sum_{i \in [h]} J(i, t), & \qquad \text{(transition)} \\
-    \text{ where } \quad & f^{\downarrow}(j, u) := f(j, u + 1) \quad \text{ for } f \in M(\mathcal{F})
+    \text{ where } \quad & f^{\downarrow}(j, u) := f(j, u + 1) \quad \text{ for } f \in M_{\infty}(\mathcal{F})
     \end{align*}
     $$
 
     並且下一拍要落回手中的物件數量，跟接下來要丟出的物件的數量要一致
 
     $$
-    \sum_{x \in \mathcal{F}} J(i, t)(x) = \sigma(t)(i, 1), \qquad \forall i \in [h] \qquad \text{(balance)}
+    \sigma(t)(i, 1) = \sum_{x \in \mathcal{F}} J(i, t)(x), \qquad \forall (i, t) \in \mathcal{S} \qquad \text{(balance)}
     $$
 
-    當然，滿足上述條件的 juggling state 是否存在唯一沒有到很顯然，敘述及證明如下
+    於是我們就描述完了 juggling matrices 跟 juggling state 的關係，但滿足上述條件的 juggling state 是否存在唯一沒有到很顯然，每一瞬間的狀態的物件數量總和跟 juggling matrices 描述的物件總和是否一致也是一個問題。
     """)
     return
 
@@ -46,18 +56,20 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition | Proposition (Throws Determine States)
+    不過在解答這些問題之前，我們先看一個簡單但實用的性質。雖然總球數可能是無限的，但我們每隻手每一瞬間能拋的物件數量都是有限的。而依據 balance 條件，我們可以得知對於每個落下的手，他每個瞬間準備接到的球也都會是有限的，而這些球正是以前各拍拋出、恰好在這一瞬間落下的球的總和。用精確一點的語言表達如下
+
+    /// admonition
         type: proposition
 
-    Let $T$ be a juggling pattern with $b < \infty$, and $J$ its juggling matrix.
-    Then exactly one $\sigma : \mathbb{Z} \to M(\mathcal{F})$ satisfies the
-    transition and balance equations for $J$, namely
-
     $$
-    \sigma(t)(j, u) \;=\; \sum_{i \in [h]} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau) ,
+    \sum_{\tau < t} \sum_{i \in [h]} J(i, \tau)(j, t - \tau) < \infty, \qquad \forall (j, t) \in \mathcal{S}
     $$
 
-    and $\sum_{x \in \mathcal{F}} \sigma(t)(x) = b$ for every $t$.
+    In particular,
+
+    $$
+    \sum_{i \in [h]} J(i, t)(j, u) < \infty, \qquad \forall t \in \mathbb{Z},\, (j, u) \in \mathcal{F}
+    $$
     ///
     """)
     return
@@ -69,34 +81,22 @@ def _(mo):
     /// admonition
         type: proof
 
-    *Uniqueness.*  Let $\sigma, \sigma'$ both satisfy the two equations for $J$ and
-    write $\delta := \sigma - \sigma'$.  The transition equation is affine in
-    $\sigma$ with the same $\sum_i J(i, t)$ on both sides, so $\delta$ satisfies
-    $\delta(t + 1) = \delta(t)^{\downarrow}$, that is
-    $\delta(t)(j, u) = \delta(t + 1)(j, u - 1)$, and iterating,
-
-    $$
-    \delta(t)(j, u) = \delta(t + u - 1)(j, 1) \qquad \text{for every } u \geq 1 .
-    $$
-
-    Balance reads $\sigma(\tau)(j, 1) = \sum_x J(j, \tau)(x) = \sigma'(\tau)(j, 1)$,
-    so the right side vanishes and $\delta = 0$.
-
-    *Existence.*  The displayed $\sigma(t)$ is non-negative, and its total is $b(t - 1) = b < \infty$.  Splitting its sum at $\tau = t$,
-
     $$
     \begin{align*}
-    \sigma(t + 1)(j, u)
-    & = \sum_{i \in [h]} \sum_{\tau < t} J(i, \tau)(j, \; t + u - \tau)
-        \;+\; \sum_{i \in [h]} J(i, t)(j, u) \\
-    & = \sigma(t)(j, u + 1) + \sum_{i \in [h]} J(i, t)(j, u)
+    \sum_{\tau < t} \sum_{i \in [h]} J(i, \tau)(j, t - \tau)
+    &= \sum_{x \in \mathcal{F}} J(j, t)(x) && \text{(by balance)} \\
+    &< \infty && \text{(by definition of finite multiset)}
     \end{align*}
     $$
 
-    which is the transition equation.  For balance, $\sigma(t)(i, 1)$ counts every
-    object landing in hand $i$ at beat $t$, which is
-    $\sum_{x \in \mathcal{S}} T(x)(i, t)$; by the balance of $T$ this equals
-    $\sum_{x \in \mathcal{S}} T(i, t)(x) = \sum_{x \in \mathcal{F}} J(i, t)(x)$.
+    For the second result
+
+    $$
+    \begin{align*}
+    \sum_{i \in [h]} J(i, t)(j, u) &\leq \sum_{\tau < t + 1} \sum_{i \in [h]} J(i, \tau)(j, u + t - \tau) \\
+    &< \infty
+    \end{align*}
+    $$
 
     <span class="qed">$\square$</span>
     ///
@@ -107,7 +107,145 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    有了上述狀態跟 juggling matrix 的關係式，我們會發現當我們從一個狀態出發，經過各個後回到原來的位置。拋出的**落點手 $\times$ 滯空時長**的重數的合，只取決於經過的狀態，不取決於經過的順序。這就是著名的 **States Determine Throws**
+    /// admonition | Proposition (Throws Determine States)
+        type: proposition
+
+    Let $T$ be a juggling pattern and $J$ its juggling matrix.  Then exactly
+    one $\sigma : \mathbb{Z} \to M_{\infty}(\mathcal{F})$ satisfies the
+    transition and balance equations for $J$, namely
+
+    $$
+    \sigma(t)(j, u) \;=\; \sum_{i \in [h]} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau).
+    $$
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    /// admonition
+        type: proof
+
+    **$\sigma \in M_{\infty}(\mathcal{F})^{\mathbb{Z}}$.**
+
+    $$
+    \begin{align*}
+    \sigma(t)(j, u) &= \sum_{i \in [h]} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau) \\
+    &\leq \sum_{i \in [h]} \sum_{\tau < t + u - 1} J(i, \tau)(j, \; t + u - 1 - \tau) \\
+    &< \infty && \text{(by proposition above)}
+    \end{align*}
+    $$
+
+    **Uniqueness.**
+
+    Let $\sigma, \sigma'$ both satisfy the two equations for $J$ and write
+
+    $$\delta := \sigma - \sigma'$$
+
+    Then by transition equation
+
+    $$
+    \begin{align*}
+    & \delta(t + 1) \\
+    &= \sigma(t + 1) - \sigma'(t + 1) \\
+    &= \sigma(t)^{\downarrow} + \sum_{i \in [h]} J(i, t) - \sigma'(t)^{\downarrow} - \sum_{i \in [h]} J(i, t) \\
+    &= \delta(t)^{\downarrow} && \text{(by the second part of proposition above)}
+    \end{align*}
+    $$
+
+    Hence,
+
+    $$
+    \begin{align*}
+    \delta(t)(j, u)
+    &= \delta(t + 1)(j, u - 1) \\
+    & \quad \vdots \\
+    &= \delta(t + u - 1)(j, 1) \\
+    &= \sigma(t + u - 1)(j, 1) - \sigma'(t + u - 1)(j, 1) \\
+    &= 0 && \text{(by balance)}
+    \end{align*}
+    $$
+
+    **Existence.**
+
+    It suffices to check both equations for the displayed $\sigma$.
+
+    *Balance.*
+
+    $$
+    \begin{align*}
+    \sigma(t)(i, 1) &= \sum_{\substack{(i', \tau) \in \mathcal{S} \\ \tau < t}} J(i', \tau)(i, \; t - \tau) \\
+    &= \sum_{x \in \mathcal{F}} J(i, t)(x) && \text{(by balance of $J$)}
+    \end{align*}
+    $$
+
+    *Transition.*
+
+    $$
+    \begin{align*}
+    \sigma(t + 1)(j, u)
+    &= \sum_{i \in [h]} \sum_{\tau < t + 1} J(i, \tau)(j, \; t + u - \tau) \\
+    &= \sum_{i \in [h]} \sum_{\tau < t} J(i, \tau)(j, \; t + u - \tau) + \sum_{i \in [h]} J(i, t)(j, u) \\
+    &= \sigma(t)^{\downarrow}(j, u) + \sum_{i \in [h]} J(i, t)(j, u) \\
+    \end{align*}
+    $$
+
+    <span class="qed">$\square$</span>
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    除此之外，每個瞬間的狀態，其物件總數也會跟從 juggling matrices 定義出來的一致
+
+    /// admonition | Proposition
+        type: proposition
+
+    Let $\sigma$ be the state of a juggling pattern $T$. Then
+
+    $$
+    \sum_{x \in \mathcal{F}} \sigma(t)(x) = b, \qquad \forall t \in \mathbb{Z}.
+    $$
+
+    In particular $\sigma(t) \in M(\mathcal{F})$ if and only if $b < \infty$.
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    /// admonition
+        type: proof
+
+    $$
+    \begin{align*}
+    \sum_{(j, u) \in \mathcal{F}} \sigma(t)(j, u)
+    &= \sum_{(j, u) \in \mathcal{F}} \sum_{i \in [h]} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau) \\
+    &= \sum_{\substack{(i, \tau),\, (j, r) \in \mathcal{S} \\ \tau < t \leq r}} T(i, \tau)(j, r) && (r = t + u - 1) \\
+    &= b(t - 1) \\
+    &= b
+    \end{align*}
+    $$
+
+    <span class="qed">$\square$</span>
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Juggling matrix 可以決定 juggling state，反之則不全然。因為當我們同時拋出多個物件時，把各手拋出物件的落點互換，也會得出一樣的 state 。
+
+    但弱化版的性質是成立的，當我們從一個狀態出發，經過各個狀態後回到原來的位置。拋出的**落點手 $\times$ 滯空時長**的重數的和，只取決於經過的狀態，不取決於經過的順序。這就是著名的 **States Determine Throws**
     """)
     return
 
@@ -118,10 +256,10 @@ def _(mo):
     /// admonition | Theorem (States Determine Throws)
         type: theorem
 
-    Let $J$ be a $p$-periodic juggling matrix, and the corresponding state is $\sigma$, write
+    Let $J$ be a $p$-periodic juggling matrix, and $\sigma$ its state. Write
 
     $$
-    \Sigma := \sum_{t = 0}^{p - 1} \sigma(t) \;\in\; M(\mathcal{F})
+    \Sigma := \sum_{t = 0}^{p - 1} \sigma(t) \;\in\; M_{\infty}(\mathcal{F})
     $$
 
     then
@@ -143,15 +281,17 @@ def _(mo):
     /// admonition
         type: proof
 
+    Since $J$ is $p$-periodic, so is $\sigma$ by uniqueness. Then
+
     $$
     \begin{align*}
     & \sum_{t = 0}^{p - 1} \sum_{i \in [h]} J(i, t) \\
-    = & \sum_{t = 0}^{p - 1} \bigl( \sigma(t + 1) - \sigma(t)^{\downarrow} \bigr) \\
-    = & \sum_{t = 0}^{p - 1} \sigma(t + 1) \;-\; \sum_{t = 0}^{p - 1} \sigma(t)^{\downarrow}
-        && \text{(each sum is finite)} \\
-    = & \sum_{t = 0}^{p - 1} \sigma(t) \;-\; \Bigl( \sum_{t = 0}^{p - 1} \sigma(t) \Bigr)^{\downarrow}
+    &= \sum_{t = 0}^{p - 1} \bigl( \sigma(t + 1) - \sigma(t)^{\downarrow} \bigr) \\
+    &= \sum_{t = 0}^{p - 1} \sigma(t + 1) \;-\; \sum_{t = 0}^{p - 1} \sigma(t)^{\downarrow}
+        && \text{(entrywise finite)} \\
+    &= \sum_{t = 0}^{p - 1} \sigma(t) \;-\; \Bigl( \sum_{t = 0}^{p - 1} \sigma(t) \Bigr)^{\downarrow}
         && \text{(periodic; } \downarrow \text{ is linear)} \\
-    = & \; \Sigma - \Sigma^{\downarrow}
+    &= \; \Sigma - \Sigma^{\downarrow}
     \end{align*}
     $$
 
@@ -167,7 +307,7 @@ def _(mo):
     /// admonition
         type: remark
 
-    注意到 State Determine Throws 只決定了落回哪隻手跟滯空時長，並無法推出這些物件是何時從哪隻手拋出。
+    注意到 States Determine Throws 只決定了落回哪隻手跟滯空時長，並無法推出這些物件是何時從哪隻手拋出。
     ///
     """)
     return
@@ -208,7 +348,7 @@ def _(mo):
     mo.md(r"""
     關於 juggling state ，還有幾個性質可以探討。以下先把有界化的設定寫清楚，接著給出幾個能當場證完的結果，最後再把我還沒能給出夠短證明的敘述連同來源一起列出來。
 
-    到目前為止 $\mathcal{F} = [h] \times \mathbb{Z}_{>0}$ 沒有上界，狀態有無窮多個。以下固定兩個上限：滯空不超過 $k$，且一隻手在一拍最多接住 $c$ 個物件。記
+    到目前為止 $h$ 跟 $b$ 都可以是 $\infty$ ， $\mathcal{F} = [h] \times \mathbb{Z}_{>0}$ 也沒有上界，狀態有無窮多個。以下假設 $h, b < \infty$ ，並固定兩個上限：滯空不超過 $k$，且一隻手在一拍最多接住 $c$ 個物件。記
 
     $$
     \mathcal{F}_k := [h] \times [k]

@@ -41,7 +41,7 @@ def _(mo):
     在這系列的文章， $h, b, k, c, p \in \mathbb{Z}_{>0} \cup \{\infty\}$ 將作為保留字，分別代表著雜耍的手數、物件數量、物件滯空時間上界、 multiplex 的上界、雜耍的週期。而如果這些值是 $\infty$ 或是沒特別指出來，那就是沒有上界或週期。
     ///
 
-    接著我們考慮前者，同一隻手可能會有多顆但有限數量的物件被拋出，此時一個拋的動作可以用 $\mathcal{S}$ 的有限 multiset 表示
+    接著我們考慮前者，同一隻手可能會有多顆但有限數量的物件被拋出，此時一個拋的動作可以用 $\mathcal{S}$ 的 finite multiset 表示
 
     $$
     M(\mathcal{S}) := \left\{ m : \mathcal{S} \to \mathbb{Z}_{\geq 0} \;\middle|\; \sum_{s \in \mathcal{S}} m(s) < \infty \right\}
