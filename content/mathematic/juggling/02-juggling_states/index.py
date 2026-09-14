@@ -9,7 +9,7 @@ def _(mo):
     mo.md(r"""
     # Juggling States
 
-    在前一個章節，我們關心如何將一串雜耍的 pattern 轉為符號的形式。每個時間點，玩家都會進行不同的拋接動作，來讓雜耍持續下去。 Juggling State 則是記錄了每個時間點的狀態，這個狀態告訴我們接下來玩家可以進行何種拋接動作。這個狀態是無記憶性的，也就是不管你是透過何種途徑來到這個狀態，都不會影響你後續可以選擇的拋接動作。
+    在前一個章節，我們關心如何將一串雜耍的 pattern 轉為符號的形式。每個時間點，玩家都會進行不同的拋接動作，來讓雜耍持續下去。 **Juggling Sequence** 則是記錄了每個時間點的狀態 (**Juggling State**)，這個狀態告訴我們接下來玩家可以進行何種拋接動作。這個狀態是無記憶性的，也就是不管你是透過何種途徑來到這個狀態，都不會影響你後續可以選擇的拋接動作。
     """)
     return
 
@@ -17,38 +17,38 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Notation
+    ## Juggling Sequence
 
     在某個瞬間，對於每個物件，他的狀態能簡要用**將落入哪隻手**和**還有多久會落入手中**這兩個性質概括，可以發現此剛好我們能用上一章定義的 $\mathcal{F}$ 來描述。此外，我們會有多個物件，所以我們一樣可以用 multiset 來描述有多少物件屬於哪些狀態。只是跟 juggling function 的值域不同的是，我們有可能允許物件有無限多個 (但要注意我們每隻手每個瞬間能拋接的物件的數量有限)。綜上所述，我們可以用以下集合來描述各種可能的狀態
 
     $$
-    M_{\infty}(\mathcal{F}) := \left\{ m : \mathcal{F} \to \mathbb{Z}_{\geq 0} \right\}, \qquad M(\mathcal{F}) \subset M_{\infty}(\mathcal{F}).
+    \sigma \in M_{\infty}(\mathcal{F}) := \left\{ m : \mathcal{F} \to \mathbb{Z}_{\geq 0} \right\}, \qquad M(\mathcal{F}) \subset M_{\infty}(\mathcal{F}).
     $$
 
-    當我們遵循一個 juggling matrices 執行雜耍動作時，每一個瞬間都會有一個狀態，所以我們這樣描述其對應到的 juggling state
+    當我們遵循一個 juggling matrices 執行雜耍動作時，每一個瞬間都會有一個狀態，把它們沿著時間串起來就是一條**狀態序列** (state sequence)
 
     $$
-    \sigma: \mathbb{Z} \to M_{\infty}(\mathcal{F}).
+    \gamma: \mathbb{Z} \to M_{\infty}(\mathcal{F}).
     $$
 
-    這裡的時間 $t$ 指第 $t - 1$ 拍拋接完成的瞬間，也就是第 $t$ 拍接球之前。$\sigma(t)$ 代表若從此刻起不再做任何拋接，則再經過 $u$ 單位時間，會有 $\sigma(t)(j, u)$ 個物件落回第 $j$ 隻手中；特別地，第 $1$ 格就是第 $t$ 拍要接的球。
+    這裡的時間 $t$ 指第 $t - 1$ 拍拋接完成的瞬間，也就是第 $t$ 拍接球之前。$\gamma(t)$ 代表若從此刻起不再做任何拋接，則再經過 $u$ 單位時間，會有 $\gamma(t)(j, u)$ 個物件落回第 $j$ 隻手中；特別地，第 $1$ 格就是第 $t$ 拍要接的球。
 
     Juggling matrix 其實就是做一次狀態轉移。他將 $1$ 單位時間後落回手中的物件，再重新拋回空中，整個過程消耗了 $1$ 單位時間，我們可以將此狀態轉移表示成此形式
 
     $$
     \begin{align*}
-    & \sigma(t + 1) = \sigma(t)^{\downarrow} + \sum_{i \in \mathbb{Z}_{>0}} J(i, t), & \qquad \text{(transition)} \\
-    \text{ where } \quad & f^{\downarrow}(j, u) := f(j, u + 1) \quad \text{ for } f \in M_{\infty}(\mathcal{F})
+    & \gamma(t + 1) = \gamma(t)^{\downarrow} + \sum_{i \in \mathbb{Z}_{>0}} J(i, t), & \qquad \text{(transition)} \\
+    \text{ where } \quad & \sigma^{\downarrow}(j, u) := \sigma(j, u + 1) \quad \text{ for } \sigma \in M_{\infty}(\mathcal{F})
     \end{align*}
     $$
 
     並且下一拍要落回手中的物件數量，跟接下來要丟出的物件的數量要一致
 
     $$
-    \sigma(t)(i, 1) = \sum_{x \in \mathcal{F}} J(i, t)(x), \qquad \forall (i, t) \in \mathcal{S} \qquad \text{(balance)}
+    \gamma(t)(i, 1) = \sum_{x \in \mathcal{F}} J(i, t)(x), \qquad \forall (i, t) \in \mathcal{S} \qquad \text{(balance)}
     $$
 
-    於是我們就描述完了 juggling matrices 跟 juggling state 的關係，但滿足上述條件的 juggling state 是否存在唯一沒有到很顯然。
+    於是我們就描述完了 juggling matrices 跟狀態序列的關係，但滿足上述條件的狀態序列是否存在唯一沒有到很顯然。
 
     不過在解答這些問題之前，我們先看一個簡單但實用的性質。雖然總球數可能是無限的，但我們每隻手每一瞬間能拋的物件數量都是有限的。而依據 balance 條件，我們可以得知對於每個落下的手，他每個瞬間準備接到的球也都會是有限的，而這些球正是以前各拍拋出、恰好在這一瞬間落下的球的總和。用精確一點的語言表達如下
     """)
@@ -115,15 +115,15 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition | Proposition (Throws Determine States)
+    /// admonition | Proposition (Throws Determine Sequence)
         type: proposition
 
     Let $T$ be a juggling pattern and $J$ its juggling matrix.  Then exactly
-    one $\sigma : \mathbb{Z} \to M_{\infty}(\mathcal{F})$ satisfies the
+    one state sequence $\gamma : \mathbb{Z} \to M_{\infty}(\mathcal{F})$ satisfies the
     transition and balance equations for $J$, namely
 
     $$
-    \sigma(t)(j, u) \;=\; \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau).
+    \gamma(t)(j, u) \;=\; \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau).
     $$
     ///
     """)
@@ -136,11 +136,11 @@ def _(mo):
     /// admonition
         type: proof
 
-    **$\sigma \in M_{\infty}(\mathcal{F})^{\mathbb{Z}}$.**
+    **$\gamma \in M_{\infty}(\mathcal{F})^{\mathbb{Z}}$.**
 
     $$
     \begin{align*}
-    \sigma(t)(j, u) &= \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau) \\
+    \gamma(t)(j, u) &= \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau) \\
     &\leq \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t + u - 1} J(i, \tau)(j, \; t + u - 1 - \tau) \\
     &< \infty && \text{(by proposition above)}
     \end{align*}
@@ -148,17 +148,17 @@ def _(mo):
 
     **Uniqueness.**
 
-    Let $\sigma, \sigma'$ both satisfy the two equations for $J$ and write
+    Let $\gamma, \gamma'$ both satisfy the two equations for $J$ and write
 
-    $$\delta := \sigma - \sigma'$$
+    $$\delta := \gamma - \gamma'$$
 
     Then by transition equation
 
     $$
     \begin{align*}
     & \delta(t + 1) \\
-    &= \sigma(t + 1) - \sigma'(t + 1) \\
-    &= \sigma(t)^{\downarrow} + \sum_{i \in \mathbb{Z}_{>0}} J(i, t) - \sigma'(t)^{\downarrow} - \sum_{i \in \mathbb{Z}_{>0}} J(i, t) \\
+    &= \gamma(t + 1) - \gamma'(t + 1) \\
+    &= \gamma(t)^{\downarrow} + \sum_{i \in \mathbb{Z}_{>0}} J(i, t) - \gamma'(t)^{\downarrow} - \sum_{i \in \mathbb{Z}_{>0}} J(i, t) \\
     &= \delta(t)^{\downarrow} && \text{(by the second part of proposition above)}
     \end{align*}
     $$
@@ -171,20 +171,20 @@ def _(mo):
     &= \delta(t + 1)(j, u - 1) \\
     & \quad \vdots \\
     &= \delta(t + u - 1)(j, 1) \\
-    &= \sigma(t + u - 1)(j, 1) - \sigma'(t + u - 1)(j, 1) \\
+    &= \gamma(t + u - 1)(j, 1) - \gamma'(t + u - 1)(j, 1) \\
     &= 0 && \text{(by balance)}
     \end{align*}
     $$
 
     **Existence.**
 
-    It suffices to check both equations for the displayed $\sigma$.
+    It suffices to check both equations for the displayed $\gamma$.
 
     *Balance.*
 
     $$
     \begin{align*}
-    \sigma(t)(i, 1) &= \sum_{\substack{(i', \tau) \in \mathcal{S} \\ \tau < t}} J(i', \tau)(i, \; t - \tau) \\
+    \gamma(t)(i, 1) &= \sum_{\substack{(i', \tau) \in \mathcal{S} \\ \tau < t}} J(i', \tau)(i, \; t - \tau) \\
     &= \sum_{x \in \mathcal{F}} J(i, t)(x) && \text{(by balance of $J$)}
     \end{align*}
     $$
@@ -193,10 +193,10 @@ def _(mo):
 
     $$
     \begin{align*}
-    \sigma(t + 1)(j, u)
+    \gamma(t + 1)(j, u)
     &= \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t + 1} J(i, \tau)(j, \; t + u - \tau) \\
     &= \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t} J(i, \tau)(j, \; t + u - \tau) + \sum_{i \in \mathbb{Z}_{>0}} J(i, t)(j, u) \\
-    &= \sigma(t)^{\downarrow}(j, u) + \sum_{i \in \mathbb{Z}_{>0}} J(i, t)(j, u) \\
+    &= \gamma(t)^{\downarrow}(j, u) + \sum_{i \in \mathbb{Z}_{>0}} J(i, t)(j, u) \\
     \end{align*}
     $$
 
@@ -209,9 +209,9 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Juggling matrix 可以決定 juggling state，反之則不全然。因為當我們同時拋出多個物件時，把各手拋出物件的落點互換，也會得出一樣的 state 。
+    Juggling matrix 可以決定 juggling sequence，反之則不全然。因為當我們同時拋出多個物件時，把各手拋出物件的落點互換，也會得出一樣的 state 。
 
-    但弱化版的性質是成立的，當我們從一個狀態出發，經過各個狀態後回到原來的位置。拋出的**落點手 $\times$ 滯空時長**的重數的和，只取決於經過的狀態，不取決於經過的順序。這就是著名的 **States Determine Throws**
+    但弱化版的性質是成立的，當我們從一個狀態出發，經過各個狀態後回到原來的位置。拋出的**落點手 $\times$ 滯空時長**的重數的和，只取決於經過的狀態，不取決於經過的順序。也就是說我們不需要知道 sequence ，只需要知道 states 。這就是著名的 **States Determine Throws**
     """)
     return
 
@@ -222,10 +222,10 @@ def _(mo):
     /// admonition | Theorem (States Determine Throws)
         type: theorem
 
-    Let $J$ be a $p$-periodic juggling matrix, and $\sigma$ its state. Write
+    Let $J$ be a $p$-periodic juggling matrix, and $\gamma$ its state sequence. Write
 
     $$
-    \Sigma := \sum_{t = 0}^{p - 1} \sigma(t) \;\in\; M_{\infty}(\mathcal{F})
+    \Sigma := \sum_{t = 0}^{p - 1} \gamma(t) \;\in\; M_{\infty}(\mathcal{F})
     $$
 
     then
@@ -247,15 +247,15 @@ def _(mo):
     /// admonition
         type: proof
 
-    Since $J$ is $p$-periodic, so is $\sigma$ by uniqueness. Then
+    Since $J$ is $p$-periodic, so is $\gamma$ by uniqueness. Then
 
     $$
     \begin{align*}
     & \sum_{t = 0}^{p - 1} \sum_{i \in \mathbb{Z}_{>0}} J(i, t) \\
-    &= \sum_{t = 0}^{p - 1} \bigl( \sigma(t + 1) - \sigma(t)^{\downarrow} \bigr) \\
-    &= \sum_{t = 0}^{p - 1} \sigma(t + 1) \;-\; \sum_{t = 0}^{p - 1} \sigma(t)^{\downarrow}
+    &= \sum_{t = 0}^{p - 1} \bigl( \gamma(t + 1) - \gamma(t)^{\downarrow} \bigr) \\
+    &= \sum_{t = 0}^{p - 1} \gamma(t + 1) \;-\; \sum_{t = 0}^{p - 1} \gamma(t)^{\downarrow}
         && \text{(entrywise finite)} \\
-    &= \sum_{t = 0}^{p - 1} \sigma(t) \;-\; \Bigl( \sum_{t = 0}^{p - 1} \sigma(t) \Bigr)^{\downarrow}
+    &= \sum_{t = 0}^{p - 1} \gamma(t) \;-\; \Bigl( \sum_{t = 0}^{p - 1} \gamma(t) \Bigr)^{\downarrow}
         && \text{(periodic; } \downarrow \text{ is linear)} \\
     &= \; \Sigma - \Sigma^{\downarrow}
     \end{align*}
@@ -284,9 +284,24 @@ def _(mo):
     mo.md(r"""
     ## Constraint on Juggling State
 
-    在前述討論中，因為我們可以拋到任意高度，或是擁有無限隻手無限個物件等等，可以輕易看出有無限種雜耍的狀態。但實際雜耍的時候總是會有物理限制。比如不可能有無限隻手無限個物件，或是人的力量與地球的重力加速度，幾乎不太可能讓拋出去的物件的滯空時長達到 40 以上，除非你是玩彈力球之類的。同理，以人手掌的大小， multiplex 同時拋出 5 個物件應該也算蠻多的了。
+    實際雜耍的時候總是會有一些物理限制。比如不可能有無限隻手無限個物件，或是人的力量與地球的重力加速度，幾乎不太可能讓拋出去的物件的滯空時長達到 40 以上，除非你是玩彈力球之類的。同理，以人手掌的大小， multiplex 同時拋出 5 個物件應該也算蠻多的了。
 
-    假如我們加上手跟球有限、高度跟 multiplex 數量有有限上界的條件，那可能出現的狀態就會是有限的。在上一篇文章有提到過， $h, b, k, c, p$ 這些參數是 juggling matrices 內蘊的性質，這些性質也會顯化在 juggling state 上面。不過這邊證明我先偷懶用 AI 證的，之後有空我再用我的語言重寫。
+    而這些限制對應到的就是上一篇文提到的 $b_J, h_J, k_J, c_J, p_J$ 這些參數，它們是 juggling matrices 內蘊的性質，而這些性質也會顯化在 juggling state 上面。我們可以先定義 juggling state 對應到的各項參數。
+
+    /// admonition
+        type: definition
+
+    For $\sigma \in M_{\infty}(\mathcal{F})$, define the following parameters for $\sigma$
+
+    $$
+    \begin{align*}
+    b_{\sigma} &:= \sum_{x \in \mathcal{F}} \sigma(x) && \text{(objects)} \\
+    h_{\sigma} &:= \sup \{\, i : \sigma(i, u) > 0,\, u \in \mathbb{Z}_{>0} \,\} && \text{(hands)} \\
+    k_{\sigma} &:= \sup \{\, u : \sigma(j, u) > 0,\, j \in \mathbb{Z}_{>0} \,\} && \text{(max height)} \\
+    c_{\sigma} &:= \sup \{\, \sigma(x) : x \in \mathcal{F} \,\} && \text{(max multiplex)}
+    \end{align*}
+    $$
+    ///
     """)
     return
 
@@ -294,22 +309,28 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    這樣除了 period 以外的狀態序列的參數就可以用其經過的 juggling state 訂出來，而且會跟 juggling matrices 導出的參數是一樣的，不過這邊證明我先偷懶用 AI 證，之後有空我再用我的語言重寫。
+
     /// admonition | Proposition (Parameters from the State)
         type: proposition
 
-    Let $\sigma$ be the state of a juggling matrix $J$. Then
+    Let $\gamma$ be the state sequence of a juggling matrix $J$. Then
 
     $$
     \begin{align*}
-    h &= \sup \{\, i : \sigma(t)(i, u) > 0,\ t \in \mathbb{Z},\ u \in \mathbb{Z}_{>0} \,\} && \text{(hands)} \\
-    b &= \sum_{x \in \mathcal{F}} \sigma(t)(x), \quad \forall t \in \mathbb{Z} && \text{(objects)} \\
-    k &= \sup \{\, u : \sigma(t)(j, u) > 0,\ t \in \mathbb{Z},\ j \in \mathbb{Z}_{>0} \,\} && \text{(max height)} \\
-    c &= \sup \{\, \sigma(t)(x) : t \in \mathbb{Z},\ x \in \mathcal{F} \,\} && \text{(max multiplex)} \\
-    p_{\sigma} &:= \inf \{\, q \in \mathbb{Z}_{>0} : \sigma(t + q) = \sigma(t),\ \forall t \in \mathbb{Z} \,\}, \qquad p_{\sigma} \mid p \text{ for } p < \infty && \text{(period)}
+    b_J &= \sup \{\, b_{\gamma(t)} : t \in \mathbb{Z} \,\} && \text{(objects)} \\
+    h_J &= \sup \{\, h_{\gamma(t)} : t \in \mathbb{Z} \,\} && \text{(hands)} \\
+    k_J &= \sup \{\, k_{\gamma(t)} : t \in \mathbb{Z} \,\} && \text{(max height)} \\
+    c_J &= \sup \{\, c_{\gamma(t)} : t \in \mathbb{Z} \,\} && \text{(max multiplex)} \\
+    p_{\gamma} &:= \inf \{\, q \in \mathbb{Z}_{>0} : \gamma(t + q) = \gamma(t),\ \forall t \in \mathbb{Z} \,\}, \qquad p_{\gamma} \mid p_J \text{ for } p_J < \infty && \text{(period)}
     \end{align*}
     $$
 
-    In particular $\sigma(t) \in M(\mathcal{F})$ if and only if $b < \infty$.
+    In fact $b_{\gamma(t)}$ does not depend on $t$, so
+
+    $$
+    b_J = b_{\gamma(t)} \quad \forall t \in \mathbb{Z} \qquad \text{(objects)}
+    $$
     ///
     """)
     return
@@ -321,31 +342,30 @@ def _(mo):
     /// admonition | Proof (by AI)
         type: proof
 
-    *Hands.* If $\sigma(t)(i, u) > 0$ then hand $i$ catches at beat $t + u - 1$, so $J(i, \; t + u - 1) \neq 0$ by balance; hence the supremum is at most $h$. Conversely $J(i, t) \neq 0$ gives $\sigma(t)(i, 1) > 0$ by balance.
-
     *Objects.*
 
     $$
     \begin{align*}
-    \sum_{(j, u) \in \mathcal{F}} \sigma(t)(j, u)
+    b_{\gamma(t)}
     &= \sum_{(j, u) \in \mathcal{F}} \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau) \\
     &= \sum_{\substack{(i, \tau),\, (j, r) \in \mathcal{S} \\ \tau \leq t - 1 < r}} J(i, \tau)(j, r - \tau) && (r = t + u - 1) \\
-    &= b(t - 1) \\
-    &= b
+    &= b(t - 1) = b_J
     \end{align*}
     $$
 
-    *Height.* If $\sigma(t)(j, u) > 0$ then $J(i, \tau)(j, \; t + u - 1 - \tau) > 0$ for some $i$ and $\tau < t$, with $t + u - 1 - \tau \geq u$; so the supremum is at most $k$. Conversely $J(i, t)(j, u) > 0$ gives $\sigma(t + 1)(j, u) > 0$ by transition.
+    *Hands.* If $\gamma(t)(i, u) > 0$ then hand $i$ catches at beat $t + u - 1$, so $J(i, \; t + u - 1) \neq 0$ by balance and $i \leq h_J$; hence $h_{\gamma(t)} \leq h_J$. Conversely $J(i, t)(x) > 0$ gives $\gamma(t)(i, 1) > 0$ by balance, so $h_J \leq \sup_t h_{\gamma(t)}$.
+
+    *Height.* If $\gamma(t)(j, u) > 0$ then $J(i, \tau)(j, \; t + u - 1 - \tau) > 0$ for some $i$ and $\tau < t$, with $t + u - 1 - \tau \geq u$; hence $k_{\gamma(t)} \leq k_J$. Conversely $J(i, t)(j, u) > 0$ gives $\gamma(t + 1)(j, u) > 0$ by transition, so $k_J \leq \sup_t k_{\gamma(t)}$.
 
     *Multiplex.* By transition and balance,
 
     $$
-    \sigma(t)(j, u) \leq \sigma(t + 1)(j, u - 1) \leq \cdots \leq \sigma(t + u - 1)(j, 1) = \sum_{x \in \mathcal{F}} J(j, \; t + u - 1)(x),
+    \gamma(t)(j, u) \leq \gamma(t + 1)(j, u - 1) \leq \cdots \leq \gamma(t + u - 1)(j, 1) = \sum_{x \in \mathcal{F}} J(j, \; t + u - 1)(x) \leq c_J,
     $$
 
-    so the supremum is at most $c$; $u = 1$ gives equality.
+    hence $c_{\gamma(t)} \leq c_J$; the case $u = 1$ is an equality, so $c_J \leq \sup_t c_{\gamma(t)}$.
 
-    *Period.* For $p < \infty$, $\sigma(\cdot + p)$ satisfies both equations for $J$, so it equals $\sigma$ by uniqueness; thus $p$ is a period of $\sigma$, and every period of $\sigma$ is a multiple of the least one.
+    *Period.* For $p_J < \infty$, $\gamma(\cdot + p_J)$ satisfies both equations for $J$, so it equals $\gamma$ by uniqueness; thus $p_J$ is a period of $\gamma$, and every period of $\gamma$ is a multiple of the least one.
 
     <span class="qed">$\square$</span>
     ///
@@ -356,17 +376,11 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    關於 juggling state ，還有幾個性質可以探討。以下先把有界化的設定寫清楚，接著給出幾個能當場證完的結果，最後再把我還沒能給出夠短證明的敘述連同來源一起列出來。
+    /// admonition
+        type: remark
 
-    到目前為止 $h$ 跟 $b$ 都可以是 $\infty$ ， $\mathcal{F} = [h] \times \mathbb{Z}_{>0}$ 也沒有上界，狀態有無窮多個。以下假設 $h, b < \infty$ ，並固定兩個上限：滯空不超過 $k$，且一隻手在一拍最多接住 $c$ 個物件。記
-
-    $$
-    \mathcal{F}_k := [h] \times [k]
-    $$
-
-    則 **$b$ 物件 $h$ 手高度 $k$ 容量 $c$ 的狀態圖**，其頂點是滿足 $\sum \sigma = b$ 且每格不超過 $c$ 的 $\sigma \in M(\mathcal{F}_k)$，每個合法的投擲給出一條邊。
-
-    $c = 1$ 就是不允許 multiplex 的情形，而 $c \geq b$ 則是完全不設限；以下的敘述會標明各自需要哪些條件。
+    跟 states determine throws 一樣，因為物件落點互換時 state 不會改變，所以我們無法從 juggling sequence 的週期去推算出 juggling matrices 的週期。但至少我們能知道後者週期是前者週期的倍數。
+    ///
     """)
     return
 
@@ -374,18 +388,27 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    先數點。
+    當我們沒加上任何限制時，因為我們可以拋到任意高度，或是擁有無限隻手無限個物件等等，可以輕易看出有無限種雜耍的狀態。
 
+    但如果我們加上手跟球有限、高度跟 multiplex 數量有有限上界的條件，那可能出現的狀態就會是有限的。
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     /// admonition | Proposition (Number of States)
         type: proposition
 
-    The state graph has
+    For $b, h, k, c \in \mathbb{Z}_{>0}$,
 
     $$
-    \sum_{\ell \geq 0} (-1)^{\ell} \binom{hk}{\ell} \binom{b - \ell(c + 1) + hk - 1}{hk - 1}
+    \# \{\, \sigma \in M_{\infty}(\mathcal{F}) : b_{\sigma} = b,\ h_{\sigma} \leq h,\ k_{\sigma} \leq k,\ c_{\sigma} \leq c \,\}
+    = \sum_{\ell \geq 0} (-1)^{\ell} \binom{hk}{\ell} \binom{b - \ell(c + 1) + hk - 1}{hk - 1}.
     $$
 
-    states.  At $c = 1$ this is $\binom{hk}{b}$, and at $c \geq b$ only the first
+    At $c = 1$ this is $\binom{hk}{b}$, and at $c \geq b$ only the first
     term survives and it is $\binom{b + hk - 1}{b}$.
 
     *The $c \geq b$ case is stated in [Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) §4.3; the bounded form is the standard inclusion–exclusion count.*
@@ -432,7 +455,7 @@ def _(mo):
     /// admonition | Proposition (Out-degree)
         type: proposition
 
-    Suppose $c = 1$.  Let $m := \sum_{i \in [h]} \sigma(i, 1)$ be the
+    Suppose $c = 1$.  Let $m := \sum_{i \in \mathbb{Z}_{>0}} \sigma(i, 1)$ be the
     number of objects $\sigma$ must throw and $f := hk - (b - m)$ the number of
     slots left empty by $\sigma^{\downarrow}$.  Then $\sigma$ has exactly
 
@@ -463,7 +486,7 @@ def _(mo):
     occupy $b - m$ of the $hk$ slots of $\mathcal{F}_k$ and leave
     $f = hk - (b - m)$ of them empty.
 
-    An outgoing edge is a choice of $J(i, t)$ for every $i \in [h]$.
+    An outgoing edge is a choice of $J(i, t)$ for every $i \in \mathbb{Z}_{>0}$.
     Balance makes $J(i_r, t)$ a single slot and $J(i, t)$ empty for every other
     hand, and the successor $\sigma^{\downarrow} + \sum_i J(i, t)$ is a state
     only if each of its entries is at most $1$, which forces those $m$ slots to
@@ -524,7 +547,7 @@ def _(mo):
     involution, so it is a bijection between the two vertex sets.
 
     Let $\sigma \to \sigma'$ be an edge and write
-    $\theta := \sum_{i \in [h]} J(i, t)$ for where its objects land, so
+    $\theta := \sum_{i \in \mathbb{Z}_{>0}} J(i, t)$ for where its objects land, so
     that $\sigma'(j, u) = \sigma(j, u + 1) + \theta(j, u)$ throughout, reading
     $\sigma(j, k + 1) = 0$.  Put
 
@@ -554,12 +577,12 @@ def _(mo):
     $$
     \begin{align*}
     \sum_{j, u} \tilde{\theta}(j, u)
-    & = \sum_{j \in [h]} \sum_{v = 1}^{k - 1} \theta(j, v)
-        \;+\; hc - \sum_{j \in [h]} \sigma(j, 1) \\
-    & = hc - \sum_{j \in [h]} \theta(j, k)
+    & = \sum_{j \in \mathbb{Z}_{>0}} \sum_{v = 1}^{k - 1} \theta(j, v)
+        \;+\; hc - \sum_{j \in \mathbb{Z}_{>0}} \sigma(j, 1) \\
+    & = hc - \sum_{j \in \mathbb{Z}_{>0}} \theta(j, k)
         && \text{(balance for } \sigma \text{)} \\
-    & = \sum_{j \in [h]} \bigl( c - \sigma'(j, k) \bigr)
-        \;=\; \sum_{j \in [h]} \varphi(\sigma')(j, 1)
+    & = \sum_{j \in \mathbb{Z}_{>0}} \bigl( c - \sigma'(j, k) \bigr)
+        \;=\; \sum_{j \in \mathbb{Z}_{>0}} \varphi(\sigma')(j, 1)
     \end{align*}
     $$
 
@@ -583,10 +606,10 @@ def _(mo):
         type: lemma
 
     Give the slot $(j, u)$ the rank $r(j, u) := (u - 1) h + j$, so that $\mathcal{F}_k$ is
-    ranked $1, \cdots, hk$ and the ground state $\gamma$ is the one filling the
+    ranked $1, \cdots, hk$ and the ground state $g$ is the one filling the
     ranks $1, 2, 3, \cdots$ to capacity until the objects run out.  Then from any
     state, repeatedly throwing every caught object into the lowest-ranked slot
-    that still has room reaches $\gamma$.
+    that still has room reaches $g$.
 
     *Worked out here; it is one half of the theorem below.*
 
@@ -631,12 +654,12 @@ def _(mo):
     walk, and being a non-negative integer it is eventually constant; once it is,
     the displayed inequality is an equality at every $\rho$, so $\sigma' = \sigma$.
 
-    It remains to see that a greedy walk can only rest at $\gamma$.  Let
+    It remains to see that a greedy walk can only rest at $g$.  Let
     $\rho^{*}$ be the highest occupied rank of $\sigma$ and read
     $C_{\sigma'} = C_{\sigma}$ at $\rho = \rho^{*} - 1$.  Either
     $C_{\sigma}(\rho^{*} - 1) = (\rho^{*} - 1) c$, so every rank below
     $\rho^{*}$ is full and the remaining objects all sit at $\rho^{*}$, which is
-    $\gamma$; or $C_{\sigma}(\rho^{*} - 1) = C_{\sigma}(\rho^{*} - 1 + h)$, so
+    $g$; or $C_{\sigma}(\rho^{*} - 1) = C_{\sigma}(\rho^{*} - 1 + h)$, so
     $\sigma$ has nothing at the ranks $\rho^{*}, \cdots, \rho^{*} - 1 + h$,
     against the choice of $\rho^{*}$.
 

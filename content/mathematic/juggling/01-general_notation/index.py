@@ -322,7 +322,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    既然球數是獨立於時間的常數函數，我們可以僅用 $b$ 這個字母來表示。而除了球數跟週期外，其實還有其他 juggling matrices 內蘊的性質，包括手數、滯空時間上界、 multiplex 上界等等。我們皆可以把它翻譯成 juggling matrices 的語言描述這些性質。
+    既然球數是獨立於時間的常數函數，我們可以僅用 $b_J$ 來表示。而除了球數跟週期外，其實還有其他 juggling matrices 內蘊的性質，包括手數、滯空時間上界、 multiplex 上界等等。我們皆可以把它翻譯成 juggling matrices 的語言描述這些性質。
 
     /// admonition | Definition (Parameters of a Pattern)
         type: definition
@@ -331,19 +331,13 @@ def _(mo):
 
     $$
     \begin{align*}
-    h &:= \sup \{\, i : J(i, t)(x) > 0,\, t \in \mathbb{Z},\, x \in \mathcal{F} \,\} && \text{(hands)} \\
-    b &:= \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t < r}} J(i, l)(j, r - l), \quad \forall t \in \mathbb{Z} && \text{(objects)} \\
-    k &:= \sup \{\, u : J(s)(j, u) > 0,\, s \in \mathcal{S},\, j \in \mathbb{Z}_{>0} \,\} && \text{(max height)} \\
-    c &:= \sup \Bigl\{\, \sum_{x \in \mathcal{F}} J(s)(x) : s \in \mathcal{S} \,\Bigr\} && \text{(max multiplex)} \\
-    p &:= \inf \{\, q \in \mathbb{Z}_{>0} : J(i, t + q) = J(i, t),\ \forall (i, t) \in \mathcal{S} \,\} && \text{(min period)}
+    b_J &:= \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t < r}} J(i, l)(j, r - l), \quad \forall t \in \mathbb{Z} && \text{(objects)} \\
+    h_J &:= \sup \{\, i : J(i, t)(x) > 0,\, t \in \mathbb{Z},\, x \in \mathcal{F} \,\} && \text{(hands)} \\
+    k_J &:= \sup \{\, u : J(s)(j, u) > 0,\, s \in \mathcal{S},\, j \in \mathbb{Z}_{>0} \,\} && \text{(max height)} \\
+    c_J &:= \sup \Bigl\{\, \sum_{x \in \mathcal{F}} J(s)(x) : s \in \mathcal{S} \,\Bigr\} && \text{(max multiplex)} \\
+    p_J &:= \inf \{\, q \in \mathbb{Z}_{>0} : J(i, t + q) = J(i, t),\ \forall (i, t) \in \mathcal{S} \,\} && \text{(min period)}
     \end{align*}
     $$
-    ///
-
-    /// admonition
-        type: remark
-
-    在這系列的文章， $h, b, k, c, p \in \mathbb{Z}_{>0} \cup \{\infty\}$ 將作為保留字，分別代表著雜耍的手數、物件數量、物件滯空時間上界、 multiplex 的上界、雜耍的週期。如果這些值是 $\infty$ 或是沒特別指出來，那就是沒有上界或週期。
     ///
     """)
     return
@@ -352,7 +346,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    另外從定義還可以看出，任何時間點拋出的物件總數都不會超過 $b$ 。
+    另外從定義還可以看出，任何時間點拋出的物件總數都不會超過 $b_J$ 。
 
     /// admonition
         type: proposition
@@ -360,8 +354,8 @@ def _(mo):
 
     $$
     \begin{align*}
-    \sum_{\substack{i \in \mathbb{Z}_{>0},\, (j, u) \in \mathcal{S}}} T(i, t)(j, u) \leq b, \quad \forall t \in \mathbb{Z} \\
-    \sum_{\substack{i \in \mathbb{Z}_{>0},\, (j, u) \in \mathcal{F}}} J(i, t)(j, u) \leq b, \quad \forall t \in \mathbb{Z}
+    \sum_{\substack{i \in \mathbb{Z}_{>0},\, (j, u) \in \mathcal{S}}} T(i, t)(j, u) \leq b_J, \quad \forall t \in \mathbb{Z} \\
+    \sum_{\substack{i \in \mathbb{Z}_{>0},\, (j, u) \in \mathcal{F}}} J(i, t)(j, u) \leq b_J, \quad \forall t \in \mathbb{Z}
     \end{align*}
     $$
     ///
@@ -386,7 +380,7 @@ def _(mo):
     be the number of beats that $[\tau, \, \tau + u)$ spends inside $[m, \, n)$. Then the number of objects satisfies
 
     $$
-    b \;=\; \frac{1}{n - m} \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}}
+    b_J \;=\; \frac{1}{n - m} \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}}
     J(i, \tau)(j, u) \, \lambda_{m, n}(\tau, u).
     $$
     ///
@@ -410,7 +404,7 @@ def _(mo):
     = & \sum_{(i, l),\, (j, r) \in \mathcal{S}}  \sum_{\substack{m \leq t < n\\ l \leq t < r}} T(i, l)(j, r) \\
     = & \sum_{m \leq t < n}  \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t < r}} T(i, l)(j, r) \\
     = & \sum_{m \leq t < n} b(t) \\
-    = & (n - m) \cdot b
+    = & (n - m) \cdot b_J
     \end{align*}
     $$
 
@@ -431,7 +425,7 @@ def _(mo):
     Let $T$ be a juggling pattern with period $p$. Then the number of juggling items satisfies
 
     $$
-    b = \frac{1}{p} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ 0 \leq \tau < p}} J(i, \tau)(j, u) \, u.
+    b_J = \frac{1}{p} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ 0 \leq \tau < p}} J(i, \tau)(j, u) \, u.
     $$
     ///
     """)
@@ -493,10 +487,10 @@ def _(mo):
     /// admonition
         type: corollary
 
-    Let $T$ be a juggling pattern with $h < \infty$ and $k < \infty$. Then the number of juggling items satisfies
+    Let $T$ be a juggling pattern with $h_J, k_J < \infty$. Then the number of juggling items satisfies
 
     $$
-    b = \lim_{\substack{m \to -\infty \\ n \to \infty }} \frac{1}{n - m} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ m \leq \tau < n}} J(i, \tau)(j, u) \, u
+    b_J = \lim_{\substack{m \to -\infty \\ n \to \infty }} \frac{1}{n - m} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ m \leq \tau < n}} J(i, \tau)(j, u) \, u
     $$
     ///
     """)
@@ -517,18 +511,18 @@ def _(mo):
     E(m, n) := \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, \lambda_{m, n}(\tau, u).
     $$
 
-    Note that $E(m, n) = b \cdot (n - m)$ and
+    Note that $E(m, n) = b_J \cdot (n - m)$ and
 
     $$
     \begin{align*}
     & E(m, n) \\
-    = & \sum_{\substack{i \in \mathbb{Z}_{>0} \\ m - k < \tau < n}} \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \, \lambda_{m, n}(\tau, u) \\
-    \leq & \sum_{\substack{i \in \mathbb{Z}_{>0} \\ m - k < \tau < n}} k \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \\
-    < & \infty && \text{(by $h, k < \infty$ and definition of finite multiset.)}
+    = & \sum_{\substack{i \in \mathbb{Z}_{>0} \\ m - k_J < \tau < n}} \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \, \lambda_{m, n}(\tau, u) \\
+    \leq & \sum_{\substack{i \in \mathbb{Z}_{>0} \\ m - k_J < \tau < n}} k_J \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \\
+    < & \infty && \text{(by $h_J, k_J < \infty$ and definition of finite multiset)}
     \end{align*}
     $$
 
-    We have both $E(m, n), \, b < \infty$. Now we can compute
+    We have both $E(m, n), \, b_J < \infty$. Now we can compute
 
     $$
     \begin{align*}
@@ -554,22 +548,22 @@ def _(mo):
     \begin{align*}
     & \left\lvert\, A(m, n) - E(m, n) \,\right\rvert \\
     = & \left\lvert\, \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert \\
-    \leq & \left\lvert\, \sum_{m - k < \tau < m} \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert +
-    \left\lvert\, \sum_{n - k < \tau < n} \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert \\
-    \leq & \left\lvert\, \sum_{m - k < \tau < m} 2k \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u)  \,\right\rvert +
-    \left\lvert\, \sum_{n - k < \tau < n} 2k \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \,\right\rvert \\
-    \leq & \left\lvert\, \sum_{m - k < \tau < m} 2kb \,\right\rvert +
-    \left\lvert\, \sum_{n - k < \tau < n} 2kb \,\right\rvert \\
-    \leq & 4k^2 b
+    \leq & \left\lvert\, \sum_{m - k_J < \tau < m} \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert +
+    \left\lvert\, \sum_{n - k_J < \tau < n} \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert \\
+    \leq & \left\lvert\, \sum_{m - k_J < \tau < m} 2 k_J \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u)  \,\right\rvert +
+    \left\lvert\, \sum_{n - k_J < \tau < n} 2 k_J \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \,\right\rvert \\
+    \leq & \left\lvert\, \sum_{m - k_J < \tau < m} 2 k_J b_J \,\right\rvert +
+    \left\lvert\, \sum_{n - k_J < \tau < n} 2 k_J b_J \,\right\rvert \\
+    \leq & 4 k_J^2 b_J
     \end{align*}
     $$
 
     finally
 
     $$
-    \left\lvert \frac{A(m, n)}{n - m} - b \right\rvert
+    \left\lvert \frac{A(m, n)}{n - m} - b_J \right\rvert
     = \frac{\lvert A(m, n) - E(m, n) \rvert}{n - m}
-    \leq \frac{4k^2 b}{n - m}
+    \leq \frac{4 k_J^2 b_J}{n - m}
     \xrightarrow[\; \substack{m \to -\infty \\ n \to \infty} \;]{} 0 .
     $$
 
