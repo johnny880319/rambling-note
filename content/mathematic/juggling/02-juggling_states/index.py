@@ -37,7 +37,7 @@ def _(mo):
 
     $$
     \begin{align*}
-    & \sigma(t + 1) = \sigma(t)^{\downarrow} + \sum_{i \in [h]} J(i, t), & \qquad \text{(transition)} \\
+    & \sigma(t + 1) = \sigma(t)^{\downarrow} + \sum_{i \in \mathbb{Z}_{>0}} J(i, t), & \qquad \text{(transition)} \\
     \text{ where } \quad & f^{\downarrow}(j, u) := f(j, u + 1) \quad \text{ for } f \in M_{\infty}(\mathcal{F})
     \end{align*}
     $$
@@ -48,7 +48,9 @@ def _(mo):
     \sigma(t)(i, 1) = \sum_{x \in \mathcal{F}} J(i, t)(x), \qquad \forall (i, t) \in \mathcal{S} \qquad \text{(balance)}
     $$
 
-    於是我們就描述完了 juggling matrices 跟 juggling state 的關係，但滿足上述條件的 juggling state 是否存在唯一沒有到很顯然，每一瞬間的狀態的物件數量總和跟 juggling matrices 描述的物件總和是否一致也是一個問題。
+    於是我們就描述完了 juggling matrices 跟 juggling state 的關係，但滿足上述條件的 juggling state 是否存在唯一沒有到很顯然。
+
+    不過在解答這些問題之前，我們先看一個簡單但實用的性質。雖然總球數可能是無限的，但我們每隻手每一瞬間能拋的物件數量都是有限的。而依據 balance 條件，我們可以得知對於每個落下的手，他每個瞬間準備接到的球也都會是有限的，而這些球正是以前各拍拋出、恰好在這一瞬間落下的球的總和。用精確一點的語言表達如下
     """)
     return
 
@@ -56,19 +58,17 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    不過在解答這些問題之前，我們先看一個簡單但實用的性質。雖然總球數可能是無限的，但我們每隻手每一瞬間能拋的物件數量都是有限的。而依據 balance 條件，我們可以得知對於每個落下的手，他每個瞬間準備接到的球也都會是有限的，而這些球正是以前各拍拋出、恰好在這一瞬間落下的球的總和。用精確一點的語言表達如下
-
     /// admonition
         type: proposition
 
     $$
-    \sum_{\tau < t} \sum_{i \in [h]} J(i, \tau)(j, t - \tau) < \infty, \qquad \forall (j, t) \in \mathcal{S}
+    \sum_{\tau < t} \sum_{i \in \mathbb{Z}_{>0}} J(i, \tau)(j, t - \tau) < \infty, \qquad \forall (j, t) \in \mathcal{S}
     $$
 
     In particular,
 
     $$
-    \sum_{i \in [h]} J(i, t)(j, u) < \infty, \qquad \forall t \in \mathbb{Z},\, (j, u) \in \mathcal{F}
+    \sum_{i \in \mathbb{Z}_{>0}} J(i, t)(j, u) < \infty, \qquad \forall t \in \mathbb{Z},\, (j, u) \in \mathcal{F}
     $$
     ///
     """)
@@ -83,7 +83,7 @@ def _(mo):
 
     $$
     \begin{align*}
-    \sum_{\tau < t} \sum_{i \in [h]} J(i, \tau)(j, t - \tau)
+    \sum_{\tau < t} \sum_{i \in \mathbb{Z}_{>0}} J(i, \tau)(j, t - \tau)
     &= \sum_{x \in \mathcal{F}} J(j, t)(x) && \text{(by balance)} \\
     &< \infty && \text{(by definition of finite multiset)}
     \end{align*}
@@ -93,13 +93,21 @@ def _(mo):
 
     $$
     \begin{align*}
-    \sum_{i \in [h]} J(i, t)(j, u) &\leq \sum_{\tau < t + 1} \sum_{i \in [h]} J(i, \tau)(j, u + t - \tau) \\
+    \sum_{i \in \mathbb{Z}_{>0}} J(i, t)(j, u) &\leq \sum_{\tau < t + 1} \sum_{i \in \mathbb{Z}_{>0}} J(i, \tau)(j, u + t - \tau) \\
     &< \infty
     \end{align*}
     $$
 
     <span class="qed">$\square$</span>
     ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    有了上述性質，我們就能解答存在唯一的問題
     """)
     return
 
@@ -115,7 +123,7 @@ def _(mo):
     transition and balance equations for $J$, namely
 
     $$
-    \sigma(t)(j, u) \;=\; \sum_{i \in [h]} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau).
+    \sigma(t)(j, u) \;=\; \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau).
     $$
     ///
     """)
@@ -132,8 +140,8 @@ def _(mo):
 
     $$
     \begin{align*}
-    \sigma(t)(j, u) &= \sum_{i \in [h]} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau) \\
-    &\leq \sum_{i \in [h]} \sum_{\tau < t + u - 1} J(i, \tau)(j, \; t + u - 1 - \tau) \\
+    \sigma(t)(j, u) &= \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau) \\
+    &\leq \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t + u - 1} J(i, \tau)(j, \; t + u - 1 - \tau) \\
     &< \infty && \text{(by proposition above)}
     \end{align*}
     $$
@@ -150,7 +158,7 @@ def _(mo):
     \begin{align*}
     & \delta(t + 1) \\
     &= \sigma(t + 1) - \sigma'(t + 1) \\
-    &= \sigma(t)^{\downarrow} + \sum_{i \in [h]} J(i, t) - \sigma'(t)^{\downarrow} - \sum_{i \in [h]} J(i, t) \\
+    &= \sigma(t)^{\downarrow} + \sum_{i \in \mathbb{Z}_{>0}} J(i, t) - \sigma'(t)^{\downarrow} - \sum_{i \in \mathbb{Z}_{>0}} J(i, t) \\
     &= \delta(t)^{\downarrow} && \text{(by the second part of proposition above)}
     \end{align*}
     $$
@@ -186,51 +194,9 @@ def _(mo):
     $$
     \begin{align*}
     \sigma(t + 1)(j, u)
-    &= \sum_{i \in [h]} \sum_{\tau < t + 1} J(i, \tau)(j, \; t + u - \tau) \\
-    &= \sum_{i \in [h]} \sum_{\tau < t} J(i, \tau)(j, \; t + u - \tau) + \sum_{i \in [h]} J(i, t)(j, u) \\
-    &= \sigma(t)^{\downarrow}(j, u) + \sum_{i \in [h]} J(i, t)(j, u) \\
-    \end{align*}
-    $$
-
-    <span class="qed">$\square$</span>
-    ///
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    除此之外，每個瞬間的狀態，其物件總數也會跟從 juggling matrices 定義出來的一致
-
-    /// admonition | Proposition
-        type: proposition
-
-    Let $\sigma$ be the state of a juggling pattern $T$. Then
-
-    $$
-    \sum_{x \in \mathcal{F}} \sigma(t)(x) = b, \qquad \forall t \in \mathbb{Z}.
-    $$
-
-    In particular $\sigma(t) \in M(\mathcal{F})$ if and only if $b < \infty$.
-    ///
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    /// admonition
-        type: proof
-
-    $$
-    \begin{align*}
-    \sum_{(j, u) \in \mathcal{F}} \sigma(t)(j, u)
-    &= \sum_{(j, u) \in \mathcal{F}} \sum_{i \in [h]} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau) \\
-    &= \sum_{\substack{(i, \tau),\, (j, r) \in \mathcal{S} \\ \tau < t \leq r}} T(i, \tau)(j, r) && (r = t + u - 1) \\
-    &= b(t - 1) \\
-    &= b
+    &= \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t + 1} J(i, \tau)(j, \; t + u - \tau) \\
+    &= \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t} J(i, \tau)(j, \; t + u - \tau) + \sum_{i \in \mathbb{Z}_{>0}} J(i, t)(j, u) \\
+    &= \sigma(t)^{\downarrow}(j, u) + \sum_{i \in \mathbb{Z}_{>0}} J(i, t)(j, u) \\
     \end{align*}
     $$
 
@@ -265,7 +231,7 @@ def _(mo):
     then
 
     $$
-    \sum_{t = 0}^{p - 1} \sum_{i \in [h]} J(i, t) \;=\; \Sigma - \Sigma^{\downarrow}.
+    \sum_{t = 0}^{p - 1} \sum_{i \in \mathbb{Z}_{>0}} J(i, t) \;=\; \Sigma - \Sigma^{\downarrow}.
     $$
 
     *[Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) states this for one hand in §2.8.3 and for several in §4.3;
@@ -285,7 +251,7 @@ def _(mo):
 
     $$
     \begin{align*}
-    & \sum_{t = 0}^{p - 1} \sum_{i \in [h]} J(i, t) \\
+    & \sum_{t = 0}^{p - 1} \sum_{i \in \mathbb{Z}_{>0}} J(i, t) \\
     &= \sum_{t = 0}^{p - 1} \bigl( \sigma(t + 1) - \sigma(t)^{\downarrow} \bigr) \\
     &= \sum_{t = 0}^{p - 1} \sigma(t + 1) \;-\; \sum_{t = 0}^{p - 1} \sigma(t)^{\downarrow}
         && \text{(entrywise finite)} \\
@@ -318,27 +284,71 @@ def _(mo):
     mo.md(r"""
     ## Constraint on Juggling State
 
-    我們實際雜耍的時候總是會遇到一些物理限制。比如人的力量與地球的重力加速度，幾乎不太可能讓拋出去的物件的滯空時長達到 40 以上，除非你是玩彈力球之類的。同理，以人手掌的大小， multiplex 同時拋出 5 個物件應該也算蠻多的了。所以我們有時會加上一些限制，除了原本的 $b$ 顆球 $h$ 隻手之外，我們可以限制滯空時長不能超過 $k$ 且 multiplex 數量最多為 $c$ 。
+    在前述討論中，因為我們可以拋到任意高度，或是擁有無限隻手無限個物件等等，可以輕易看出有無限種雜耍的狀態。但實際雜耍的時候總是會有物理限制。比如不可能有無限隻手無限個物件，或是人的力量與地球的重力加速度，幾乎不太可能讓拋出去的物件的滯空時長達到 40 以上，除非你是玩彈力球之類的。同理，以人手掌的大小， multiplex 同時拋出 5 個物件應該也算蠻多的了。
 
-    對於 juggling matrices ，其可以表述成以下形式
+    假如我們加上手跟球有限、高度跟 multiplex 數量有有限上界的條件，那可能出現的狀態就會是有限的。在上一篇文章有提到過， $h, b, k, c, p$ 這些參數是 juggling matrices 內蘊的性質，這些性質也會顯化在 juggling state 上面。不過這邊證明我先偷懶用 AI 證的，之後有空我再用我的語言重寫。
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    /// admonition | Proposition (Parameters from the State)
+        type: proposition
+
+    Let $\sigma$ be the state of a juggling matrix $J$. Then
 
     $$
     \begin{align*}
-    & J(s)(j, u) = 0 \quad && \forall s \in \mathcal{S}, j \in [h], u > k \qquad && \text{(constraint on height)} \\
-    & \sum_{x \in \mathcal{F}} J(s)(x) \leq c \quad && \forall s \in \mathcal{S} \qquad && \text{(constraint on multiplex)}
+    h &= \sup \{\, i : \sigma(t)(i, u) > 0,\ t \in \mathbb{Z},\ u \in \mathbb{Z}_{>0} \,\} && \text{(hands)} \\
+    b &= \sum_{x \in \mathcal{F}} \sigma(t)(x), \quad \forall t \in \mathbb{Z} && \text{(objects)} \\
+    k &= \sup \{\, u : \sigma(t)(j, u) > 0,\ t \in \mathbb{Z},\ j \in \mathbb{Z}_{>0} \,\} && \text{(max height)} \\
+    c &= \sup \{\, \sigma(t)(x) : t \in \mathbb{Z},\ x \in \mathcal{F} \,\} && \text{(max multiplex)} \\
+    p_{\sigma} &:= \inf \{\, q \in \mathbb{Z}_{>0} : \sigma(t + q) = \sigma(t),\ \forall t \in \mathbb{Z} \,\}, \qquad p_{\sigma} \mid p \text{ for } p < \infty && \text{(period)}
     \end{align*}
     $$
 
-    而對於 juggling state ，則可以這樣表述
+    In particular $\sigma(t) \in M(\mathcal{F})$ if and only if $b < \infty$.
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    /// admonition | Proof (by AI)
+        type: proof
+
+    *Hands.* If $\sigma(t)(i, u) > 0$ then hand $i$ catches at beat $t + u - 1$, so $J(i, \; t + u - 1) \neq 0$ by balance; hence the supremum is at most $h$. Conversely $J(i, t) \neq 0$ gives $\sigma(t)(i, 1) > 0$ by balance.
+
+    *Objects.*
 
     $$
     \begin{align*}
-    & \sigma(t)(j, u) = 0 \quad && \forall t \in \mathbb{Z}, j \in [h], u > k \qquad && \text{(constraint on height)} \\
-    & \sigma(t)(x) \leq c \quad && \forall t \in \mathbb{Z}, x \in \mathcal{F} \qquad && \text{(constraint on multiplex)}
+    \sum_{(j, u) \in \mathcal{F}} \sigma(t)(j, u)
+    &= \sum_{(j, u) \in \mathcal{F}} \sum_{i \in \mathbb{Z}_{>0}} \sum_{\tau < t} J(i, \tau)(j, \; t + u - 1 - \tau) \\
+    &= \sum_{\substack{(i, \tau),\, (j, r) \in \mathcal{S} \\ \tau \leq t - 1 < r}} J(i, \tau)(j, r - \tau) && (r = t + u - 1) \\
+    &= b(t - 1) \\
+    &= b
     \end{align*}
     $$
 
-    juggling matrices 跟 juggling state 的 constraint 的等價性質沒有那麼顯然，讀者可以自行嘗試論證看看。
+    *Height.* If $\sigma(t)(j, u) > 0$ then $J(i, \tau)(j, \; t + u - 1 - \tau) > 0$ for some $i$ and $\tau < t$, with $t + u - 1 - \tau \geq u$; so the supremum is at most $k$. Conversely $J(i, t)(j, u) > 0$ gives $\sigma(t + 1)(j, u) > 0$ by transition.
+
+    *Multiplex.* By transition and balance,
+
+    $$
+    \sigma(t)(j, u) \leq \sigma(t + 1)(j, u - 1) \leq \cdots \leq \sigma(t + u - 1)(j, 1) = \sum_{x \in \mathcal{F}} J(j, \; t + u - 1)(x),
+    $$
+
+    so the supremum is at most $c$; $u = 1$ gives equality.
+
+    *Period.* For $p < \infty$, $\sigma(\cdot + p)$ satisfies both equations for $J$, so it equals $\sigma$ by uniqueness; thus $p$ is a period of $\sigma$, and every period of $\sigma$ is a multiple of the least one.
+
+    <span class="qed">$\square$</span>
+    ///
     """)
     return
 
