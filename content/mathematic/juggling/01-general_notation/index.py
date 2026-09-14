@@ -21,25 +21,13 @@ def _(mo):
 
     當我們描述拋接雜耍時，可以把物件的行為拆成**如何被拋出**與**如何落入手中**。
 
-    先考慮後者，對於每個物件，我們可以用兩個物理量來描述他落下時的行為: **落到哪隻手**跟**落入手的時間點**。假設共有 $h$ 隻手，則我們可以用以下的集合來刻畫此性質
+    先考慮後者，對於每個物件，我們可以用兩個物理量來描述他落下時的行為: **落到哪隻手**跟**落入手的時間點**。手用正整數編號，我們可以用以下的集合來刻畫此性質
 
     $$
-    \mathcal{S} := [h] \times \mathbb{Z}
+    \mathcal{S} := \mathbb{Z}_{>0} \times \mathbb{Z}
     $$
 
     其中 $(i,t) \in \mathcal{S}$ 表示物件在時間 $t$ 落在第 $i$ 隻手。
-
-    /// admonition
-        type: remark
-
-    $[n]$ 為組合數學常用記號，代表 $\{1, 2, \cdots, n\}$ ，此外定義 $[\infty] := \mathbb{Z}_{>0}$ 。
-    ///
-
-    /// admonition
-        type: remark
-
-    在這系列的文章， $h, b, k, c, p \in \mathbb{Z}_{>0} \cup \{\infty\}$ 將作為保留字，分別代表著雜耍的手數、物件數量、物件滯空時間上界、 multiplex 的上界、雜耍的週期。而如果這些值是 $\infty$ 或是沒特別指出來，那就是沒有上界或週期。
-    ///
 
     接著我們考慮前者，同一隻手可能會有多顆但有限數量的物件被拋出，此時一個拋的動作可以用 $\mathcal{S}$ 的 finite multiset 表示
 
@@ -92,7 +80,7 @@ def _(mo):
 
     $$
     \begin{align*}
-    & \mathcal{S}_p := [h] \times \mathbb{Z}/p\mathbb{Z} \\
+    & \mathcal{S}_p := \mathbb{Z}_{>0} \times \mathbb{Z}/p\mathbb{Z} \\
     & T_p: \mathcal{S}_p \to M(\mathcal{S}_p) \\
     & T_p(i, \overline{t})(j, \overline{u}) := \sum_{q \in \mathbb{Z}}T(i, t)(j, u + qp)
     \end{align*}
@@ -166,8 +154,8 @@ def _(mo):
     $$
     \begin{align*}
     & \sum_{(j, u) \in \mathcal{S}} T(i, t)(j, u) \\
-    = & \sum_{j \in [h]} \sum_{u_0 = 0}^{p - 1} \sum_{q \in \mathbb{Z}} T(i, t)(j, u_0 + qp) \\
-    = & \sum_{j \in [h]} \sum_{u_0 = 0}^{p - 1} T_p(i, \overline{t})(j, \overline{u_0}) \\
+    = & \sum_{j \in \mathbb{Z}_{>0}} \sum_{u_0 = 0}^{p - 1} \sum_{q \in \mathbb{Z}} T(i, t)(j, u_0 + qp) \\
+    = & \sum_{j \in \mathbb{Z}_{>0}} \sum_{u_0 = 0}^{p - 1} T_p(i, \overline{t})(j, \overline{u_0}) \\
     = & \sum_{(j, \overline{u}) \in \mathcal{S}_p} T_p(i, \overline{t})(j, \overline{u})
     \end{align*}
     $$
@@ -177,9 +165,9 @@ def _(mo):
     $$
     \begin{align*}
     & \sum_{(j, u) \in \mathcal{S}} T(j, u)(i, t) \\
-    = & \sum_{j \in [h]} \sum_{u_0 = 0}^{p - 1} \sum_{q \in \mathbb{Z}} T(j, u_0 + qp)(i, t) \\
-    = & \sum_{j \in [h]} \sum_{u_0 = 0}^{p - 1} \sum_{q \in \mathbb{Z}} T(j, u_0)(i, t - qp) \\
-    = & \sum_{j \in [h]} \sum_{u_0 = 0}^{p - 1} T_p(j, \overline{u_0})(i, \overline{t}) \\
+    = & \sum_{j \in \mathbb{Z}_{>0}} \sum_{u_0 = 0}^{p - 1} \sum_{q \in \mathbb{Z}} T(j, u_0 + qp)(i, t) \\
+    = & \sum_{j \in \mathbb{Z}_{>0}} \sum_{u_0 = 0}^{p - 1} \sum_{q \in \mathbb{Z}} T(j, u_0)(i, t - qp) \\
+    = & \sum_{j \in \mathbb{Z}_{>0}} \sum_{u_0 = 0}^{p - 1} T_p(j, \overline{u_0})(i, \overline{t}) \\
     = & \sum_{(j, \overline{u}) \in \mathcal{S}_p} T_p(j, \overline{u})(i, \overline{t})
     \end{align*}
     $$
@@ -212,7 +200,7 @@ def _(mo):
     在實際場景中，雜耍玩家們比起描述球落下的時間點，描述拋出後球滯空的時間會更直覺。所以實務場景裡，我們會用經過 affine transformation 後的記號來描述雜耍 pattern
 
     $$
-    \mathcal{F} := [h] \times \mathbb{Z}_{>0}
+    \mathcal{F} := \mathbb{Z}_{>0} \times \mathbb{Z}_{>0}
     $$
 
     $$
@@ -289,7 +277,7 @@ def _(mo):
     /// admonition
         type: proposition
 
-    Let $T$ be a juggling pattern. Then $b(t)$ is constant in $t$. Hence, we write $b \in \mathbb{Z}_{> 0} \cup \{\infty\}$ for the common value.
+    Let $T$ be a juggling pattern. Then $b(t)$ is constant in $t$.
     ///
     """)
     return
@@ -319,13 +307,43 @@ def _(mo):
     $$
     \begin{align*}
     & \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l < t,\; r = t}} T(i, l)(j, r) \\
-    =& \sum_{(i, l) \in \mathcal{S},\; j \in [h]} T(i, l)(j, t) && \text{(by causality)} \\
-    =& \sum_{(i, l) \in \mathcal{S},\; j \in [h]} T(j, t)(i, l) && \text{(by balance)} \\
+    =& \sum_{(i, l) \in \mathcal{S},\; j \in \mathbb{Z}_{>0}} T(i, l)(j, t) && \text{(by causality)} \\
+    =& \sum_{(i, l) \in \mathcal{S},\; j \in \mathbb{Z}_{>0}} T(j, t)(i, l) && \text{(by balance)} \\
     =& \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l = t,\; t < r}} T(i, l)(j, r) && \text{(by causality and change of variables)} \\
     \end{align*}
     $$
 
     <span class="qed">$\square$</span>
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    既然球數是獨立於時間的常數函數，我們可以僅用 $b$ 這個字母來表示。而除了球數跟週期外，其實還有其他 juggling matrices 內蘊的性質，包括手數、滯空時間上界、 multiplex 上界等等。我們皆可以把它翻譯成 juggling matrices 的語言描述這些性質。
+
+    /// admonition | Definition (Parameters of a Pattern)
+        type: definition
+
+    Let $J$ be a juggling matrix. Its parameters are
+
+    $$
+    \begin{align*}
+    h &:= \sup \{\, i : J(i, t) \neq 0,\, t \in \mathbb{Z} \,\} && \text{(hands)} \\
+    b &:= \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t < r}} J(i, l)(j, r - l), \quad \forall t \in \mathbb{Z} && \text{(objects)} \\
+    k &:= \sup \{\, u : J(s)(j, u) > 0,\, s \in \mathcal{S},\, j \in \mathbb{Z}_{>0} \,\} && \text{(max height)} \\
+    c &:= \sup \Bigl\{\, \sum_{x \in \mathcal{F}} J(s)(x) : s \in \mathcal{S} \,\Bigr\} && \text{(max multiplex)} \\
+    p &:= \inf \{\, q \in \mathbb{Z}_{>0} : J(i, t + q) = J(i, t),\ \forall (i, t) \in \mathcal{S} \,\} && \text{(min period)}
+    \end{align*}
+    $$
+    ///
+
+    /// admonition
+        type: remark
+
+    在這系列的文章， $h, b, k, c, p \in \mathbb{Z}_{>0} \cup \{\infty\}$ 將作為保留字，分別代表著雜耍的手數、物件數量、物件滯空時間上界、 multiplex 的上界、雜耍的週期。如果這些值是 $\infty$ 或是沒特別指出來，那就是沒有上界或週期。
     ///
     """)
     return
@@ -342,8 +360,8 @@ def _(mo):
 
     $$
     \begin{align*}
-    \sum_{\substack{i \in [h],\, (j, u) \in \mathcal{S}}} T(i, t)(j, u) \leq b, \quad \forall t \in \mathbb{Z} \\
-    \sum_{\substack{i \in [h],\, (j, u) \in \mathcal{F}}} J(i, t)(j, u) \leq b, \quad \forall t \in \mathbb{Z}
+    \sum_{\substack{i \in \mathbb{Z}_{>0},\, (j, u) \in \mathcal{S}}} T(i, t)(j, u) \leq b, \quad \forall t \in \mathbb{Z} \\
+    \sum_{\substack{i \in \mathbb{Z}_{>0},\, (j, u) \in \mathcal{F}}} J(i, t)(j, u) \leq b, \quad \forall t \in \mathbb{Z}
     \end{align*}
     $$
     ///
@@ -433,9 +451,9 @@ def _(mo):
     & b \\
     = & \frac{1}{p} \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}}
     J(i, \tau)(j, u) \, \lambda_{0, p}(\tau, u) \\
-    = & \frac{1}{p} \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} \sum_{\tau \in \mathbb{Z}} J(i, \tau)(j, u) \, \lambda_{0, p}(\tau, u) \\
-    = &  \frac{1}{p} \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} \sum_{q \in \mathbb{Z}} J(i, \tau_0 + qp)(j, u) \, \lambda_{0, p}(\tau_0 + qp, u) \\
-    = &  \frac{1}{p} \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} J(i, \tau_0)(j, u) \underbrace{\sum_{q \in \mathbb{Z}} \lambda_{0, p}(\tau_0 + qp, u)}_{(1)} && \text{(by periodic)}
+    = & \frac{1}{p} \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} \sum_{\tau \in \mathbb{Z}} J(i, \tau)(j, u) \, \lambda_{0, p}(\tau, u) \\
+    = &  \frac{1}{p} \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} \sum_{q \in \mathbb{Z}} J(i, \tau_0 + qp)(j, u) \, \lambda_{0, p}(\tau_0 + qp, u) \\
+    = &  \frac{1}{p} \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} J(i, \tau_0)(j, u) \underbrace{\sum_{q \in \mathbb{Z}} \lambda_{0, p}(\tau_0 + qp, u)}_{(1)} && \text{(by periodic)}
     \end{align*}
     $$
 
@@ -456,7 +474,7 @@ def _(mo):
     $$
     \begin{align*}
     & b \\
-    = &  \frac{1}{p} \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} J(i, \tau_0)(j, u) \, u \\
+    = &  \frac{1}{p} \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} \sum_{\tau_0 = 0}^{p - 1} J(i, \tau_0)(j, u) \, u \\
     = & \frac{1}{p} \sum_{\substack{(i, \tau) \in \mathcal{S}, \, (j, u) \in \mathcal{F} \\ 0 \leq \tau < p}} J(i, \tau)(j, u) \, u
     \end{align*}
     $$
@@ -470,21 +488,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    如果今天只有有限隻手，且道具的滯空時間有 upper bound ，那也可以透過取極限的方式去計算道具數量。以下我們定義何為滯空時間的有界及如何取極限計算。
-
-    /// admonition
-        type: notation
-
-    In what follows, define
-    $$
-    k := \sup \{\, u : J(i, t)(j, u) > 0 \,\},
-    $$
-    so
-
-    $$
-    J(i, t)(j, u) = 0, \forall u > k.
-    $$
-    ///
+    如果今天只有有限隻手，且道具的滯空時間有 upper bound ，那也可以透過取極限的方式去計算道具數量。
 
     /// admonition
         type: corollary
@@ -518,8 +522,8 @@ def _(mo):
     $$
     \begin{align*}
     & E(m, n) \\
-    = & \sum_{\substack{i \in [h] \\ m - k < \tau < n}} \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \, \lambda_{m, n}(\tau, u) \\
-    \leq & \sum_{\substack{i \in [h] \\ m - k < \tau < n}} k \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \\
+    = & \sum_{\substack{i \in \mathbb{Z}_{>0} \\ m - k < \tau < n}} \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \, \lambda_{m, n}(\tau, u) \\
+    \leq & \sum_{\substack{i \in \mathbb{Z}_{>0} \\ m - k < \tau < n}} k \sum_{(j, u) \in \mathcal{F}} J(i, \tau)(j, u) \\
     < & \infty && \text{(by $h, k < \infty$ and definition of finite multiset.)}
     \end{align*}
     $$
@@ -550,10 +554,10 @@ def _(mo):
     \begin{align*}
     & \left\lvert\, A(m, n) - E(m, n) \,\right\rvert \\
     = & \left\lvert\, \sum_{\substack{(i, \tau) \in \mathcal{S} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert \\
-    \leq & \left\lvert\, \sum_{m - k < \tau < m} \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert +
-    \left\lvert\, \sum_{n - k < \tau < n} \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert \\
-    \leq & \left\lvert\, \sum_{m - k < \tau < m} 2k \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u)  \,\right\rvert +
-    \left\lvert\, \sum_{n - k < \tau < n} 2k \sum_{\substack{i \in [h] \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \,\right\rvert \\
+    \leq & \left\lvert\, \sum_{m - k < \tau < m} \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert +
+    \left\lvert\, \sum_{n - k < \tau < n} \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \, (u I_{[m,n)}(\tau) - \lambda_{m, n}(\tau, u))  \,\right\rvert \\
+    \leq & \left\lvert\, \sum_{m - k < \tau < m} 2k \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u)  \,\right\rvert +
+    \left\lvert\, \sum_{n - k < \tau < n} 2k \sum_{\substack{i \in \mathbb{Z}_{>0} \\ (j, u) \in \mathcal{F}}} J(i, \tau)(j, u) \,\right\rvert \\
     \leq & \left\lvert\, \sum_{m - k < \tau < m} 2kb \,\right\rvert +
     \left\lvert\, \sum_{n - k < \tau < n} 2kb \,\right\rvert \\
     \leq & 4k^2 b
@@ -590,7 +594,7 @@ def _(mo):
     模擬將整數拍作為接球的時間點，持球 $d$ 拍後拋出，因此拋接時長 $u$ 包含持球時間，實際滯空時間為 $u-d$。關於持球的討論未來有機會可以跟 claude 的雜耍三大定理一起討論。
     ///
 
-    當然在模擬之中，我們不太可能直接輸入 juggling matrices 的函數形式，但用玩家間流行的符號，在某些情境又會容易造成混淆，所以以下會用這裡自創但足夠簡潔的符號去表示我們的 juggling matrices 。另外，因為我們也不可能輸入無限長的 juggling matrices ，所以以下我們都考慮 periodic 的 juggling matrices 以循環播放。
+    當然在模擬之中，我們不太可能直接輸入 juggling matrices 的函數形式，但用玩家間流行的符號，在某些情境又會容易造成混淆，所以以下會用這裡自創但足夠簡潔的符號去表示我們的 juggling matrices 。另外，因為我們也不可能輸入無限長的 juggling matrices ，所以以下我們都考慮 periodic 的 juggling matrices 以循環播放。統理 $b, h, k, c$ 也都會是有限的。
 
     我們用以下符號代表某個球的拋接時長跟落回的手
 
@@ -601,7 +605,7 @@ def _(mo):
     而 multiplex 就可以用中括號列出零個或多個元素來表示
 
     $$
-    [x_1, x_2, \cdots, x_c] \simeq m \in M(\mathcal{F}), \quad m(x) = \#\{i \in [c] : x_i = x\}
+    [x_1, x_2, \cdots, x_l] \simeq m \in M(\mathcal{F}), \quad m(x) = \#\{i \in [l] : x_i = x\}
     $$
 
     在同一個瞬間，對不同的拋出手，我們用 $|$ 來做為分隔符
