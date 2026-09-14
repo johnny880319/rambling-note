@@ -331,7 +331,7 @@ def _(mo):
 
     $$
     \begin{align*}
-    h &:= \sup \{\, i : J(i, t) \neq 0,\, t \in \mathbb{Z} \,\} && \text{(hands)} \\
+    h &:= \sup \{\, i : J(i, t)(x) > 0,\, t \in \mathbb{Z},\, x \in \mathcal{F} \,\} && \text{(hands)} \\
     b &:= \sum_{\substack{(i, l),\, (j, r) \in \mathcal{S} \\ l \leq t < r}} J(i, l)(j, r - l), \quad \forall t \in \mathbb{Z} && \text{(objects)} \\
     k &:= \sup \{\, u : J(s)(j, u) > 0,\, s \in \mathcal{S},\, j \in \mathbb{Z}_{>0} \,\} && \text{(max height)} \\
     c &:= \sup \Bigl\{\, \sum_{x \in \mathcal{F}} J(s)(x) : s \in \mathcal{S} \,\Bigr\} && \text{(max multiplex)} \\
