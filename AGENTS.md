@@ -73,6 +73,13 @@ running prose is prose, and stays Chinese; the same definition set off in a
 block is English. A `>` quotation is neither: it is a passage of the article
 restated, so it follows the article too.
 
+# Conversation language
+
+Replies to the user are in Chinese, the language the user writes in. English
+stays where the rules above put it: code, commit messages, file contents that
+are not rendered, and the set-off blocks quoted from the articles. A reply that
+drifts into English is a slip, not a style choice.
+
 # Maths in conversation
 
 Chat replies reach the reader through a terminal that renders markdown but has

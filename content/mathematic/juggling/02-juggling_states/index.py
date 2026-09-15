@@ -234,8 +234,6 @@ def _(mo):
     \sum_{t = 0}^{p - 1} \sum_{i \in \mathbb{Z}_{>0}} J(i, t) \;=\; \Sigma - \Sigma^{\downarrow}.
     $$
 
-    *[Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) states this for one hand in §2.8.3 and for several in §4.3;
-    the closed form on the right, and the proof below, are worked out here.*
     ///
     """)
     return
@@ -408,10 +406,10 @@ def _(mo):
     = \sum_{\ell \geq 0} (-1)^{\ell} \binom{hk}{\ell} \binom{b - \ell(c + 1) + hk - 1}{hk - 1}.
     $$
 
-    At $c = 1$ this is $\binom{hk}{b}$, and at $c \geq b$ only the first
-    term survives and it is $\binom{b + hk - 1}{b}$.
+    In particular
 
-    *The $c \geq b$ case is stated in [Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) §4.3; the bounded form is the standard inclusion–exclusion count.*
+    - For $c = 1$, the number is $\binom{hk}{b}$
+    - For $c \geq b$, the number is $\binom{b + hk - 1}{b}$
 
     ///
     """)
@@ -424,22 +422,28 @@ def _(mo):
     /// admonition
         type: proof
 
-    A state is a choice of $\sigma(x) \in \{0, 1, \cdots, c\}$ for each of the
-    $hk$ slots $x \in \mathcal{F}_k$ subject to $\sum_x \sigma(x) = b$, so the
-    number of states is the coefficient of $z^{b}$ in
+    The conditions $h_{\sigma} \leq h$ and $k_{\sigma} \leq k$ confine $\sigma$ to
+    the $hk$ slots $(j, u)$ with $j \leq h$ and $u \leq k$, and $c_{\sigma} \leq c$
+    lets each of them take the values $0, 1, \cdots, c$; so the count is the
+    coefficient of $z^{b}$ in
 
     $$
     \begin{align*}
     \left( 1 + z + \cdots + z^{c} \right)^{hk}
     & = \left( \frac{1 - z^{c + 1}}{1 - z} \right)^{hk} \\
     & = \left( \sum_{\ell \geq 0} (-1)^{\ell} \binom{hk}{\ell} z^{\ell(c + 1)} \right)
+        \left( \sum_{n \geq 0} (-1)^{n} \binom{-hk}{n} z^{n} \right) \\
+    & = \left( \sum_{\ell \geq 0} (-1)^{\ell} \binom{hk}{\ell} z^{\ell(c + 1)} \right)
         \left( \sum_{n \geq 0} \binom{n + hk - 1}{hk - 1} z^{n} \right)
     \end{align*}
     $$
 
-    Taking $n = b - \ell(c + 1)$ from the second factor gives the sum.  At $c = 1$
-    the left side is $(1 + z)^{hk}$; at $c \geq b$ no term with $\ell \geq 1$ can
-    reach $z^{b}$.
+    Taking $n = b - \ell(c + 1)$ from the second factor gives the sum.
+
+    In particular,
+
+    - At $c = 1$, the left side is $(1 + z)^{hk}$, the coefficient of $z^{b}$ is $\binom{hk}{b}$
+    - At $c \geq b$, only the $\ell = 0$ term reaches $z^{b}$, giving $\binom{b + hk - 1}{b}$.
 
     <span class="qed">$\square$</span>
     ///
@@ -450,67 +454,9 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    再數邊。這一條需要 $c = 1$，而且 balance 條件在證明裡真的做了事。
+    ## Work in Progress
 
-    /// admonition | Proposition (Out-degree)
-        type: proposition
-
-    Suppose $c = 1$.  Let $m := \sum_{i \in \mathbb{Z}_{>0}} \sigma(i, 1)$ be the
-    number of objects $\sigma$ must throw and $f := hk - (b - m)$ the number of
-    slots left empty by $\sigma^{\downarrow}$.  Then $\sigma$ has exactly
-
-    $$
-    f (f - 1) \cdots (f - m + 1)
-    $$
-
-    outgoing edges; in particular the out-degree depends on $\sigma$ only through
-    how many objects each hand catches.  With one hand this is $k - b + 1$ when
-    the hand catches and $1$ when it does not.
-
-    *[Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) §2.8.3 treats the one-hand case; the falling factorial, for any $h$, is proved below.*
-
-    ///
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    /// admonition
-        type: proof
-
-    Since $c = 1$ every hand holds at most one object, so the $m$ objects to be
-    thrown lie in $m$ distinct hands $i_1, \cdots, i_m$.  For the same reason
-    $\sigma^{\downarrow}$ has each entry at most $1$, so its $b - m$ objects
-    occupy $b - m$ of the $hk$ slots of $\mathcal{F}_k$ and leave
-    $f = hk - (b - m)$ of them empty.
-
-    An outgoing edge is a choice of $J(i, t)$ for every $i \in \mathbb{Z}_{>0}$.
-    Balance makes $J(i_r, t)$ a single slot and $J(i, t)$ empty for every other
-    hand, and the successor $\sigma^{\downarrow} + \sum_i J(i, t)$ is a state
-    only if each of its entries is at most $1$, which forces those $m$ slots to
-    be distinct and empty in $\sigma^{\downarrow}$.  An edge is therefore exactly
-    an injection from $\{ i_1, \cdots, i_m \}$ into the $f$ empty slots, and
-    there are $f (f - 1) \cdots (f - m + 1)$ of those.
-
-    With one hand $m = \sigma(1, 1)$ is $1$ or $0$, giving $f = k - b + 1$ or the
-    empty product $1$.
-
-    <span class="qed">$\square$</span>
-    ///
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    /// admonition
-        type: remark
-
-    $c \geq 2$ 時這條不成立 —— 出邊數不再只由「每隻手接幾顆」決定。
-    ///
+    從這裡以下的內容是我讓 AI 先幫我整理有哪些定理跟簡短的證明，之後會把它們都整理好，或是把過於細節的內容捨棄。
     """)
     return
 
@@ -600,109 +546,29 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    最後一個可證的，是說任何狀態都收得回 ground state 。
+    剩下幾個也是關於 juggling state 的性質，但因為篇幅跟時間因素，就不證明他們了。
 
-    /// admonition | Lemma (Return to Ground)
-        type: lemma
+    雜耍玩家有時可能會想嘗試各種各樣的招式，而每個招是所要切換到的狀態可能都不太一樣。以下定理說明只要目前的 juggling state 的高度是有限的，就能在有限步驟內切換到想要的狀態。
 
-    Give the slot $(j, u)$ the rank $r(j, u) := (u - 1) h + j$, so that $\mathcal{F}_k$ is
-    ranked $1, \cdots, hk$ and the ground state $g$ is the one filling the
-    ranks $1, 2, 3, \cdots$ to capacity until the objects run out.  Then from any
-    state, repeatedly throwing every caught object into the lowest-ranked slot
-    that still has room reaches $g$.
+    /// admonition | Theorem (Forgetting the Past)
+        type: theorem
 
-    *Worked out here; it is one half of the theorem below.*
-
+    Let $\sigma, \sigma'$ be states with $b_{\sigma} = b_{\sigma'}$ and
+    $k_{\sigma} < \infty$. Then for any $t \in \mathbb{Z}$, some juggling matrix has a state sequence $\gamma$
+    with $\gamma(t) = \sigma$ and $\gamma(t + k_{\sigma}) = \sigma'$.
     ///
-    """)
-    return
 
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
     /// admonition
         type: proof
 
-    Write $C_{\sigma}(\rho) := \sum_{r(x) \leq \rho} \sigma(x)$ for how many
-    objects sit at rank $\rho$ or below, reading $C_{\sigma}(\rho) = b$ for
-    $\rho \geq hk$.  Two bounds hold for every state: $C_{\sigma}(\rho) \leq b$,
-    and $C_{\sigma}(\rho) \leq \rho c$ because $\rho$ slots hold at most $\rho c$
-    objects.  Let $\sigma'$ be the state one greedy beat later.
-
-    Shifting sends the slot of rank $\rho$ to rank $\rho - h$ and empties the
-    ranks $1, \cdots, h$, whose $m := C_{\sigma}(h)$ objects are the ones in
-    hand, so $C_{\sigma^{\downarrow}}(\rho) = C_{\sigma}(\rho + h) - m$.  Greedy
-    fills the lowest free capacity, which places all $m$ objects at rank $\rho$
-    or below unless the ranks up to $\rho$ are already full.  Hence
-
-    $$
-    C_{\sigma'}(\rho) = \min \bigl( \rho c, \; C_{\sigma}(\rho + h) \bigr)
-    \;\geq\; C_{\sigma}(\rho)
-    \qquad \text{for every } \rho
-    $$
-
-    the inequality because $C_{\sigma}$ obeys both bounds on the right.  Now
-
-    $$
-    \sum_{x \in \mathcal{F}_k} r(x) \, \sigma(x)
-    \;=\; \sum_{\rho = 0}^{hk - 1} \bigl( b - C_{\sigma}(\rho) \bigr)
-    $$
-
-    since an object of rank $\rho_0$ is counted by exactly the $\rho_0$ terms
-    with $\rho < \rho_0$.  So this rank sum never increases along the greedy
-    walk, and being a non-negative integer it is eventually constant; once it is,
-    the displayed inequality is an equality at every $\rho$, so $\sigma' = \sigma$.
-
-    It remains to see that a greedy walk can only rest at $g$.  Let
-    $\rho^{*}$ be the highest occupied rank of $\sigma$ and read
-    $C_{\sigma'} = C_{\sigma}$ at $\rho = \rho^{*} - 1$.  Either
-    $C_{\sigma}(\rho^{*} - 1) = (\rho^{*} - 1) c$, so every rank below
-    $\rho^{*}$ is full and the remaining objects all sit at $\rho^{*}$, which is
-    $g$; or $C_{\sigma}(\rho^{*} - 1) = C_{\sigma}(\rho^{*} - 1 + h)$, so
-    $\sigma$ has nothing at the ranks $\rho^{*}, \cdots, \rho^{*} - 1 + h$,
-    against the choice of $\rho^{*}$.
+    WLOG, assume $t = 0$. Every object of $\sigma$ lands within $k_{\sigma}$ beats. When one lands at
+    beat $s$, throw it to its slot $(j, u)$ in $\sigma'$ with flight
+    $k_{\sigma} + u - 1 - s \geq 1$, so that it lands at beat
+    $k_{\sigma} + u - 1$. Each hand throws only what it catches from $\sigma$,
+    and at beat $k_{\sigma}$ nothing else is in the air, so
+    $\gamma(k_{\sigma}) = \sigma'$.
 
     <span class="qed">$\square$</span>
-    ///
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    /// admonition
-        type: remark
-
-    實際跑起來收斂得比證明保證的快得多：試過的每組 $b, h, k, c$ 裡，任何狀態都在 $k$ 拍之內回到 ground state 。上面的論證只說明了「終究會到」，沒有給出這個界。
-
-    另外貪婪必須允許跨手。只丟回自己那隻手的話球換不了手，狀態會卡在原地回不去。
-    ///
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    剩下的幾個我還沒能給出夠短的證明，把敘述跟來源記在這裡。
-
-    /// admonition | Theorem (Strong Connectivity)
-        type: theorem
-
-    The state graph is strongly connected: from any state some sequence of throws
-    reaches any other.  In particular any two patterns with the same number of
-    objects are joined by a transition.
-
-    *No source located; checked numerically here for one, two and three hands, with and without multiplex.*
-
-    ///
-
-    /// admonition
-        type: remark
-
-    上面的 lemma 已經給了一半：任何狀態都能走到 ground state 。缺的是另一半 —— 從 ground state 出發能走到任何狀態。$b \leq hc$ 時這是一行，因為 ground state 就是「所有物件都在手上」，一拍就能丟成任何狀態；$b > hc$ 時就得自己造一條鏈了。
     ///
     """)
     return
