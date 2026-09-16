@@ -1,5 +1,5 @@
 [tool.marimo.runtime]
-pythonpath = ["."]
+pythonpath = [".", "01-general_notation"]
 
 [tool.marimo.display]
 custom_css = ["../../../styles/marimo.css"]

@@ -14,7 +14,7 @@ from juggling_editor import CSS as EDITOR_CSS
 from juggling_editor import DEFAULT_PATTERN_JSON
 from juggling_editor import JAVASCRIPT as EDITOR_JAVASCRIPT
 
-HTML = r"""<!doctype html>
+_TEMPLATE = r"""<!doctype html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
@@ -54,12 +54,7 @@ summary { cursor: pointer; font-weight: 600; }
 </style>
 </head>
 <body>
-<div id="patternEditor"></div>
-<div class="row">
-  <button id="apply" class="primary">套用並播放</button>
-  <button id="restore">還原目前資料</button>
-  <span id="stats"></span>
-</div>
+__INPUT_CONTROLS__
 <p id="message" role="status" aria-live="polite"></p>
 <details id="geometrySettings">
   <summary>調整平台位置</summary>
@@ -199,7 +194,7 @@ function ballPosition(pattern, geometry, ball, time, dwell, dip, gravity = fligh
   const edge = segment.edge, age = local - segment.start;
   const count = pattern.outgoing[edge.phase][edge.source].length;
   const offset = slotOffset(edge.rank, count);
-  if (age < dwell) {
+  if (age < dwell || (pattern.holdTwos && edge.duration === 2)) {
     const point = handPosition(pattern, geometry, edge.source, time, dwell, dip);
     return {x: point.x + offset, y: point.y - 1.8, held: true, edge};
   }
@@ -222,8 +217,8 @@ globalThis.Juggling = {parseThrows, buildPattern, defaultGeometry, handPosition,
 const $ = id => document.getElementById(id);
 __EDITOR_JAVASCRIPT__
 const defaultPattern = __DEFAULT_PATTERN__;
-createPatternEditor($("patternEditor"), {value: defaultPattern, hint: "修改後按「套用並播放」。", describedBy: "message"});
-let pattern, geometry, source, time = 0, lastStamp = null;
+if ($("patternEditor")) createPatternEditor($("patternEditor"), {value: defaultPattern, hint: "修改後按「套用並播放」。", describedBy: "message"});
+let pattern, geometry, source, time = 0, lastStamp = null, onFrame = null;
 let running = !matchMedia("(prefers-reduced-motion: reduce)").matches;
 let drag = null, resumeAfterDrag = false, frame = null;
 const canvas = $("stage"), context = canvas.getContext("2d");
@@ -246,15 +241,15 @@ function setPoint(hand, kind, point) {
   for (const entry of phases) entry[kind] = {...point};
   syncCoordinates(); draw();
 }
-function load(text) {
+function load(text, beats = null, options = {}) {
   /* Validate before replacing a working animation or its edited geometry. */
-  const candidate = buildPattern(parseThrows(text));
+  const candidate = Object.assign(buildPattern(beats ?? parseThrows(text)), options);
   const nextGeometry = geometry && pattern.hands === candidate.hands && pattern.period === candidate.period
     ? structuredClone(geometry) : defaultGeometry(candidate);
   pattern = candidate; geometry = nextGeometry; source = text; time = 0; lastStamp = null;
-  $("editor").value = text;
+  if ($("editor")) $("editor").value = text;
   $("stats").textContent = `${pattern.hands} 隻手 · ${pattern.period} 拍 · ${pattern.objects} 顆球`;
-  $("hand").replaceChildren(...Array.from({length: pattern.hands}, (_, h) => option(h, `手 ${h + 1}`)));
+  $("hand").replaceChildren(...Array.from({length: pattern.hands}, (_, h) => option(h, pattern.handLabels?.[h] ?? `手 ${h + 1}`)));
   $("phase").replaceChildren(option("all", "所有拍"), ...Array.from({length: pattern.period}, (_, t) => option(t, `第 ${t} 拍`)));
   $("scrub").max = pattern.period;
   message(`已通過 causality 與 balance 檢查；b = ${pattern.edges.reduce((n, edge) => n + edge.duration, 0)} / ${pattern.period} = ${pattern.objects}。`);
@@ -298,7 +293,7 @@ function draw() {
     const halfWidth = Math.max(24, Math.abs(slotOffset(0, capacity)) * 10 + 12);
     context.fillStyle = handColor(h); context.beginPath(); context.roundRect(p.x - halfWidth, p.y, halfWidth * 2, 9, 4); context.fill();
     context.fillStyle = muted; context.font = "16px system-ui"; context.textAlign = "center";
-    context.fillText(`手 ${h + 1}`, p.x, p.y + 31);
+    context.fillText(pattern.handLabels?.[h] ?? `手 ${h + 1}`, p.x, p.y + 31);
   }
   for (const ball of pattern.balls) {
     const color = ballColor(ball.id);
@@ -329,6 +324,7 @@ function draw() {
   }
   $("clock").textContent = `t = ${time.toFixed(2)} · 第 ${mod(Math.floor(time), pattern.period)} 拍`;
   $("scrub").value = mod(time, pattern.period);
+  if (onFrame) onFrame(time);
 }
 
 function tick(stamp) {
@@ -350,11 +346,11 @@ $("dwell").oninput = () => { $("dwellValue").value = dwell().toFixed(2) + " 拍"
 for (const id of ["guides", "trails", "dip"]) $(id).onchange = draw;
 for (const id of ["hand", "phase"]) $(id).onchange = () => { syncCoordinates(); draw(); };
 $("resetGeometry").onclick = () => { geometry = defaultGeometry(pattern); syncCoordinates(); draw(); };
-$("apply").onclick = () => {
+if ($("apply")) $("apply").onclick = () => {
   try { load($("editor").value); running = true; schedule(); }
   catch (error) { message(error.message, true); }
 };
-$("restore").onclick = () => { $("editor").value = source; message("已還原目前播放的拋接資料。"); };
+if ($("restore")) $("restore").onclick = () => { $("editor").value = source; message("已還原目前播放的拋接資料。"); };
 for (const kind of ["catch", "throw"]) for (const axis of ["x", "y"]) {
   const input = $(kind + axis.toUpperCase());
   input.onchange = () => {
@@ -396,10 +392,33 @@ document.addEventListener("visibilitychange", () => {
 });
 new ResizeObserver(draw).observe(canvas);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
-load(defaultPattern); schedule();
+__STARTUP__
 </script>
 </body>
 </html>
-""".replace("__PARSER__", JAVASCRIPT).replace("__EDITOR_CSS__", EDITOR_CSS).replace(
-    "__EDITOR_JAVASCRIPT__", EDITOR_JAVASCRIPT
-).replace("__DEFAULT_PATTERN__", DEFAULT_PATTERN_JSON)
+"""
+
+_DEFAULT_CONTROLS = """<div id="patternEditor"></div>
+<div class="row">
+  <button id="apply" class="primary">套用並播放</button>
+  <button id="restore">還原目前資料</button>
+  <span id="stats"></span>
+</div>
+"""
+
+
+def make_html(*, controls=None, startup="load(defaultPattern); schedule();"):
+    """Embed alternative controls around the same animation engine and canvas."""
+    return (
+        _TEMPLATE.replace(
+            "__INPUT_CONTROLS__", _DEFAULT_CONTROLS if controls is None else controls
+        )
+        .replace("__PARSER__", JAVASCRIPT)
+        .replace("__EDITOR_CSS__", EDITOR_CSS)
+        .replace("__EDITOR_JAVASCRIPT__", EDITOR_JAVASCRIPT)
+        .replace("__DEFAULT_PATTERN__", DEFAULT_PATTERN_JSON)
+        .replace("__STARTUP__", startup)
+    )
+
+
+HTML = make_html()
