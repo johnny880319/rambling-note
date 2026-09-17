@@ -19,38 +19,27 @@ def _(mo):
     mo.md(r"""
     ## Juggling Sequence
 
-    在某個瞬間，對於每個物件，他的狀態能簡要用**將落入哪隻手**和**還有多久會落入手中**這兩個性質概括，可以發現此剛好我們能用上一章定義的 $\mathcal{F}$ 來描述。此外，我們會有多個物件，所以我們一樣可以用 multiset 來描述有多少物件屬於哪些狀態。只是跟 juggling function 的值域不同的是，我們有可能允許物件有無限多個 (但要注意我們每隻手每個瞬間能拋接的物件的數量有限)。綜上所述，我們可以用以下集合來描述各種可能的狀態
+    在某個瞬間，對於每個物件，他的狀態能簡要用**將落入哪隻手**和**還有多久會落入手中**這兩個性質概括，可以發現此剛好我們能用上一章定義的 $\mathcal{F}$ 來描述。此外，我們會有多個物件，所以我們一樣可以用 multiset 來描述有多少物件屬於哪些狀態。只是跟 juggling function 的值域不同的是，我們有可能允許物件有無限多個 (但要注意我們每隻手每個瞬間能拋接的物件的數量有限)。綜上所述，我們可以用以下集合來描述各種可能的狀態，我們稱之為 **juggling state**
 
     $$
     \sigma \in M_{\infty}(\mathcal{F}) := \left\{ m : \mathcal{F} \to \mathbb{Z}_{\geq 0} \right\}, \qquad M(\mathcal{F}) \subset M_{\infty}(\mathcal{F}).
     $$
 
-    當我們遵循一個 juggling matrices 執行雜耍動作時，每一個瞬間都會有一個狀態，把它們沿著時間串起來就是一條**狀態序列** (state sequence)
+    這樣的 juggling state 代表著，若從此刻起不再做任何拋接，則再經過 $u$ 單位時間，會有 $\sigma(j, u)$ 個物件落回第 $j$ 隻手中。特別地，第 $u = 1$ 描述的就是下一瞬間各個手會拋接多少物件。
+
+    當我們今天處於某個狀態時，我們會需要執行一個雜耍動作，來轉移到另一個狀態。在此過程中，我們會將下一瞬間落入手中的物件接住並再次拋出
 
     $$
-    \gamma: \mathbb{Z} \to M_{\infty}(\mathcal{F}).
+    \sum_{x \in \mathcal{F}} \theta_i(x) = \sigma(i, 1) \qquad \forall i \in \mathbb{Z}_{>0}, \qquad \text{(balance)}
     $$
 
-    這裡的時間 $t$ 指第 $t - 1$ 拍拋接完成的瞬間，也就是第 $t$ 拍接球之前。$\gamma(t)$ 代表若從此刻起不再做任何拋接，則再經過 $u$ 單位時間，會有 $\gamma(t)(j, u)$ 個物件落回第 $j$ 隻手中；特別地，第 $1$ 格就是第 $t$ 拍要接的球。
-
-    Juggling matrix 其實就是做一次狀態轉移。他將 $1$ 單位時間後落回手中的物件，再重新拋回空中，整個過程消耗了 $1$ 單位時間，我們可以將此狀態轉移表示成此形式
+    其中 $\theta_i \in M(\mathcal{F})$ 代表著第 $i$ 隻手拋出的物件們的落點。在拋出物件的同時，空中其他的物件離落地又近了一拍，於是轉移到了新的狀態，其表達式為
 
     $$
-    \begin{align*}
-    & \gamma(t + 1) = \gamma(t)^{\downarrow} + \sum_{i \in \mathbb{Z}_{>0}} J(i, t), & \qquad \text{(transition)} \\
-    \text{ where } \quad & \sigma^{\downarrow}(j, u) := \sigma(j, u + 1) \quad \text{ for } \sigma \in M_{\infty}(\mathcal{F})
-    \end{align*}
+    \sigma' = \sigma^{\downarrow} + \sum_{i \in \mathbb{Z}_{>0}} \theta_i, \qquad \text{where } \sigma^{\downarrow}(j, u) := \sigma(j, u + 1). \qquad \text{(transition)}
     $$
 
-    並且下一拍要落回手中的物件數量，跟接下來要丟出的物件的數量要一致
-
-    $$
-    \gamma(t)(i, 1) = \sum_{x \in \mathcal{F}} J(i, t)(x), \qquad \forall (i, t) \in \mathcal{S} \qquad \text{(balance)}
-    $$
-
-    於是我們就描述完了 juggling matrices 跟狀態序列的關係，但滿足上述條件的狀態序列是否存在唯一沒有到很顯然。
-
-    不過在解答這些問題之前，我們先看一個簡單但實用的性質。雖然總球數可能是無限的，但我們每隻手每一瞬間能拋的物件數量都是有限的。而依據 balance 條件，我們可以得知對於每個落下的手，他每個瞬間準備接到的球也都會是有限的，而這些球正是以前各拍拋出、恰好在這一瞬間落下的球的總和。用精確一點的語言表達如下
+    當我們將各種狀態蒐集起來，雜耍動作當作我們的邊，我們就可以建構出一個 directed multigraph $\mathcal{G}$，我們稱其為 **state graph**
     """)
     return
 
@@ -58,6 +47,59 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    /// admonition | Definition (State Graph)
+        type: definition
+
+    The state graph $\mathcal{G}$ is the directed multigraph with vertex set
+
+    $$
+    V(\mathcal{G}) = M_{\infty}(\mathcal{F})
+    $$
+
+    and edge set
+
+    $$
+    E(\mathcal{G}) = \{\, (\sigma, \theta, \sigma') : \sigma, \sigma' \in M_{\infty}(\mathcal{F}),\ \theta \in M(\mathcal{F})^{\mathbb{Z}_{>0}},\ \text{balance and transition hold} \,\},
+    $$
+    ///
+
+    /// admonition
+        type: remark
+
+    這是一個多重圖，因為今天如果有多隻手同時拋出物件時，如果將落點互換，其拋出前後的狀態會一致，但其代表的邊並不相同。
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    當我們遵循一個 juggling matrix 執行雜耍時，其實就相當於在各個 juggling state 之間轉換。每一拍都在 $\mathcal{G}$ 上行走。事實上，給定一個 juggling matrix ，則存在且唯一一個 $\mathcal{G}$ 上面的 walk ，其 vertex sequence 為 $\gamma \in V(\mathcal{G})^{\mathbb{Z}}$ ，使得它滿足
+
+    $$
+    \begin{align*}
+    & \gamma(t)(i, 1) = \sum_{x \in \mathcal{F}} J(i, t)(x), && \forall (i, t) \in \mathcal{S} \quad \text{(balance)} \\
+    & \gamma(t + 1) = \gamma(t)^{\downarrow} + \sum_{i \in \mathbb{Z}_{>0}} J(i, t), && \forall t \in \mathbb{Z} \quad \text{(transition)}
+    \end{align*}
+    $$
+
+    也就是說當時間從 $t$ 推進到 $t + 1$ 時，點會從 $\gamma(t) \in V(\mathcal{G})$ 移動到 $\gamma(t + 1) \in V(\mathcal{G})$ ，而對應的邊則是
+
+    $$
+    (\gamma(t), J(\cdot, t), \gamma(t + 1)) \in E(\mathcal{G})
+    $$
+
+    我們稱這樣的 vertex sequence 為 **juggling sequence** 。
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    在證明給定 $J$ 時， walk 的存在唯一性之前，我們先看一個簡單但實用的性質。雖然總球數可能是無限的，但我們每隻手每一瞬間能拋的物件數量都是有限的。而依據 balance 條件，我們可以得知對於每個落下的手，他每個瞬間準備接到的球也都會是有限的，而這些球正是以前各拍拋出、恰好在這一瞬間落下的球的總和。用精確一點的語言表達如下
+
     /// admonition
         type: proposition
 
@@ -107,7 +149,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    有了上述性質，我們就能解答存在唯一的問題
+    有了上述性質，我們就能解答存在唯一的問題，事實上只要證明 vertex sequence 存在唯一即可，其經過的邊會直接由 juggling matrices 給出。
     """)
     return
 
@@ -211,7 +253,7 @@ def _(mo):
     mo.md(r"""
     Juggling matrix 可以決定 juggling sequence，反之則不全然。因為當我們同時拋出多個物件時，把各手拋出物件的落點互換，也會得出一樣的 state 。
 
-    但弱化版的性質是成立的，當我們從一個狀態出發，經過各個狀態後回到原來的位置。拋出的**落點手 $\times$ 滯空時長**的重數的和，只取決於經過的狀態，不取決於經過的順序。也就是說我們不需要知道 sequence ，只需要知道 states 。這就是著名的 **States Determine Throws**
+    但弱化版的性質是成立的，一個 periodic 的 juggling matrix 在 $\mathcal{G}$ 裡對應到的 closed walk 。沿著它拋出的**落點手 $\times$ 滯空時長**的重數的和，只取決於經過了哪些頂點，不取決於經過的順序跟經過的邊，這就是著名的 **States Determine Throws**
     """)
     return
 
@@ -272,6 +314,72 @@ def _(mo):
         type: remark
 
     注意到 States Determine Throws 只決定了落回哪隻手跟滯空時長，並無法推出這些物件是何時從哪隻手拋出。
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    最後， juggling state 之所以可以被稱為**狀態**，是因為某個時間點是否能執行某個拋的動作，只取決於現在的狀態，我們不需要知道 juggling matrices 過去的所有行為。
+
+    /// admonition | Theorem (Splicing)
+        type: theorem
+
+    Let $J, J'$ be juggling matrices with state sequences $\gamma, \gamma'$, and
+    $t \in \mathbb{Z}$. The splice
+
+    $$
+    J''(\cdot, \tau) := \begin{cases} J(\cdot, \tau) & \tau < t \\ J'(\cdot, \tau) & \tau \geq t \end{cases}
+    $$
+
+    is a juggling matrix if and only if $\gamma(t) = \gamma'(t)$.
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    /// admonition
+        type: proof
+
+    $J''$ is causal, so it is a juggling matrix if and only if it is balanced, that
+    is, for every $(i, \tau) \in \mathcal{S}$
+
+    $$
+    \sum_{\substack{(j, l) \in \mathcal{S} \\ l < \tau}} J''(j, l)(i, \tau - l) - \sum_{x \in \mathcal{F}} J''(i, \tau)(x) = 0,
+    $$
+
+    the second sum being finite as $J''(i, \tau) \in M(\mathcal{F})$. For $\tau < t$,
+
+    $$
+    \begin{align*}
+    & \sum_{\substack{(j, l) \in \mathcal{S} \\ l < \tau}} J''(j, l)(i, \tau - l) - \sum_{x \in \mathcal{F}} J''(i, \tau)(x) \\
+    &= \sum_{\substack{(j, l) \in \mathcal{S} \\ l < \tau}} J(j, l)(i, \tau - l) - \sum_{x \in \mathcal{F}} J(i, \tau)(x) \\
+    &= 0 && \text{(by balance of $J$)}
+    \end{align*}
+    $$
+
+    It remains to see that the difference vanishes for all $\tau \geq t$ if and only
+    if $\gamma(t) = \gamma'(t)$. For $\tau \geq t$,
+
+    $$
+    \begin{align*}
+    & \sum_{\substack{(j, l) \in \mathcal{S} \\ l < \tau}} J''(j, l)(i, \tau - l) - \sum_{x \in \mathcal{F}} J''(i, \tau)(x) \\
+    &= \sum_{\substack{(j, l) \in \mathcal{S} \\ l < t}} J(j, l)(i, \tau - l) + \sum_{\substack{(j, l) \in \mathcal{S} \\ t \leq l < \tau}} J'(j, l)(i, \tau - l) - \sum_{x \in \mathcal{F}} J'(i, \tau)(x) \\
+    &= \sum_{\substack{(j, l) \in \mathcal{S} \\ l < t}} J(j, l)(i, \tau - l) + \sum_{\substack{(j, l) \in \mathcal{S} \\ t \leq l < \tau}} J'(j, l)(i, \tau - l) - \sum_{\substack{(j, l) \in \mathcal{S} \\ l < \tau}} J'(j, l)(i, \tau - l) && \text{(by balance of $J'$)} \\
+    &= \sum_{\substack{(j, l) \in \mathcal{S} \\ l < t}} J(j, l)(i, \tau - l) - \sum_{\substack{(j, l) \in \mathcal{S} \\ l < t}} J'(j, l)(i, \tau - l) \\
+    &= \gamma(t)(i, \tau - t + 1) - \gamma'(t)(i, \tau - t + 1) && \text{(by Throws Determine Sequence)}
+    \end{align*}
+    $$
+
+    With $v = \tau - t + 1$, this vanishes for all $(i, \tau)$ with $\tau \geq t$ if
+    and only if $\gamma(t)(i, v) = \gamma'(t)(i, v)$ for all $(i, v) \in \mathcal{F}$.
+
+    <span class="qed">$\square$</span>
     ///
     """)
     return
@@ -386,9 +494,22 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    當我們沒加上任何限制時，因為我們可以拋到任意高度，或是擁有無限隻手無限個物件等等，可以輕易看出有無限種雜耍的狀態。
+    當我們沒加上任何限制時，因為我們可以拋到任意高度，或是擁有無限隻手無限個物件等等，可以輕易看出 $\mathcal{G}$ 有無限多個頂點。
 
-    但如果我們加上手跟球有限、高度跟 multiplex 數量有有限上界的條件，那可能出現的狀態就會是有限的。
+    但如果我們加上手跟球有限、高度跟 multiplex 數量有有限上界的條件，那可能出現的狀態就會是有限的。用圖的語言說，就是取 $\mathcal{G}$ 的一個誘導子圖：
+
+    /// admonition | Definition (Bounded State Graph)
+        type: definition
+
+    For $b, h, k, c \in \mathbb{Z}_{>0} \cup \{\infty\}$, the bounded state graph
+    $\mathcal{G}(b, h, k, c)$ is the subgraph of $\mathcal{G}$ induced by
+
+    $$
+    V(b, h, k, c) := \{\, \sigma \in M_{\infty}(\mathcal{F}) : b_{\sigma} = b,\ h_{\sigma} \leq h,\ k_{\sigma} \leq k,\ c_{\sigma} \leq c \,\}.
+    $$
+    ///
+
+    球數取等號而其餘取上界，是因為球數沿著每條邊守恆：$\mathcal{G}$ 本來就依 $b_{\sigma}$ 拆成互不相連的幾塊，而高度與 multiplex 只是我們額外劃下的界。一個 juggling matrix 的狀態序列落在 $\mathcal{G}(b, h, k, c)$ 裡，若且唯若它的參數滿足 $b_J = b$ 、 $h_J \leq h$ 、 $k_J \leq k$ 、 $c_J \leq c$ ；這是 Parameters from the State 的另一種說法。
     """)
     return
 
@@ -402,7 +523,7 @@ def _(mo):
     For $b, h, k, c \in \mathbb{Z}_{>0}$,
 
     $$
-    \# \{\, \sigma \in M_{\infty}(\mathcal{F}) : b_{\sigma} = b,\ h_{\sigma} \leq h,\ k_{\sigma} \leq k,\ c_{\sigma} \leq c \,\}
+    \lvert V(b, h, k, c) \rvert
     = \sum_{\ell \geq 0} (-1)^{\ell} \binom{hk}{\ell} \binom{b - \ell(c + 1) + hk - 1}{hk - 1}.
     $$
 
@@ -464,16 +585,17 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    接著是狀態圖的一個對稱性。
+    接著是有界狀態圖的一個對稱性。
 
     /// admonition | Theorem (Complement Duality)
         type: theorem
 
-    Reversing each hand's slots and then replacing every count $x$ by $c - x$
-    carries the $b$-object state graph to the $(hkc - b)$-object state graph of
-    the same $h$, $k$ and $c$, reversing every edge.  The two are therefore
-    anti-isomorphic, and since transposing leaves a trace unchanged, they hold
-    the same number of patterns of each period.
+    For $h, k, c < \infty$, reversing each hand's slots and then replacing every
+    count $x$ by $c - x$ is a bijection $V(b, h, k, c) \to V(hkc - b, h, k, c)$
+    that carries every edge of $\mathcal{G}(b, h, k, c)$ to an edge of
+    $\mathcal{G}(hkc - b, h, k, c)$ in the reverse direction.  The two graphs are
+    therefore anti-isomorphic, and have the same number of closed walks of each
+    length.
 
     *[Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) §2.8.5 treats the one-hand case without multiplex; the form above, for any $h$ and $c$, is proved below.*
 
@@ -548,7 +670,7 @@ def _(mo):
     mo.md(r"""
     剩下幾個也是關於 juggling state 的性質，但因為篇幅跟時間因素，就不證明他們了。
 
-    雜耍玩家有時可能會想嘗試各種各樣的招式，而每個招是所要切換到的狀態可能都不太一樣。以下定理說明只要目前的 juggling state 的高度是有限的，就能在有限步驟內切換到想要的狀態。
+    雜耍玩家有時可能會想嘗試各種各樣的招式，而每個招是所要切換到的狀態可能都不太一樣。以下定理說明只要目前的 juggling state 的高度是有限的，就能在有限步驟內切換到想要的狀態。用圖的語言說：在 $\mathcal{G}$ 裡，從任何高度有限的頂點出發，都有 walk 通到每一個球數相同的頂點。
 
     /// admonition | Theorem (Forgetting the Past)
         type: theorem
@@ -577,12 +699,12 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    以下兩個關於 prime loop 的結果需要 $b, h, k \geq 2$。
+    以下兩個關於 prime loop （也就是 $\mathcal{G}(b, h, k, c)$ 的 cycle ）的結果需要 $b, h, k \geq 2$。
 
     /// admonition | Theorem
         type: theorem
 
-    For $b, h, k \geq 2$, no prime loop visits every state.
+    For $b, h, k \geq 2$, no cycle of $\mathcal{G}(b, h, k, c)$ visits every vertex.
 
     *[Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) §4.3, where a sketch of the proof is given.*
 
@@ -591,8 +713,8 @@ def _(mo):
     /// admonition | Theorem (Maximal Prime Loops)
         type: theorem
 
-    Let $\mathrm{MMP}(b, h, k)$ be the length of a longest prime loop when the
-    capacity is unbounded.  For $b, h, k \geq 2$,
+    Let $\mathrm{MMP}(b, h, k)$ be the length of a longest cycle of
+    $\mathcal{G}(b, h, k, \infty)$.  For $b, h, k \geq 2$,
 
     $$
     \binom{b + h - 1}{b} k \;\leq\; \mathrm{MMP}(b, h, k) \;\leq\; \binom{b + hk - 1}{b} - 1 .
@@ -638,7 +760,7 @@ def _(mo):
     /// admonition
         type: remark
 
-    $k = 1$ 是個退化的情形：此時 $\sigma^{\downarrow} = 0$，下一個狀態完全由這一拍的投擲決定，而每個物件都必須被重新拋出，所以任何狀態都能到任何狀態 —— 圖是完全的，含自環。
+    $k = 1$ 是個退化的情形：此時 $\sigma^{\downarrow} = 0$，下一個狀態完全由這一拍的投擲決定，而每個物件都必須被重新拋出，所以任何狀態都能一步到任何狀態 —— $\mathcal{G}(b, h, 1, c)$ 是完全圖，含自環。
     ///
     """)
     return
