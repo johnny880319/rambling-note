@@ -9,7 +9,7 @@ def _(mo):
     mo.md(r"""
     # Juggling States
 
-    在前一個章節，我們關心如何將一串雜耍的 pattern 轉為符號的形式。每個時間點，玩家都會進行不同的拋接動作，來讓雜耍持續下去。 **Juggling Sequence** 則是記錄了每個時間點的狀態 (**Juggling State**)，這個狀態告訴我們接下來玩家可以進行何種拋接動作。這個狀態是無記憶性的，也就是不管你是透過何種途徑來到這個狀態，都不會影響你後續可以選擇的拋接動作。
+    在前一個章節，我們關心如何將一串雜耍的 pattern 轉為符號的形式。每個時間點，玩家都會進行不同的拋接動作，來讓雜耍持續下去。 **State Sequence** 則是記錄了每個時間點的狀態 (**Juggling State**)，這個狀態告訴我們接下來玩家可以進行何種拋接動作。這個狀態是無記憶性的，也就是不管你是透過何種途徑來到這個狀態，都不會影響你後續可以選擇的拋接動作。
     """)
     return
 
@@ -17,7 +17,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Juggling Sequence
+    ## State Sequence
 
     在某個瞬間，對於每個物件，他的狀態能簡要用**將落入哪隻手**和**還有多久會落入手中**這兩個性質概括，可以發現此剛好我們能用上一章定義的 $\mathcal{F}$ 來描述。此外，我們會有多個物件，所以我們一樣可以用 multiset 來描述有多少物件屬於哪些狀態。只是跟 juggling function 的值域不同的是，我們有可能允許物件有無限多個 (但要注意我們每隻手每個瞬間能拋接的物件的數量有限)。綜上所述，我們可以用以下集合來描述各種可能的狀態，我們稱之為 **juggling state**
 
@@ -59,7 +59,7 @@ def _(mo):
     and edge set
 
     $$
-    E(\mathcal{G}) = \{\, (\sigma, \theta, \sigma') : \sigma, \sigma' \in M_{\infty}(\mathcal{F}),\ \theta \in M(\mathcal{F})^{\mathbb{Z}_{>0}},\ \text{balance and transition hold} \,\},
+    E(\mathcal{G}) = \{\, (\sigma, \theta, \sigma') : \sigma, \sigma' \in M_{\infty}(\mathcal{F}),\ \theta \in M(\mathcal{F})^{\mathbb{Z}_{>0}},\ \text{balance and transition hold} \,\}
     $$
     ///
 
@@ -90,7 +90,7 @@ def _(mo):
     (\gamma(t), J(\cdot, t), \gamma(t + 1)) \in E(\mathcal{G})
     $$
 
-    我們稱這樣的 vertex sequence 為 **juggling sequence** 。
+    我們稱這樣的 vertex sequence 為 **state sequence** 。
     """)
     return
 
@@ -251,9 +251,29 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Juggling matrix 可以決定 juggling sequence，反之則不全然。因為當我們同時拋出多個物件時，把各手拋出物件的落點互換，也會得出一樣的 state 。
+    /// admonition
+        type: remark
 
-    但弱化版的性質是成立的，一個 periodic 的 juggling matrix 在 $\mathcal{G}$ 裡對應到的 closed walk 。沿著它拋出的**落點手 $\times$ 滯空時長**的重數的和，只取決於經過了哪些頂點，不取決於經過的順序跟經過的邊，這就是著名的 **States Determine Throws**
+    一個 juggling matrix 決定唯一一條 $\mathcal{G}$ 上的 walk 。反之給定一條 walk ，對應的 juggling matrix 若存在則必唯一，其對應到的是 walk 的邊裡的 $\theta \in M(\mathcal{F})^{\mathbb{Z}_{>0}}$ 。
+
+    但也有不存在的情況，比如
+
+    $$
+    \gamma(t)(j, u) = 1_{\{t \geq 0,\, j = 1,\, u = 1\}} + 1_{\{t < 0,\, j = 1,\, u = 1 - t\}},
+    $$
+
+    它描述的是一顆從未被拋出，卻一直在空中往下掉的球。在時間點 $0$ 落回第 $1$ 隻手，之後每拍被丟成 $1$ 。會有此現象的根本原因是因為 walk 只要確定每一步的狀態轉換是否合法，但 juggling matrix 要去溯源每一顆球如何被拋出。
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Juggling matrix 可以決定 walk ，所以可以進而決定 state sequence，但反之則不全然。因為當我們同時拋出多個物件時，把各手拋出物件的落點互換，也會得出一樣的 state 。
+
+    不過弱化版的性質是成立的，一個 periodic 的 juggling matrix 在 $\mathcal{G}$ 裡對應到一條 closed walk，沿著它拋出的**落點手 $\times$ 滯空時長**的重數的和，只取決於經過了哪些頂點，不取決於經過的順序跟經過的邊，這就是著名的 **States Determine Throws**
     """)
     return
 
@@ -415,6 +435,28 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    /// admonition
+        type: remark
+
+    可以注意到相連的兩個狀態 $\sigma, \sigma'$ 的球數會一樣，假如 $(\sigma, \theta, \sigma') \in E(\mathcal{G})$
+
+    $$
+    \begin{align*}
+    b_{\sigma'} &= \sum_{(i, u) \in \mathcal{F}} \sigma'(i, u) \\
+    &= \sum_{(i, u) \in \mathcal{F}} \sigma^{\downarrow}(i, u) + \sum_{j \in \mathbb{Z}_{>0}} \sum_{(i, u) \in \mathcal{F}} \theta_j(i, u) \\
+    &= \sum_{(i, u) \in \mathcal{F}} \sigma(i, u + 1) + \sum_{j \in \mathbb{Z}_{>0}} \sigma(j, 1) \\
+    &= \sum_{(i, u) \in \mathcal{F}} \sigma(i, u) \\
+    &= b_{\sigma}
+    \end{align*}
+    $$
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     這樣除了 period 以外的狀態序列的參數就可以用其經過的 juggling state 訂出來，而且會跟 juggling matrices 導出的參數是一樣的，不過這邊證明我先偷懶用 AI 證，之後有空我再用我的語言重寫。
 
     /// admonition | Proposition (Parameters from the State)
@@ -485,7 +527,7 @@ def _(mo):
     /// admonition
         type: remark
 
-    跟 states determine throws 一樣，因為物件落點互換時 state 不會改變，所以我們無法從 juggling sequence 的週期去推算出 juggling matrices 的週期。但至少我們能知道後者週期是前者週期的倍數。
+    跟 states determine throws 一樣，因為物件落點互換時 state 不會改變，所以我們無法從 state sequence 的週期去推算出 juggling matrices 的週期。但至少我們能知道後者週期是前者週期的倍數。
     ///
     """)
     return
@@ -496,7 +538,7 @@ def _(mo):
     mo.md(r"""
     當我們沒加上任何限制時，因為我們可以拋到任意高度，或是擁有無限隻手無限個物件等等，可以輕易看出 $\mathcal{G}$ 有無限多個頂點。
 
-    但如果我們加上手跟球有限、高度跟 multiplex 數量有有限上界的條件，那可能出現的狀態就會是有限的。用圖的語言說，就是取 $\mathcal{G}$ 的一個誘導子圖：
+    但我們可以加上手跟球有限、高度跟 multiplex 數量有有限上界的條件，用圖論的語言說，就是取 $\mathcal{G}$ 的一個誘導子圖：
 
     /// admonition | Definition (Bounded State Graph)
         type: definition
@@ -509,7 +551,7 @@ def _(mo):
     $$
     ///
 
-    球數取等號而其餘取上界，是因為球數沿著每條邊守恆：$\mathcal{G}$ 本來就依 $b_{\sigma}$ 拆成互不相連的幾塊，而高度與 multiplex 只是我們額外劃下的界。一個 juggling matrix 的狀態序列落在 $\mathcal{G}(b, h, k, c)$ 裡，若且唯若它的參數滿足 $b_J = b$ 、 $h_J \leq h$ 、 $k_J \leq k$ 、 $c_J \leq c$ ；這是 Parameters from the State 的另一種說法。
+    球數取等號而其餘參數取上界，是因為相連的狀態球數會一樣。而這樣的誘導子圖，其狀態就會是有限的。
     """)
     return
 
@@ -567,6 +609,125 @@ def _(mo):
     - At $c \geq b$, only the $\ell = 0$ term reaches $z^{b}$, giving $\binom{b + hk - 1}{b}$.
 
     <span class="qed">$\square$</span>
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    雜耍玩家有時可能會想嘗試各種各樣的招式，而每個招是所要切換到的狀態可能都不太一樣。以下定理說明只要目前的 juggling state 的高度是有限的，就能在有限步驟內切換到想要的狀態。用圖的語言說就是，在 $\mathcal{G}$ 裡，從任何高度有限的頂點出發，都有 walk 通到每一個球數相同的頂點，而且走的步數跟路徑可以被嚴格控制。
+
+    /// admonition | Theorem (Forgetting the Past)
+        type: theorem
+
+    Let $\sigma, \sigma' \in V(b, h, k, c)$ with $k < \infty$. Then
+    $\mathcal{G}(b, h, k, c)$ contains a walk of length $k_\sigma$ from $\sigma$ to
+    $\sigma'$.
+
+    In particular, $\mathcal{G}(b, h, k, c)$ is strongly connected, with diameter at most $k$.
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    /// admonition | Proof (by AI)
+        type: proof
+
+    Start at time $0$; every object of $\sigma$ lands within $k_{\sigma}$ beats.
+    Write $D(u) := \sum_{j} \sum_{v \geq u} \sigma'(j, v)$ for the number of objects
+    of $\sigma'$ at height at least $u$. A throw at beat $s$ landing in slot
+    $(j, u)$ of the state at time $k_{\sigma}$ has flight $k_{\sigma} + u - 1 - s$,
+    which is at most $k$ exactly when $s \geq s_u := \max(0,\; u - 1 - (k - k_{\sigma}))$;
+    so the $D(u)$ objects of $\sigma'$ at height $\geq u$ must be thrown at beats in
+    $[s_u, k_{\sigma} - 1]$, an interval of $\min(k - u + 1, k_{\sigma})$ beats. Note
+    $D(u) \leq hc (k - u + 1)$ and $D(u) \leq b \leq hc \, k_{\sigma}$.
+
+    *Bounces.* An object may be thrown once more before its final throw: at the
+    beat $s$ it lands, to some hand $\leq h$ at a beat $\tau \leq k_{\sigma} - 1$,
+    with flight $\tau - s \leq k$. Process $u = k, k - 1, \cdots, 2$, and let $m(u)$
+    be the number of objects whose last landing beat is $\geq s_u$. If
+    $m(u) < D(u)$, bounce the $D(u) - m(u)$ earliest-landing objects not yet
+    bounced into slots $(j, \tau)$ with $\tau \geq s_u$ that hold fewer than $c$
+    objects. Such objects exist, since $D(u) \leq b$, and they land before beat
+    $s_u$, so all earlier bounces also came from before beat $s_u$; hence the room
+    in the beats $\geq s_u$ is $hc \min(k - u + 1, k_{\sigma}) - m(u) \geq D(u) - m(u)$.
+    Afterwards $m(u) \geq D(u)$ for every $u$.
+
+    *Targets.* Process $u = k, \cdots, 1$ again: assign the objects of $\sigma'$ at
+    height $u$ to $D(u) - D(u + 1)$ unassigned objects whose last landing beat $s$
+    is $\geq s_u$, of which there are $m(u) - D(u + 1)$, and throw each from that
+    beat with flight $k_{\sigma} + u - 1 - s \leq k$.
+
+    Every object is thrown when it lands, so each beat is an edge of
+    $\mathcal{G}$; every flight is at most $k$ and lands in a hand $\leq h$; every
+    slot holds at most $c$ objects, those landing before beat $k_{\sigma}$ by
+    construction and the later ones because they form $\sigma'$; and at time
+    $k_{\sigma}$ exactly the objects of $\sigma'$ are in the air.
+
+    <span class="qed">$\square$</span>
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    剩下幾個也是關於 juggling state 的性質，但因為篇幅跟時間因素，就不證明他們了。
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    以下兩個定理是研究 $\mathcal{G}(b, h, k, \infty)$ 的 cycle (在 [Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) 裡稱作 **prime loop** ) 最長可以到多長。
+
+    /// admonition | Theorem
+        type: theorem
+
+    For $b, h, k \geq 2$, no cycle of $\mathcal{G}(b, h, k, \infty)$ visits every vertex.
+
+    *[Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) §4.3, where a sketch of the proof is given.*
+
+    ///
+
+    /// admonition | Theorem (Maximal Prime Loops)
+        type: theorem
+
+    Let $\mathrm{MMP}(b, h, k)$ be the length of a longest cycle of
+    $\mathcal{G}(b, h, k, \infty)$.  For $b, h, k \geq 2$,
+
+    $$
+    \binom{b + h - 1}{b} k \;\leq\; \mathrm{MMP}(b, h, k) \;\leq\; \binom{b + hk - 1}{b} - 1 .
+    $$
+
+    The upper bound is the theorem above; the lower bound comes from a cycle
+    through the states whose objects all sit at the same height.
+
+    *[Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) §4.3.*
+
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    最後，當我們只有一隻手且不做 multiplex 時，週期為 p 的 juggling matrices 的可能性可以被精確算出來。
+
+    /// admonition | Theorem (Buhler–Eisenbud–Graham–Wright)
+        type: theorem
+
+    The number of closed walks of length $p$ in $\mathcal{G}(b, 1, \infty, 1)$ is $(b + 1)^{p} - b^{p}$.
+
+    *[Buhler, Eisenbud, Graham & Wright, *Juggling Drops and Descents*, Amer. Math. Monthly **101** (1994) 507–519](https://doi.org/10.1080/00029890.1994.11996984).*
     ///
     """)
     return
@@ -660,107 +821,6 @@ def _(mo):
     the old one, so $\varphi$ is a bijection on edges as well.
 
     <span class="qed">$\square$</span>
-    ///
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    剩下幾個也是關於 juggling state 的性質，但因為篇幅跟時間因素，就不證明他們了。
-
-    雜耍玩家有時可能會想嘗試各種各樣的招式，而每個招是所要切換到的狀態可能都不太一樣。以下定理說明只要目前的 juggling state 的高度是有限的，就能在有限步驟內切換到想要的狀態。用圖的語言說：在 $\mathcal{G}$ 裡，從任何高度有限的頂點出發，都有 walk 通到每一個球數相同的頂點。
-
-    /// admonition | Theorem (Forgetting the Past)
-        type: theorem
-
-    Let $\sigma, \sigma'$ be states with $b_{\sigma} = b_{\sigma'}$ and
-    $k_{\sigma} < \infty$. Then for any $t \in \mathbb{Z}$, some juggling matrix has a state sequence $\gamma$
-    with $\gamma(t) = \sigma$ and $\gamma(t + k_{\sigma}) = \sigma'$.
-    ///
-
-    /// admonition
-        type: proof
-
-    WLOG, assume $t = 0$. Every object of $\sigma$ lands within $k_{\sigma}$ beats. When one lands at
-    beat $s$, throw it to its slot $(j, u)$ in $\sigma'$ with flight
-    $k_{\sigma} + u - 1 - s \geq 1$, so that it lands at beat
-    $k_{\sigma} + u - 1$. Each hand throws only what it catches from $\sigma$,
-    and at beat $k_{\sigma}$ nothing else is in the air, so
-    $\gamma(k_{\sigma}) = \sigma'$.
-
-    <span class="qed">$\square$</span>
-    ///
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    以下兩個關於 prime loop （也就是 $\mathcal{G}(b, h, k, c)$ 的 cycle ）的結果需要 $b, h, k \geq 2$。
-
-    /// admonition | Theorem
-        type: theorem
-
-    For $b, h, k \geq 2$, no cycle of $\mathcal{G}(b, h, k, c)$ visits every vertex.
-
-    *[Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) §4.3, where a sketch of the proof is given.*
-
-    ///
-
-    /// admonition | Theorem (Maximal Prime Loops)
-        type: theorem
-
-    Let $\mathrm{MMP}(b, h, k)$ be the length of a longest cycle of
-    $\mathcal{G}(b, h, k, \infty)$.  For $b, h, k \geq 2$,
-
-    $$
-    \binom{b + h - 1}{b} k \;\leq\; \mathrm{MMP}(b, h, k) \;\leq\; \binom{b + hk - 1}{b} - 1 .
-    $$
-
-    The upper bound is the theorem above; the lower bound comes from a loop built
-    out of the states whose objects all sit in one column.
-
-    *[Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) §4.3.*
-
-    ///
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    最後一個需要更強的條件，而且有反例說明條件不能拿掉。
-
-    /// admonition | Theorem (Buhler-Eisenbud-Graham-Wright)
-        type: theorem
-
-    Suppose $h = 1$ and $c = 1$.  Then the number of $p$-periodic juggling
-    sequences with $b$ objects is $(b + 1)^{p} - b^{p}$.
-
-    *[Buhler, Eisenbud, Graham & Wright, *Juggling Drops and Descents*, Amer. Math. Monthly **101** (1994) 507–519](https://doi.org/10.1080/00029890.1994.11996984).*
-
-    ///
-
-    /// admonition
-        type: remark
-
-    這條只對單手成立。兩手時同樣的計數會給出完全不同的數字 —— 例如 $2$ 物件 $2$ 手高度 $5$，週期 $1, 2, 3$ 分別是 $4, 40, 310$，而公式給 $1, 5, 19$ —— 因為原本的證明吃的是「每一拍恰好丟一顆」。
-    ///
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    /// admonition
-        type: remark
-
-    $k = 1$ 是個退化的情形：此時 $\sigma^{\downarrow} = 0$，下一個狀態完全由這一拍的投擲決定，而每個物件都必須被重新拋出，所以任何狀態都能一步到任何狀態 —— $\mathcal{G}(b, h, 1, c)$ 是完全圖，含自環。
     ///
     """)
     return
