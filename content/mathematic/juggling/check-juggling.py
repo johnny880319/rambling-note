@@ -348,9 +348,9 @@ for (const text of ['5','[5,9]','0|0','3_2|0 0|3_1','[3,3,5]','2','64']) {
     points.catch={x:5+(h*31+t*11)%90,y:35+(h*9+t*7)%55};
     points.throw={x:95-(h*23+t*13)%90,y:90-(h*7+t*11)%55};
   }));
-  for(const holdTwos of [false,true]) for(const dwell of [0.1,0.8]) for(const gravity of [4,24,48]) {
+  for(const holdTwos of [false,true]) for(const dwell of [0.1,0.8]) for(const gravity of [4,24,48]) for(const viewportHeight of [240,600,900]) {
     p.holdTwos=holdTwos;
-    const before=JSON.stringify(g),view=fitView(p,g,dwell,gravity);
+    const before=JSON.stringify(g),view=fitView(p,g,dwell,gravity,24,viewportHeight);
     assert.equal(JSON.stringify(g),before);
     assert.ok(view.scale>0 && view.scale<=1);
     for(const point of [{x:5,y:35},{x:95,y:90},{x:50,y:-1000}]) close(worldPoint(viewPoint(point,view),view),point);
@@ -358,7 +358,7 @@ for (const text of ['5','[5,9]','0|0','3_2|0 0|3_1','[3,3,5]','2','64']) {
       for(let i=0;i<=20;i++) {
         const time=ball.origin+segment.start+segment.edge.duration*i/20;
         const point=ballPosition(p,g,ball,time,dwell,true,gravity),screen=viewPoint(point,view);
-        assert.ok(screen.x>=0 && screen.x<=1000 && screen.y>=0 && screen.y<=600,`${text}: clipped trajectory`);
+        assert.ok(screen.x>=0 && screen.x<=1000 && screen.y>=0 && screen.y<=viewportHeight,`${text}: clipped trajectory`);
       }
       for(const t of [ball.origin+segment.start,ball.origin+segment.start+dwell]) {
         close(ballPosition(p,g,ball,t-1e-7,dwell,true,gravity),ballPosition(p,g,ball,t+1e-7,dwell,true,gravity));

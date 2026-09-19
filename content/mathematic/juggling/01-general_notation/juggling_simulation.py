@@ -37,7 +37,10 @@ label { display: inline-flex; align-items: center; gap: 6px; }
 input[type=range] { width: 110px; accent-color: var(--accent); }
 input[type=checkbox] { accent-color: var(--accent); }
 input[type=number] { width: 72px; }
-#stage { display: block; width: 100%; aspect-ratio: 5 / 3; touch-action: none; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+#stage { display: block; width: 100%; aspect-ratio: 5 / 3; cursor: grab; touch-action: none; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+#stageResizeHandle { height: 18px; margin: -1px 0 2px; cursor: ns-resize; touch-action: none; position: relative; }
+#stageResizeHandle::after { content: ""; position: absolute; left: calc(50% - 28px); top: 7px; width: 56px; border-top: 3px solid var(--line); border-radius: 2px; }
+#stageResizeHandle:hover::after, #stageResizeHandle:focus-visible::after { border-color: var(--accent); }
 #stats { font-variant-numeric: tabular-nums; color: var(--accent); }
 #clock { margin-left: auto; font-variant-numeric: tabular-nums; }
 p { margin: 7px 0 12px; }
@@ -56,7 +59,10 @@ summary { cursor: pointer; font-weight: 600; }
 <body>
 __INPUT_CONTROLS__
 <p id="message" role="status" aria-live="polite"></p>
-<details id="geometrySettings">
+<div id="animation">
+<canvas id="stage" width="1000" height="600" role="img" aria-label="雜耍動畫：彩色球在各平台間拋接。可拖曳接球圓點與拋球菱形，或使用下方的平台位置設定。"></canvas>
+<div id="stageResizeHandle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="拖曳以調整動畫視窗高度" aria-valuemin="220" aria-valuemax="800" aria-valuenow="360"></div>
+<details id="geometrySettings" class="simulation-setting">
   <summary>調整平台位置</summary>
   <p class="hint">圓點是接球點，菱形是拋球點；顏色與平台相同。選擇手與拍次後，可以修改座標或直接拖曳動畫中的控制點。</p>
 <div id="coordinates">
@@ -74,27 +80,30 @@ __INPUT_CONTROLS__
   <p class="hint">座標以原始場景為基準，y 向下增加；視野縮放不會改變座標。拖曳時視野固定，放開後才重新取景。「所有拍」會把修改的點套用到該手的整個週期；選單一拍可以安排交叉、高低交替的路徑。空拍的位置不參與拋接。</p>
 </div>
 </details>
-<div id="animation">
-<div class="row">
+<div id="timelineLabel" class="row" style="margin-top: 8px">
+  <label for="scrub">時間（拖曳會暫停）</label>
+  <output id="clock"></output>
+</div>
+<input id="scrub" type="range" min="0" max="6" step="0.001" value="0" aria-label="動畫時間，單位為拍">
+<div id="playbackControls" class="row simulation-setting" style="margin-top: 12px">
   <button id="play" class="primary">暫停</button>
   <button id="restart">從頭播放</button>
   <label>速度 <input id="speed" type="range" min="0.25" max="2" step="0.05" value="1"><output id="speedValue">1.00×</output></label>
   <label>持球 <input id="dwell" type="range" min="0.1" max="0.8" step="0.05" value="0.35"><output id="dwellValue">0.35 拍</output></label>
   <label>重力 <input id="gravity" type="range" min="4" max="48" step="1" value="12" aria-label="重力加速度，單位為 y 座標單位每拍平方"><output id="gravityValue">12</output></label>
 </div>
-<p class="hint">重力以 y 座標單位／拍² 計算；拋接拍數固定時，重力越大，拋球越高。視野會等比例容納整段軌跡，播放中保持固定。</p>
-<div class="row">
+<p id="physicsHint" class="hint simulation-setting">重力以 y 座標單位／拍² 計算；拋接拍數固定時，重力越大，拋球越高。視野會等比例容納整段軌跡，播放中保持固定。</p>
+<div id="displayControls" class="row simulation-setting">
   <label><input id="guides" type="checkbox" checked>顯示控制點</label>
   <label><input id="trails" type="checkbox" checked>球的尾跡</label>
   <label><input id="dip" type="checkbox" checked>接球下沉</label>
 </div>
-<canvas id="stage" width="1000" height="600" role="img" aria-label="雜耍動畫：彩色球在各平台間拋接。可拖曳接球圓點與拋球菱形，或使用上方的平台位置設定。"></canvas>
-<div class="row" style="margin-top: 8px">
-  <label for="scrub">時間（拖曳會暫停）</label>
-  <output id="clock"></output>
+<div id="viewportControls" class="row simulation-setting" style="margin-top: 10px">
+  <label>視窗高度 <input id="stageHeight" type="range" min="220" max="800" step="10" value="360"><output id="stageHeightValue">自動</output></label>
+  <button id="fitViewport" type="button">自動取景</button>
+  <output id="zoomValue" aria-live="polite">100%</output>
 </div>
-<input id="scrub" type="range" min="0" max="6" step="0.001" value="0" aria-label="動畫時間，單位為拍">
-<p class="hint">球的顏色與編號會持續跟著同一顆球。圓點可拖曳接球位置，菱形可拖曳拋球位置。</p>
+<p id="interactionHint" class="hint simulation-setting">滾輪或雙指可縮放，拖曳動畫空白處可移動視野；拖曳下方把手可調整視窗高度。球的顏色與編號會持續跟著同一顆球。圓點可拖曳接球位置，菱形可拖曳拋球位置。</p>
 </div>
 <script>
 "use strict";
@@ -208,7 +217,7 @@ function ballPosition(pattern, geometry, ball, time, dwell, dip, gravity = 12) {
     held: false, edge};
 }
 
-function fitView(pattern, geometry, dwell, gravity, padding = 24) {
+function fitView(pattern, geometry, dwell, gravity, padding = 24, viewportHeight = 600) {
   let left = 0, right = 1000, top = 0, bottom = 600;
   geometry.forEach((hand, h) => {
     const capacity = Math.max(1, ...pattern.outgoing.map(row => row[h].length));
@@ -230,8 +239,8 @@ function fitView(pattern, geometry, dwell, gravity, padding = 24) {
     const y = mix(a.y, b.y, elapsed / flight) - gravity * elapsed * (flight - elapsed) / 2 - 1.8;
     top = Math.min(top, y * 6 - 24);
   }
-  const scale = Math.min(1, (1000 - 2 * padding) / (right - left), (600 - 2 * padding) / (bottom - top));
-  return {scale, x: 500 - (left + right) * scale / 2, y: 600 - padding - bottom * scale};
+  const scale = Math.min(1, (1000 - 2 * padding) / (right - left), (viewportHeight - 2 * padding) / (bottom - top));
+  return {scale, x: 500 - (left + right) * scale / 2, y: viewportHeight - padding - bottom * scale};
 }
 function viewPoint(point, view) {
   return {x: point.x * 10 * view.scale + view.x, y: point.y * 6 * view.scale + view.y};
@@ -249,15 +258,33 @@ const defaultPattern = __DEFAULT_PATTERN__;
 if ($("patternEditor")) createPatternEditor($("patternEditor"), {value: defaultPattern, hint: "修改後按「套用並播放」。", describedBy: "message"});
 let pattern, geometry, source, time = 0, lastStamp = null, onFrame = null;
 let running = !matchMedia("(prefers-reduced-motion: reduce)").matches;
-let drag = null, resumeAfterDrag = false, frame = null;
+let drag = null, pan = null, resumeAfterDrag = false, frame = null;
 let view = {scale: 1, x: 0, y: 0};
+let fittedScale = 1, customHeight = false, resizingStage = null;
+const touchPoints = new Map();
+let pinch = null;
 const canvas = $("stage"), context = canvas.getContext("2d");
 const dwell = () => Number($("dwell").value);
 const gravity = () => Number($("gravity").value);
+const logicalHeight = () => 1000 * canvas.clientHeight / canvas.clientWidth;
+function updateZoom() { $("zoomValue").value = `${Math.round(view.scale / fittedScale * 100)}%`; }
 function fitViewport() {
-  if (pattern && !drag && canvas.clientWidth) {
-    view = fitView(pattern, geometry, dwell(), gravity(), Math.min(100, Math.max(24, 24000 / canvas.clientWidth)));
+  if (pattern && !drag && !pan && canvas.clientWidth) {
+    const padding = Math.min(100, Math.max(24, 24000 / canvas.clientWidth));
+    view = fitView(pattern, geometry, dwell(), gravity(), padding, logicalHeight());
+    fittedScale = view.scale; updateZoom();
   }
+}
+function canvasPoint(event) {
+  const rect = canvas.getBoundingClientRect();
+  return {x: (event.clientX - rect.left - canvas.clientLeft) / canvas.clientWidth * 1000,
+    y: (event.clientY - rect.top - canvas.clientTop) / canvas.clientHeight * logicalHeight()};
+}
+function zoomFrom(base, centre, target, factor) {
+  const scale = Math.max(fittedScale * 0.5, Math.min(fittedScale * 8, base.scale * factor));
+  const world = {x: (centre.x - base.x) / base.scale, y: (centre.y - base.y) / base.scale};
+  view = {scale, x: target.x - world.x * scale, y: target.y - world.y * scale};
+  updateZoom(); draw();
 }
 const handColor = h => `hsl(${(h * 137.508 + 210) % 360} 64% 53%)`;
 const ballColor = id => `hsl(${(id * 137.508 + 32) % 360} 80% 53%)`;
@@ -304,14 +331,15 @@ function draw() {
   if (!pattern || !canvas.clientWidth) return;
   const ratio = devicePixelRatio || 1;
   const width = Math.round(canvas.clientWidth * ratio);
-  const height = Math.round(canvas.clientWidth * 0.6 * ratio);
+  const height = Math.round(canvas.clientHeight * ratio);
+  const viewportHeight = logicalHeight();
   if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
-  context.setTransform(canvas.width / 1000, 0, 0, canvas.height / 600, 0, 0);
-  context.clearRect(0, 0, 1000, 600);
+  context.setTransform(canvas.width / 1000, 0, 0, canvas.height / viewportHeight, 0, 0);
+  context.clearRect(0, 0, 1000, viewportHeight);
   const style = getComputedStyle(document.documentElement);
   const muted = style.getPropertyValue("--muted"), line = style.getPropertyValue("--line");
   context.strokeStyle = line; context.lineWidth = 1;
-  for (let y = 100; y < 600; y += 100) { context.beginPath(); context.moveTo(0, y); context.lineTo(1000, y); context.stroke(); }
+  for (let y = 100; y < viewportHeight; y += 100) { context.beginPath(); context.moveTo(0, y); context.lineTo(1000, y); context.stroke(); }
   context.translate(view.x, view.y); context.scale(view.scale, view.scale);
   /* Keep markers readable while scaling their positions uniformly. */
   const pixelsPerUnit = view.scale * canvas.clientWidth / 1000;
@@ -388,6 +416,31 @@ $("scrub").oninput = () => { running = false; time = Number($("scrub").value); s
 $("speed").oninput = () => { $("speedValue").value = Number($("speed").value).toFixed(2) + "×"; };
 $("dwell").oninput = () => { $("dwellValue").value = dwell().toFixed(2) + " 拍"; fitViewport(); draw(); };
 $("gravity").oninput = () => { $("gravityValue").value = String(gravity()); fitViewport(); draw(); };
+$("fitViewport").onclick = () => { fitViewport(); draw(); };
+function setStageHeight(height, custom = true) {
+  const value = Math.max(Number($("stageHeight").min), Math.min(Number($("stageHeight").max), Math.round(height / 10) * 10));
+  customHeight = custom; canvas.style.aspectRatio = "auto"; canvas.style.height = `${value}px`;
+  $("stageHeight").value = value; $("stageHeightValue").value = `${value}px`;
+  resizeHandle.setAttribute("aria-valuenow", value);
+}
+$("stageHeight").oninput = () => setStageHeight(Number($("stageHeight").value));
+const resizeHandle = $("stageResizeHandle");
+resizeHandle.onpointerdown = event => {
+  if (event.button !== 0 && event.pointerType === "mouse") return;
+  resizingStage = {pointer: event.pointerId, y: event.clientY, height: canvas.clientHeight};
+  resizeHandle.setPointerCapture(event.pointerId);
+};
+resizeHandle.onpointermove = event => {
+  if (!resizingStage || resizingStage.pointer !== event.pointerId) return;
+  setStageHeight(resizingStage.height + event.clientY - resizingStage.y);
+};
+resizeHandle.onpointerup = resizeHandle.onpointercancel = event => {
+  if (resizingStage?.pointer === event.pointerId) resizingStage = null;
+};
+resizeHandle.onkeydown = event => {
+  if (!["ArrowUp", "ArrowDown"].includes(event.key)) return;
+  event.preventDefault(); setStageHeight(canvas.clientHeight + (event.key === "ArrowDown" ? 20 : -20));
+};
 for (const id of ["guides", "trails", "dip"]) $(id).onchange = draw;
 for (const id of ["hand", "phase"]) $(id).onchange = () => { syncCoordinates(); draw(); };
 $("resetGeometry").onclick = () => { geometry = defaultGeometry(pattern); syncCoordinates(); fitViewport(); draw(); };
@@ -405,38 +458,78 @@ for (const kind of ["catch", "throw"]) for (const axis of ["x", "y"]) {
   };
 }
 function pointerPoint(event) {
-  const rect = canvas.getBoundingClientRect();
-  return worldPoint({x: (event.clientX - rect.left - canvas.clientLeft) / canvas.clientWidth * 1000,
-    y: (event.clientY - rect.top - canvas.clientTop) / canvas.clientHeight * 600}, view);
+  return worldPoint(canvasPoint(event), view);
 }
 canvas.onpointerdown = event => {
-  if (!$("guides").checked || drag || (event.pointerType === "mouse" && event.button !== 0)) return;
-  const point = pointerPoint(event);
-  const hits = guidePoints().map(guide => ({...guide, distance: Math.hypot((point.x - guide.point.x) * view.scale * canvas.clientWidth / 100, (point.y - guide.point.y) * view.scale * canvas.clientHeight / 100)}));
-  hits.sort((a, b) => a.distance - b.distance || Number(b.hand === Number($("hand").value)) - Number(a.hand === Number($("hand").value)));
-  if (hits[0].distance > 20) return;
-  drag = {...hits[0], pointer: event.pointerId, offset: {x: point.x - hits[0].point.x, y: point.y - hits[0].point.y}};
-  $("hand").value = drag.hand; syncCoordinates();
-  resumeAfterDrag = running; running = false; updatePlay();
-  canvas.setPointerCapture(event.pointerId); canvas.style.cursor = "grabbing"; draw();
+  if (event.pointerType === "touch") {
+    touchPoints.set(event.pointerId, canvasPoint(event)); canvas.setPointerCapture(event.pointerId);
+    if (touchPoints.size === 2) {
+      if (drag) { drag = null; canvas.style.cursor = ""; running = resumeAfterDrag; schedule(); }
+      pan = null; canvas.style.cursor = "";
+      const points = [...touchPoints.values()], centre = {x: (points[0].x + points[1].x) / 2, y: (points[0].y + points[1].y) / 2};
+      pinch = {distance: Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y), centre, view: {...view}};
+      return;
+    }
+  }
+  if (drag || pan || (event.pointerType === "mouse" && event.button !== 0)) return;
+  if ($("guides").checked) {
+    const point = pointerPoint(event);
+    const hits = guidePoints().map(guide => ({...guide, distance: Math.hypot((point.x - guide.point.x) * view.scale * canvas.clientWidth / 100, (point.y - guide.point.y) * view.scale * canvas.clientWidth * 0.006)}));
+    hits.sort((a, b) => a.distance - b.distance || Number(b.hand === Number($("hand").value)) - Number(a.hand === Number($("hand").value)));
+    if (hits[0].distance <= 20) {
+      drag = {...hits[0], pointer: event.pointerId, offset: {x: point.x - hits[0].point.x, y: point.y - hits[0].point.y}};
+      $("hand").value = drag.hand; syncCoordinates();
+      resumeAfterDrag = running; running = false; updatePlay();
+      canvas.setPointerCapture(event.pointerId); canvas.style.cursor = "grabbing"; draw();
+      return;
+    }
+  }
+  pan = {pointer: event.pointerId, point: canvasPoint(event), view: {...view}};
+  canvas.setPointerCapture(event.pointerId); canvas.style.cursor = "grabbing";
 };
 canvas.onpointermove = event => {
+  if (event.pointerType === "touch" && touchPoints.has(event.pointerId)) {
+    touchPoints.set(event.pointerId, canvasPoint(event));
+    if (pinch && touchPoints.size >= 2) {
+      const points = [...touchPoints.values()].slice(0, 2), target = {x: (points[0].x + points[1].x) / 2, y: (points[0].y + points[1].y) / 2};
+      zoomFrom(pinch.view, pinch.centre, target, Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y) / Math.max(1, pinch.distance));
+      return;
+    }
+  }
+  if (pan && event.pointerId === pan.pointer) {
+    const point = canvasPoint(event);
+    view = {...pan.view, x: pan.view.x + point.x - pan.point.x, y: pan.view.y + point.y - pan.point.y};
+    draw(); return;
+  }
   if (!drag || event.pointerId !== drag.pointer) return;
   const point = pointerPoint(event);
   setPoint(drag.hand, drag.kind, {x: Math.max(5, Math.min(95, point.x - drag.offset.x)), y: Math.max(35, Math.min(90, point.y - drag.offset.y))});
 };
 function endDrag(event) {
+  if (event.pointerType === "touch") { touchPoints.delete(event.pointerId); if (touchPoints.size < 2) pinch = null; }
+  if (pan?.pointer === event.pointerId) { pan = null; canvas.style.cursor = ""; return; }
   if (!drag || event.pointerId !== drag.pointer) return;
   drag = null; canvas.style.cursor = ""; fitViewport(); running = resumeAfterDrag; schedule();
 }
 canvas.onpointerup = endDrag;
 canvas.onpointercancel = endDrag;
 canvas.onlostpointercapture = endDrag;
+canvas.addEventListener("wheel", event => {
+  event.preventDefault(); const point = canvasPoint(event);
+  zoomFrom({...view}, point, point, Math.exp(-event.deltaY * 0.0015));
+}, {passive: false});
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && frame !== null) { cancelAnimationFrame(frame); frame = null; }
   schedule();
 });
-new ResizeObserver(() => { fitViewport(); draw(); }).observe(canvas);
+new ResizeObserver(() => {
+  if (!customHeight) {
+    $("stageHeight").value = Math.round(canvas.clientHeight / 10) * 10;
+    $("stageHeightValue").value = "自動";
+    resizeHandle.setAttribute("aria-valuenow", Math.round(canvas.clientHeight));
+  }
+  fitViewport(); draw();
+}).observe(canvas);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
 __STARTUP__
 </script>

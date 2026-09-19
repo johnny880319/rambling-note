@@ -1,6 +1,6 @@
 """Check first returns to ground, fundamental periods, and two-hand animation.
 
-Run with `uv run python content/mathematic/juggling/03-siteswap_challenge/check-challenge.py`.
+Run with `uv run python content/mathematic/juggling/03-random-siteswap-generator/check-challenge.py`.
 Node.js is required; no browser packages are needed.
 """
 
@@ -80,12 +80,12 @@ const trace=traceStates(redundant,3);
 assert.equal(endsWithRepeatedLoop(redundant.slice(0,2),trace.slice(0,3)),false);
 assert.equal(endsWithRepeatedLoop(redundant.slice(0,9),trace.slice(0,10)),true);
 assert.equal(repeatedLoop(Array.from('5515041',Number),3),false);
-function referenceExists({balls,height,minimum,maximum}) {
+function referenceExists({balls,height,minimum,maximum,allowZero=true}) {
   const ground=Array.from({length:balls},(_,i)=>i);
   function visit(landings,path) {
     const catching=landings.includes(0);
     const shifted=landings.filter(t=>t>0).map(t=>t-1);
-    for(let h=0;h<=height;h++) {
+    for(let h=allowZero ? 0 : 1;h<=height;h++) {
       if(catching!==(h>0) || (h>0 && shifted.includes(h-1))) continue;
       const next=(h ? [...shifted,h-1] : shifted).sort((a,b)=>a-b);
       const values=[...path,h];
@@ -102,6 +102,7 @@ function verify(settings, rng = random) {
   const values = generateSiteswap(settings, rng), p = values.length;
   assert.ok(p >= settings.minimum && p <= settings.maximum);
   assert.ok(values.every(h => Number.isInteger(h) && h >= 0 && h <= settings.height));
+  if(settings.allowZero===false) assert.ok(values.every(h=>h>0));
   assert.equal(values.reduce((a,b) => a+b, 0), settings.balls * p);
   assert.equal(new Set(values.map((h,t) => (t+h)%p)).size, p);
   assert.equal(primitivePeriod(values), p);
@@ -160,6 +161,16 @@ const periods = new Set();
 for (let i=0;i<100;i++) periods.add(verify({balls:3,height:7,minimum:2,maximum:6}).length);
 assert.deepEqual([...periods].sort(),[2,3,4,5,6]);
 assert.ok(revisiting>0,'The generator must still allow non-prime loops.');
+assert.deepEqual(generateSiteswap({balls:1,height:3,minimum:1,maximum:1,allowZero:false}),[1]);
+assert.throws(()=>generateSiteswap({balls:1,height:3,minimum:2,maximum:3,allowZero:false}),/沒有空拍/);
+for(let i=0;i<40;i++) verify({balls:3,height:7,minimum:2,maximum:6,allowZero:false});
+for(const [value,label] of [[0,'0'],[9,'9'],[10,'a'],[25,'p'],[35,'z'],[36,'36'],[64,'64']]) {
+  assert.equal(formatSiteswapValue(value),label);
+}
+for(const [source,value] of [['0',0],['09',9],['10',10],['64',64],['a',10],['A',10],['p',25],['z',35]]) {
+  assert.equal(parseSiteswapValue(source),value);
+}
+for(const source of ['', 'a0', '-1', '3.5', '_']) assert.ok(Number.isNaN(parseSiteswapValue(source)));
 // Independently enumerate small spaces to check the feasibility decisions.
 for(let height=1;height<=4;height++) for(let p=1;p<=4;p++) {
   const possible=new Set();

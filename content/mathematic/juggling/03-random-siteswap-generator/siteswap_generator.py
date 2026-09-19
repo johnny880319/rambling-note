@@ -6,6 +6,15 @@ function primitivePeriod(values) {
     if (values.length % p === 0 && values.every((value, i) => value === values[i % p])) return p;
   }
 }
+function formatSiteswapValue(value) {
+  return value >= 10 && value < 36 ? String.fromCharCode(87 + value) : String(value);
+}
+function parseSiteswapValue(text) {
+  const value = String(text).trim();
+  if (/^[a-z]$/i.test(value)) return value.toLowerCase().charCodeAt(0) - 87;
+  if (/^[0-9]+$/.test(value)) return Number(value);
+  return NaN;
+}
 function endsWithRepeatedLoop(values, states) {
   const end = values.length;
   for (let width = 1; width * 2 <= end; width++) {
@@ -29,9 +38,14 @@ function validateChallenge({balls, height, minimum, maximum}) {
 function* searchSiteswap(settings, random = Math.random) {
   validateChallenge(settings);
   const {balls, height, minimum, maximum} = settings;
+  const allowZero = settings.allowZero !== false;
   const pick = count => Math.floor(random() * count);
   if (balls === height) return [balls];
   if (balls === 1) {
+    if (!allowZero) {
+      if (minimum <= 1 && maximum >= 1) return [1];
+      throw Error("找不到符合設定且沒有空拍的 pattern；請讓週期範圍包含 1，或增加球數。");
+    }
     const last = Math.min(maximum, height);
     if (minimum > last) throw Error("找不到符合設定的首次回到基態的 pattern；請縮短週期或提高最大高度。");
     const period = minimum + pick(last - minimum + 1);
@@ -50,7 +64,7 @@ function* searchSiteswap(settings, random = Math.random) {
     /* An existing landing beyond the final ground-state horizon cannot move. */
     if ((state >> BigInt(balls + remaining)) !== 0n) return null;
     const shifted = state >> 1n;
-    const choices = (state & 1n) === 0n ? [0] : shuffle(Array.from({length: height}, (_, i) => i + 1).filter(h => !(shifted & (1n << BigInt(h - 1)))));
+    const choices = (state & 1n) === 0n ? (allowZero ? [0] : []) : shuffle(Array.from({length: height}, (_, i) => i + 1).filter(h => !(shifted & (1n << BigInt(h - 1)))));
     for (const h of choices) {
       if (++work > 150000) throw Error("這組設定的搜尋量較大，尚未找到結果；請縮小高度或週期範圍後重試。");
       if (work % 1000 === 0) yield;
@@ -97,5 +111,5 @@ function qualifyRoutine(values, balls) {
     basicName: balls === 1 ? "單球交替" : balls === 2 ? "雙球持球" : balls % 2 ? "Cascade" : "Fountain"
   };
 }
-globalThis.SiteswapChallenge = {primitivePeriod, endsWithRepeatedLoop, validateChallenge, searchSiteswap, generateSiteswap, alternatingHands, qualifyRoutine};
+globalThis.SiteswapChallenge = {primitivePeriod, formatSiteswapValue, parseSiteswapValue, endsWithRepeatedLoop, validateChallenge, searchSiteswap, generateSiteswap, alternatingHands, qualifyRoutine};
 """
