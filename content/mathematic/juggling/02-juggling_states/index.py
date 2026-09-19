@@ -438,13 +438,13 @@ def _(mo):
     /// admonition
         type: remark
 
-    可以注意到相連的兩個狀態 $\sigma, \sigma'$ 的球數會一樣，假如 $(\sigma, \theta, \sigma') \in E(\mathcal{G})$
+    若 $(\sigma, \theta, \sigma') \in E(\mathcal{G})$ ，則 $\sigma, \sigma'$ 球數相同。
 
     $$
     \begin{align*}
     b_{\sigma'} &= \sum_{(i, u) \in \mathcal{F}} \sigma'(i, u) \\
-    &= \sum_{(i, u) \in \mathcal{F}} \sigma^{\downarrow}(i, u) + \sum_{j \in \mathbb{Z}_{>0}} \sum_{(i, u) \in \mathcal{F}} \theta_j(i, u) \\
-    &= \sum_{(i, u) \in \mathcal{F}} \sigma(i, u + 1) + \sum_{j \in \mathbb{Z}_{>0}} \sigma(j, 1) \\
+    &= \sum_{(i, u) \in \mathcal{F}} \sigma^{\downarrow}(i, u) + \sum_{j \in \mathbb{Z}_{>0}} \sum_{(i, u) \in \mathcal{F}} \theta_j(i, u) && \text{(by transition)} \\
+    &= \sum_{(i, u) \in \mathcal{F}} \sigma(i, u + 1) + \sum_{j \in \mathbb{Z}_{>0}} \sigma(j, 1) && \text{(by balance)} \\
     &= \sum_{(i, u) \in \mathcal{F}} \sigma(i, u) \\
     &= b_{\sigma}
     \end{align*}
@@ -551,7 +551,7 @@ def _(mo):
     $$
     ///
 
-    球數取等號而其餘參數取上界，是因為相連的狀態球數會一樣。而這樣的誘導子圖，其狀態就會是有限的。
+    球數取等號而其餘參數取上界，是因為相連的狀態球數會一樣。而當 $b, h, k < \infty$ 時，其狀態就會是有限的。
     """)
     return
 
@@ -562,18 +562,17 @@ def _(mo):
     /// admonition | Proposition (Number of States)
         type: proposition
 
-    For $b, h, k, c \in \mathbb{Z}_{>0}$,
+    For $b, h, k \in \mathbb{Z}_{>0}$ and $c \in \mathbb{Z}_{>0} \cup \{\infty\}$,
 
     $$
     \lvert V(b, h, k, c) \rvert
-    = \sum_{\ell \geq 0} (-1)^{\ell} \binom{hk}{\ell} \binom{b - \ell(c + 1) + hk - 1}{hk - 1}.
+    = \sum_{\ell (c + 1) \leq b} (-1)^{\ell} \binom{hk}{\ell} \binom{b - \ell(c + 1) + hk - 1}{hk - 1}.
     $$
 
     In particular
 
     - For $c = 1$, the number is $\binom{hk}{b}$
     - For $c \geq b$, the number is $\binom{b + hk - 1}{b}$
-
     ///
     """)
     return
@@ -617,16 +616,16 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    雜耍玩家有時可能會想嘗試各種各樣的招式，而每個招是所要切換到的狀態可能都不太一樣。以下定理說明只要目前的 juggling state 的高度是有限的，就能在有限步驟內切換到想要的狀態。用圖的語言說就是，在 $\mathcal{G}$ 裡，從任何高度有限的頂點出發，都有 walk 通到每一個球數相同的頂點，而且走的步數跟路徑可以被嚴格控制。
+    雜耍玩家有時可能會想嘗試各種各樣的招式，而每個招是所要切換到的狀態可能都不太一樣。以下定理說明只要目前的 juggling state 的高度是有限的，就能在有限步驟內切換到想要的狀態。用圖的語言說就是，在 $\mathcal{G}$ 裡，從任何高度有限的頂點出發，都有 walk 通到每一個球數相同的頂點，步數恰好是起點的高度，而且整條路都留在兩者所在的有界圖裡。
 
     /// admonition | Theorem (Forgetting the Past)
         type: theorem
 
-    Let $\sigma, \sigma' \in V(b, h, k, c)$ with $k < \infty$. Then
+    Let $\sigma, \sigma' \in V(b, h, k, c)$ with $k_{\sigma} < \infty$. Then
     $\mathcal{G}(b, h, k, c)$ contains a walk of length $k_\sigma$ from $\sigma$ to
     $\sigma'$.
 
-    In particular, $\mathcal{G}(b, h, k, c)$ is strongly connected, with diameter at most $k$.
+    In particular, if $k < \infty$, then $\mathcal{G}(b, h, k, c)$ is strongly connected, with diameter at most $k$.
     ///
     """)
     return
@@ -637,6 +636,12 @@ def _(mo):
     mo.md(r"""
     /// admonition | Proof (by AI)
         type: proof
+
+    If $k = \infty$ there is no bound on flights: throw each object, when it
+    lands at beat $s$, to its slot $(j, u)$ in $\sigma'$ with flight
+    $k_{\sigma} + u - 1 - s$; no slot receives more than its count in $\sigma$
+    or in $\sigma'$, so the walk stays in $\mathcal{G}(b, h, \infty, c)$. Assume
+    now $k < \infty$.
 
     Start at time $0$; every object of $\sigma$ lands within $k_{\sigma}$ beats.
     Write $D(u) := \sum_{j} \sum_{v \geq u} \sigma'(j, v)$ for the number of objects
@@ -720,7 +725,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    最後，當我們只有一隻手且不做 multiplex 時，週期為 p 的 juggling matrices 的可能性可以被精確算出來。
+    最後，當我們只有一隻手且不做 multiplex 時，週期為 $p$ 的 juggling matrices 的數量可以被精確算出來。
 
     /// admonition | Theorem (Buhler–Eisenbud–Graham–Wright)
         type: theorem

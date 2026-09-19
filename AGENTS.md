@@ -66,7 +66,10 @@ with a short label on each. Motivation, intuition, caveats and anything that
 would take a sentence to explain belong to the Chinese prose around the block
 or to a `remark` after it, not inside the block. A proof line reads
 `(by balance)`, not a sentence about why balance applies; if the why is worth
-saying, say it in Chinese once the block is closed.
+saying, say it in Chinese once the block is closed. A statement carries no
+conventions or asides either: standard conventions are assumed, and where one
+would be needed the statement is rewritten so that it is not — a summation
+range instead of a note that out-of-range terms vanish.
 
 The boundary is the block, not the subject matter. A definition folded into
 running prose is prose, and stays Chinese; the same definition set off in a
