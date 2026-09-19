@@ -71,7 +71,7 @@ __INPUT_CONTROLS__
     <label>拋球 x <input id="throwX" type="number" min="5" max="95" step="0.5"></label>
     <label>y <input id="throwY" type="number" min="35" max="90" step="0.5" aria-label="拋球點 y 座標"></label>
   </div>
-  <p class="hint">座標是畫面百分比，y 向下增加。「所有拍」會把修改的點套用到該手的整個週期；選單一拍可以安排交叉、高低交替的路徑。空拍的位置不參與拋接。</p>
+  <p class="hint">座標以原始場景為基準，y 向下增加；視野縮放不會改變座標。拖曳時視野固定，放開後才重新取景。「所有拍」會把修改的點套用到該手的整個週期；選單一拍可以安排交叉、高低交替的路徑。空拍的位置不參與拋接。</p>
 </div>
 </details>
 <div id="animation">
@@ -80,7 +80,9 @@ __INPUT_CONTROLS__
   <button id="restart">從頭播放</button>
   <label>速度 <input id="speed" type="range" min="0.25" max="2" step="0.05" value="1"><output id="speedValue">1.00×</output></label>
   <label>持球 <input id="dwell" type="range" min="0.1" max="0.8" step="0.05" value="0.35"><output id="dwellValue">0.35 拍</output></label>
+  <label>重力 <input id="gravity" type="range" min="4" max="48" step="1" value="12" aria-label="重力加速度，單位為 y 座標單位每拍平方"><output id="gravityValue">12</output></label>
 </div>
+<p class="hint">重力以 y 座標單位／拍² 計算；拋接拍數固定時，重力越大，拋球越高。視野會等比例容納整段軌跡，播放中保持固定。</p>
 <div class="row">
   <label><input id="guides" type="checkbox" checked>顯示控制點</label>
   <label><input id="trails" type="checkbox" checked>球的尾跡</label>
@@ -146,9 +148,10 @@ function buildPattern(beats) {
 }
 
 function defaultGeometry(pattern) {
+  const horizontalScale = pattern.horizontalScale ?? 1;
   return Array.from({length: pattern.hands}, (_, h) => {
-    const centre = 12 + (h + 0.5) * 76 / pattern.hands;
-    const spread = Math.min(7, 22 / pattern.hands);
+    const centre = 50 + (12 + (h + 0.5) * 76 / pattern.hands - 50) * horizontalScale;
+    const spread = Math.min(7, 22 / pattern.hands) * horizontalScale;
     const direction = h % 2 === 0 ? 1 : -1;
     return Array.from({length: pattern.period}, () => ({
       catch: {x: centre - direction * spread, y: 76},
@@ -183,12 +186,7 @@ function slotOffset(rank, count) {
   return (rank - (count - 1) / 2) * Math.min(2.1, 12 / Math.max(1, count));
 }
 
-function flightGravity(pattern, geometry, dwell) {
-  const lowestY = Math.min(...geometry.flatMap(hand => hand.flatMap(points => [points.catch.y, points.throw.y])));
-  return 8 * (lowestY - 10) / (pattern.maxDuration - dwell) ** 2;
-}
-
-function ballPosition(pattern, geometry, ball, time, dwell, dip, gravity = flightGravity(pattern, geometry, dwell)) {
+function ballPosition(pattern, geometry, ball, time, dwell, dip, gravity = 12) {
   const local = mod(time - ball.origin, ball.length);
   const segment = ball.segments.findLast(segment => segment.start <= local);
   const edge = segment.edge, age = local - segment.start;
@@ -204,13 +202,44 @@ function ballPosition(pattern, geometry, ball, time, dwell, dip, gravity = fligh
   const landingOffset = slotOffset(edge.landingRank, pattern.outgoing[arrival][edge.destination].length);
   const flight = edge.duration - dwell, elapsed = age - dwell;
   const progress = elapsed / flight;
-  /* One acceleration for every ball, scaled to fit all edited endpoints. */
+  /* Solve the launch velocity for the prescribed flight time and endpoints. */
   return {x: mix(a.x + offset, b.x + landingOffset, progress),
     y: mix(a.y, b.y, progress) - gravity * elapsed * (flight - elapsed) / 2 - 1.8,
     held: false, edge};
 }
 
-globalThis.Juggling = {parseThrows, buildPattern, defaultGeometry, handPosition, ballPosition};
+function fitView(pattern, geometry, dwell, gravity, padding = 24) {
+  let left = 0, right = 1000, top = 0, bottom = 600;
+  geometry.forEach((hand, h) => {
+    const capacity = Math.max(1, ...pattern.outgoing.map(row => row[h].length));
+    const margin = Math.abs(slotOffset(0, capacity)) * 10 + 32;
+    for (const points of hand) for (const point of [points.catch, points.throw]) {
+      left = Math.min(left, point.x * 10 - margin);
+      right = Math.max(right, point.x * 10 + margin);
+      top = Math.min(top, point.y * 6 - 30);
+      bottom = Math.max(bottom, point.y * 6 + 54);
+    }
+  });
+  for (const edge of pattern.edges) {
+    if (pattern.holdTwos && edge.duration === 2) continue;
+    const a = geometry[edge.source][edge.phase].throw;
+    const b = geometry[edge.destination][(edge.phase + edge.duration) % pattern.period].catch;
+    const flight = edge.duration - dwell;
+    /* Include the exact apex, also when the endpoints have unequal heights. */
+    const elapsed = Math.max(0, Math.min(flight, flight / 2 - (b.y - a.y) / (gravity * flight)));
+    const y = mix(a.y, b.y, elapsed / flight) - gravity * elapsed * (flight - elapsed) / 2 - 1.8;
+    top = Math.min(top, y * 6 - 24);
+  }
+  const scale = Math.min(1, (1000 - 2 * padding) / (right - left), (600 - 2 * padding) / (bottom - top));
+  return {scale, x: 500 - (left + right) * scale / 2, y: 600 - padding - bottom * scale};
+}
+function viewPoint(point, view) {
+  return {x: point.x * 10 * view.scale + view.x, y: point.y * 6 * view.scale + view.y};
+}
+function worldPoint(point, view) {
+  return {x: (point.x - view.x) / (10 * view.scale), y: (point.y - view.y) / (6 * view.scale)};
+}
+globalThis.Juggling = {parseThrows, buildPattern, defaultGeometry, handPosition, ballPosition, fitView, viewPoint, worldPoint};
 </script>
 <script>
 "use strict";
@@ -221,8 +250,15 @@ if ($("patternEditor")) createPatternEditor($("patternEditor"), {value: defaultP
 let pattern, geometry, source, time = 0, lastStamp = null, onFrame = null;
 let running = !matchMedia("(prefers-reduced-motion: reduce)").matches;
 let drag = null, resumeAfterDrag = false, frame = null;
+let view = {scale: 1, x: 0, y: 0};
 const canvas = $("stage"), context = canvas.getContext("2d");
 const dwell = () => Number($("dwell").value);
+const gravity = () => Number($("gravity").value);
+function fitViewport() {
+  if (pattern && !drag && canvas.clientWidth) {
+    view = fitView(pattern, geometry, dwell(), gravity(), Math.min(100, Math.max(24, 24000 / canvas.clientWidth)));
+  }
+}
 const handColor = h => `hsl(${(h * 137.508 + 210) % 360} 64% 53%)`;
 const ballColor = id => `hsl(${(id * 137.508 + 32) % 360} 80% 53%)`;
 function option(value, name) { const item = document.createElement("option"); item.value = value; item.textContent = name; return item; }
@@ -239,7 +275,7 @@ function syncCoordinates() {
 function setPoint(hand, kind, point) {
   const phases = $("phase").value === "all" ? geometry[hand] : [geometry[hand][selectedPhase()]];
   for (const entry of phases) entry[kind] = {...point};
-  syncCoordinates(); draw();
+  syncCoordinates(); fitViewport(); draw();
 }
 function load(text, beats = null, options = {}) {
   /* Validate before replacing a working animation or its edited geometry. */
@@ -253,7 +289,7 @@ function load(text, beats = null, options = {}) {
   $("phase").replaceChildren(option("all", "所有拍"), ...Array.from({length: pattern.period}, (_, t) => option(t, `第 ${t} 拍`)));
   $("scrub").max = pattern.period;
   message(`已通過 causality 與 balance 檢查；b = ${pattern.edges.reduce((n, edge) => n + edge.duration, 0)} / ${pattern.period} = ${pattern.objects}。`);
-  syncCoordinates(); updatePlay(); draw();
+  syncCoordinates(); fitViewport(); updatePlay(); draw();
 }
 
 function screenPoint(point) { return {x: point.x * 10, y: point.y * 6}; }
@@ -265,7 +301,7 @@ function guidePoints() {
   return geometry.flatMap((hand, h) => ["catch", "throw"].map(kind => ({hand: h, kind, point: hand[phase][kind]})));
 }
 function draw() {
-  if (!pattern) return;
+  if (!pattern || !canvas.clientWidth) return;
   const ratio = devicePixelRatio || 1;
   const width = Math.round(canvas.clientWidth * ratio);
   const height = Math.round(canvas.clientWidth * 0.6 * ratio);
@@ -276,6 +312,10 @@ function draw() {
   const muted = style.getPropertyValue("--muted"), line = style.getPropertyValue("--line");
   context.strokeStyle = line; context.lineWidth = 1;
   for (let y = 100; y < 600; y += 100) { context.beginPath(); context.moveTo(0, y); context.lineTo(1000, y); context.stroke(); }
+  context.translate(view.x, view.y); context.scale(view.scale, view.scale);
+  /* Keep markers readable while scaling their positions uniformly. */
+  const pixelsPerUnit = view.scale * canvas.clientWidth / 1000;
+  const ballRadius = Math.max(10, 5 / pixelsPerUnit);
   if ($("guides").checked) {
     for (let h = 0; h < pattern.hands; h++) {
       const points = geometry[h][selectedPhase()];
@@ -286,40 +326,44 @@ function draw() {
     context.setLineDash([]); context.globalAlpha = 1;
   }
   const currentDwell = dwell(), useDip = $("dip").checked;
-  const gravity = flightGravity(pattern, geometry, currentDwell);
+  const currentGravity = gravity();
   for (let h = 0; h < pattern.hands; h++) {
     const p = screenPoint(handPosition(pattern, geometry, h, time, currentDwell, useDip));
     const capacity = Math.max(1, ...pattern.outgoing.map(row => row[h].length));
-    const halfWidth = Math.max(24, Math.abs(slotOffset(0, capacity)) * 10 + 12);
-    context.fillStyle = handColor(h); context.beginPath(); context.roundRect(p.x - halfWidth, p.y, halfWidth * 2, 9, 4); context.fill();
-    context.fillStyle = muted; context.font = "16px system-ui"; context.textAlign = "center";
-    context.fillText(pattern.handLabels?.[h] ?? `手 ${h + 1}`, p.x, p.y + 31);
+    const halfWidth = Math.max(24, 7 / pixelsPerUnit, Math.abs(slotOffset(0, capacity)) * 10 + 12);
+    context.fillStyle = handColor(h); context.beginPath(); context.roundRect(p.x - halfWidth, p.y, halfWidth * 2, Math.max(9, 3 / pixelsPerUnit), 4); context.fill();
+    context.fillStyle = muted; context.font = `${Math.max(16, 9 / pixelsPerUnit)}px system-ui`; context.textAlign = "center";
+    context.fillText(pattern.handLabels?.[h] ?? `手 ${h + 1}`, p.x, p.y + Math.max(31, 16 / pixelsPerUnit));
   }
   for (const ball of pattern.balls) {
     const color = ballColor(ball.id);
     if ($("trails").checked) {
       for (let back = 6; back > 0; back--) {
         context.globalAlpha = (7 - back) / 30;
-        circle(ballPosition(pattern, geometry, ball, time - back * 0.035, currentDwell, useDip, gravity), 5, color);
+        circle(ballPosition(pattern, geometry, ball, time - back * 0.035, currentDwell, useDip, currentGravity), ballRadius / 2, color);
       }
       context.globalAlpha = 1;
     }
-    const point = ballPosition(pattern, geometry, ball, time, currentDwell, useDip, gravity);
-    circle(point, 10, color);
+    const point = ballPosition(pattern, geometry, ball, time, currentDwell, useDip, currentGravity);
+    circle(point, ballRadius, color);
     const p = screenPoint(point);
-    context.fillStyle = "#172333"; context.font = "bold 11px system-ui"; context.textAlign = "center";
-    context.fillText(ball.id + 1, p.x, p.y + 4);
+    const fontSize = Math.max(11, 8 / pixelsPerUnit);
+    context.fillStyle = "#172333"; context.font = `bold ${fontSize}px system-ui`; context.textAlign = "center";
+    context.fillText(ball.id + 1, p.x, p.y + fontSize * 0.35);
   }
   if ($("guides").checked) for (const guide of guidePoints()) {
     const p = screenPoint(guide.point), selected = guide.hand === Number($("hand").value);
     context.strokeStyle = handColor(guide.hand); context.lineWidth = selected ? 3 : 1.5;
     context.fillStyle = style.getPropertyValue("--panel"); context.globalAlpha = selected ? 1 : 0.55;
     context.beginPath();
-    if (guide.kind === "catch") context.arc(p.x, p.y, 8, 0, Math.PI * 2);
-    else { context.moveTo(p.x, p.y - 10); context.lineTo(p.x + 10, p.y); context.lineTo(p.x, p.y + 10); context.lineTo(p.x - 10, p.y); context.closePath(); }
+    if (guide.kind === "catch") context.arc(p.x, p.y, Math.max(8, 5 / pixelsPerUnit), 0, Math.PI * 2);
+    else {
+      const size = Math.max(10, 6 / pixelsPerUnit);
+      context.moveTo(p.x, p.y - size); context.lineTo(p.x + size, p.y); context.lineTo(p.x, p.y + size); context.lineTo(p.x - size, p.y); context.closePath();
+    }
     context.fill(); context.stroke();
-    context.fillStyle = handColor(guide.hand); context.font = "14px system-ui";
-    context.fillText(`${guide.hand + 1} ${guide.kind === "catch" ? "接" : "拋"}`, p.x, p.y + (guide.kind === "catch" ? 48 : -17));
+    context.fillStyle = handColor(guide.hand); context.font = `${Math.max(14, 9 / pixelsPerUnit)}px system-ui`;
+    context.fillText(`${guide.hand + 1} ${guide.kind === "catch" ? "接" : "拋"}`, p.x, p.y + (guide.kind === "catch" ? Math.max(48, 20 / pixelsPerUnit) : -Math.max(17, 12 / pixelsPerUnit)));
     context.globalAlpha = 1;
   }
   $("clock").textContent = `t = ${time.toFixed(2)} · 第 ${mod(Math.floor(time), pattern.period)} 拍`;
@@ -342,10 +386,11 @@ $("play").onclick = () => { running = !running; schedule(); };
 $("restart").onclick = () => { time = 0; running = true; schedule(); };
 $("scrub").oninput = () => { running = false; time = Number($("scrub").value); schedule(); };
 $("speed").oninput = () => { $("speedValue").value = Number($("speed").value).toFixed(2) + "×"; };
-$("dwell").oninput = () => { $("dwellValue").value = dwell().toFixed(2) + " 拍"; draw(); };
+$("dwell").oninput = () => { $("dwellValue").value = dwell().toFixed(2) + " 拍"; fitViewport(); draw(); };
+$("gravity").oninput = () => { $("gravityValue").value = String(gravity()); fitViewport(); draw(); };
 for (const id of ["guides", "trails", "dip"]) $(id).onchange = draw;
 for (const id of ["hand", "phase"]) $(id).onchange = () => { syncCoordinates(); draw(); };
-$("resetGeometry").onclick = () => { geometry = defaultGeometry(pattern); syncCoordinates(); draw(); };
+$("resetGeometry").onclick = () => { geometry = defaultGeometry(pattern); syncCoordinates(); fitViewport(); draw(); };
 if ($("apply")) $("apply").onclick = () => {
   try { load($("editor").value); running = true; schedule(); }
   catch (error) { message(error.message, true); }
@@ -361,15 +406,16 @@ for (const kind of ["catch", "throw"]) for (const axis of ["x", "y"]) {
 }
 function pointerPoint(event) {
   const rect = canvas.getBoundingClientRect();
-  return {x: (event.clientX - rect.left) / rect.width * 100, y: (event.clientY - rect.top) / rect.height * 100};
+  return worldPoint({x: (event.clientX - rect.left - canvas.clientLeft) / canvas.clientWidth * 1000,
+    y: (event.clientY - rect.top - canvas.clientTop) / canvas.clientHeight * 600}, view);
 }
 canvas.onpointerdown = event => {
   if (!$("guides").checked || drag || (event.pointerType === "mouse" && event.button !== 0)) return;
-  const point = pointerPoint(event), rect = canvas.getBoundingClientRect();
-  const hits = guidePoints().map(guide => ({...guide, distance: Math.hypot((point.x - guide.point.x) * rect.width / 100, (point.y - guide.point.y) * rect.height / 100)}));
+  const point = pointerPoint(event);
+  const hits = guidePoints().map(guide => ({...guide, distance: Math.hypot((point.x - guide.point.x) * view.scale * canvas.clientWidth / 100, (point.y - guide.point.y) * view.scale * canvas.clientHeight / 100)}));
   hits.sort((a, b) => a.distance - b.distance || Number(b.hand === Number($("hand").value)) - Number(a.hand === Number($("hand").value)));
   if (hits[0].distance > 20) return;
-  drag = {...hits[0], pointer: event.pointerId};
+  drag = {...hits[0], pointer: event.pointerId, offset: {x: point.x - hits[0].point.x, y: point.y - hits[0].point.y}};
   $("hand").value = drag.hand; syncCoordinates();
   resumeAfterDrag = running; running = false; updatePlay();
   canvas.setPointerCapture(event.pointerId); canvas.style.cursor = "grabbing"; draw();
@@ -377,11 +423,11 @@ canvas.onpointerdown = event => {
 canvas.onpointermove = event => {
   if (!drag || event.pointerId !== drag.pointer) return;
   const point = pointerPoint(event);
-  setPoint(drag.hand, drag.kind, {x: Math.max(5, Math.min(95, point.x)), y: Math.max(35, Math.min(90, point.y))});
+  setPoint(drag.hand, drag.kind, {x: Math.max(5, Math.min(95, point.x - drag.offset.x)), y: Math.max(35, Math.min(90, point.y - drag.offset.y))});
 };
 function endDrag(event) {
   if (!drag || event.pointerId !== drag.pointer) return;
-  drag = null; canvas.style.cursor = ""; running = resumeAfterDrag; schedule();
+  drag = null; canvas.style.cursor = ""; fitViewport(); running = resumeAfterDrag; schedule();
 }
 canvas.onpointerup = endDrag;
 canvas.onpointercancel = endDrag;
@@ -390,7 +436,7 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden && frame !== null) { cancelAnimationFrame(frame); frame = null; }
   schedule();
 });
-new ResizeObserver(draw).observe(canvas);
+new ResizeObserver(() => { fitViewport(); draw(); }).observe(canvas);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
 __STARTUP__
 </script>

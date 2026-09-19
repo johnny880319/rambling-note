@@ -74,7 +74,7 @@ async function nextChallenge() {
     $("challengePhase").textContent = `挑戰 · ${candidate.length} 拍`;
     $("leadOut").textContent = `回穩 ${routine.basicName} · ${routine.qualifyBeats} 拍`;
     $("sequence").replaceChildren(...candidate.map(value => { const item = document.createElement("li"); item.textContent = value; return item; }));
-    load(candidate.join(" "), beats, {holdTwos: true, handLabels: ["左手", "右手"]});
+    load(candidate.join(" "), beats, {holdTwos: true, handLabels: ["左手", "右手"], horizontalScale: 0.35});
     $("challengeStats").textContent = `${settings.balls} 顆球 · 最短週期 ${candidate.length} 拍 · 本題最高 ${Math.max(...candidate)}`;
     $("stats").textContent = `每輪 ${routine.values.length} 拍 · 雙手動作循環 ${beats.length} 拍 · 持續循環播放`;
     message("前後各接一個 qualify；完成題目後還要穩定回運，才算挑戰成功。");

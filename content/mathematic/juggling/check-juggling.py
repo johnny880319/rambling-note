@@ -31,7 +31,9 @@ parser = load_module(
     "pattern_parser", JUGGLING / "02-juggling_states/pattern_parser.py"
 )
 editor = load_module("juggling_editor", JUGGLING / "juggling_editor.py")
-widget_adapter = load_module("pattern_editor", JUGGLING / "02-juggling_states/pattern_editor.py")
+widget_adapter = load_module(
+    "pattern_editor", JUGGLING / "02-juggling_states/pattern_editor.py"
+)
 load_module("animation_parser", JUGGLING / "01-general_notation/animation_parser.py")
 state_graph = load_module("state_graph", JUGGLING / "02-juggling_states/state_graph.py")
 simulation = load_module(
@@ -40,8 +42,11 @@ simulation = load_module(
 
 # Both frontends must keep the same tab stops and initial canonical pattern.
 for line in editor.DEFAULT_PATTERN.splitlines():
-    assert [i for i, char in enumerate(line.expandtabs(4)) if char == "|"] == [16, 28]
-assert widget_adapter.PatternEditor.class_traits()["value"].default_value == editor.DEFAULT_PATTERN
+    assert [i for i, char in enumerate(line.expandtabs(4)) if char == "|"] == [12, 28]
+assert (
+    widget_adapter.PatternEditor.class_traits()["value"].default_value
+    == editor.DEFAULT_PATTERN
+)
 subprocess.run(
     ["node", "--input-type=module", "--check"],
     input=widget_adapter.PatternEditor._esm,
@@ -141,7 +146,12 @@ for duration in range(1, 65):
     text = f"{duration}_1"
     assert parser.parse_throws(text) == ((((0, duration),),),)
     examples.append(text)
-    for spelling in (str(duration), f"[{duration}]", f"{{{duration}}}", f"{{(1,{duration})}}"):
+    for spelling in (
+        str(duration),
+        f"[{duration}]",
+        f"{{{duration}}}",
+        f"{{(1,{duration})}}",
+    ):
         assert parser.parse_throws(spelling) == parser.parse_throws(text)
         examples.append(spelling)
     if duration < 36:
@@ -170,7 +180,17 @@ assert parser.parse_throws("9 7 5 31") == tuple(
 assert parser.parse_throws("a\tb\np") == tuple(
     (((0, value),),) for value in (10, 11, 25)
 )
-examples.extend([first_beat, explicit_beat, "2 5", "[2,5]", "a\tb\np", "[a,b]", "[3_2] \t | []\n[] | [3_1]"])
+examples.extend(
+    [
+        first_beat,
+        explicit_beat,
+        "2 5",
+        "[2,5]",
+        "a\tb\np",
+        "[a,b]",
+        "[3_2] \t | []\n[] | [3_1]",
+    ]
+)
 invalid_inputs = [
     "97531",
     "[97531]",
@@ -320,7 +340,42 @@ for (const time of [0, 0.1, 0.35, 0.9]) {
   const copies = points.filter(point => point.edge.phase === 0 && point.held);
   if (copies.length) assert.equal(new Set(copies.map(point => point.x)).size, copies.length);
 }
-console.log(`Passed ${FIXTURES.length} notation fixtures and ${samples} ball samples; event continuity and input limits passed.`);
+// Camera fitting covers unequal endpoints, multiplex, holds, empty patterns,
+// and the largest supported throw without changing world coordinates.
+for (const text of ['5','[5,9]','0|0','3_2|0 0|3_1','[3,3,5]','2','64']) {
+  const p=parsePattern(text),g=defaultGeometry(p);
+  g.forEach((hand,h)=>hand.forEach((points,t)=>{
+    points.catch={x:5+(h*31+t*11)%90,y:35+(h*9+t*7)%55};
+    points.throw={x:95-(h*23+t*13)%90,y:90-(h*7+t*11)%55};
+  }));
+  for(const holdTwos of [false,true]) for(const dwell of [0.1,0.8]) for(const gravity of [4,24,48]) {
+    p.holdTwos=holdTwos;
+    const before=JSON.stringify(g),view=fitView(p,g,dwell,gravity);
+    assert.equal(JSON.stringify(g),before);
+    assert.ok(view.scale>0 && view.scale<=1);
+    for(const point of [{x:5,y:35},{x:95,y:90},{x:50,y:-1000}]) close(worldPoint(viewPoint(point,view),view),point);
+    for(const ball of p.balls) for(const segment of ball.segments) {
+      for(let i=0;i<=20;i++) {
+        const time=ball.origin+segment.start+segment.edge.duration*i/20;
+        const point=ballPosition(p,g,ball,time,dwell,true,gravity),screen=viewPoint(point,view);
+        assert.ok(screen.x>=0 && screen.x<=1000 && screen.y>=0 && screen.y<=600,`${text}: clipped trajectory`);
+      }
+      for(const t of [ball.origin+segment.start,ball.origin+segment.start+dwell]) {
+        close(ballPosition(p,g,ball,t-1e-7,dwell,true,gravity),ballPosition(p,g,ball,t+1e-7,dwell,true,gravity));
+      }
+    }
+  }
+}
+const five=parsePattern('5'),taller=parsePattern('[5,9]');
+const fiveGeometry=defaultGeometry(five),tallerGeometry=defaultGeometry(taller);
+const firstFive=p=>p.balls.find(b=>b.origin===0 && b.segments[0].edge.duration===5);
+for(const gravity of [4,24,48]) {
+  const position=(p,g,t)=>ballPosition(p,g,firstFive(p),t,0.35,true,gravity);
+  assert.equal(position(five,fiveGeometry,2).y,position(taller,tallerGeometry,2).y);
+  const acceleration=(position(five,fiveGeometry,2.01).y-2*position(five,fiveGeometry,2).y+position(five,fiveGeometry,1.99).y)/0.01**2;
+  assert.ok(Math.abs(acceleration-gravity)<1e-6);
+}
+console.log(`Passed ${FIXTURES.length} notation fixtures and ${samples} ball samples; gravity, viewport bounds, coordinate transforms, continuity, and input limits passed.`);
 """
 subprocess.run(
     ["node"],
