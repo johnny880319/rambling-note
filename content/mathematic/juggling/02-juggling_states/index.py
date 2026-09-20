@@ -449,6 +449,17 @@ def _(mo):
     &= b_{\sigma}
     \end{align*}
     $$
+
+    此外，我們總是有 $b_{\sigma} \leq h_{\sigma} k_{\sigma} c_{\sigma}$.
+
+    $$
+    \begin{align*}
+    b_{\sigma} &= \sum_{x \in \mathcal{F}} \sigma(x) \\
+    &= \sum_{i \in [h_{\sigma}], u \in [k_{\sigma}]} \sigma(i, u) \\
+    &\leq \sum_{i \in [h_{\sigma}], u \in [k_{\sigma}]} c_{\sigma} \\
+    &= h_{\sigma} k_{\sigma} c_{\sigma}
+    \end{align*}
+    $$
     ///
     """)
     return
@@ -551,7 +562,19 @@ def _(mo):
     $$
     ///
 
-    球數取等號而其餘參數取上界，是因為相連的狀態球數會一樣。而當 $b, h, k < \infty$ 時，其狀態就會是有限的。
+    球數取等號而其餘參數取上界，是因為相連的狀態球數會一樣。而當 $b, h, k < \infty$ 時，其狀態就會是有限的。另外要注意如果 $b > hkc$ ，則$V(b, h, k, c) = \emptyset$ 。
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    /// admonition
+        type: remark
+
+    如果限制 $h = 1$ ，則 $\theta = (\theta_1)$ 且 $\theta_1 = \sigma' - \sigma^{\downarrow}$ 會被起點跟終點的狀態唯一決定。此時 $\mathcal{G}(b, 1, k, c)$ 會是 digraph with loops.
+    ///
     """)
     return
 
@@ -683,6 +706,83 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    此外，雖然可能沒什麼實用價值，但有界狀態圖有一個漂亮的 duality 關係。
+
+    /// admonition | Theorem (Complement Duality)
+        type: theorem
+
+    For $h, k, c < \infty$, let
+
+    $$
+    \bar{\sigma}(j, u) := c - \sigma(j, k + 1 - u).
+    $$
+
+    Then
+
+    $$
+    \varphi \colon V(b, h, k, c) \longrightarrow V(hkc - b, h, k, c), \qquad \sigma \longmapsto \bar{\sigma}
+    $$
+
+    is a bijection, and
+
+    $$
+    (\sigma, \theta, \sigma') \in E(b, h, k, c) \text{ for some } \theta
+    \iff
+    (\bar{\sigma}', \tilde{\theta}, \bar{\sigma}) \in E(hkc - b, h, k, c) \text{ for some } \tilde{\theta}.
+    $$
+
+    In particular, $\mathcal{G}(b, 1, k, c)$ and $\mathcal{G}(kc - b, 1, k, c)$ are anti-isomorphic.
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    /// admonition | Proof (by AI)
+        type: proof
+
+    Each entry of $\bar{\sigma}$ lies in $\{0, \cdots, c\}$, its total is
+    $hkc - b$, and $\sigma \mapsto \bar{\sigma}$ is an involution, hence a bijection.
+
+    An edge $\sigma \to \sigma'$ exists if and only if $\theta := \sigma' - \sigma^{\downarrow}$
+    is non-negative with $\sum_{x} \theta(x) = \sum_{i} \sigma(i, 1)$, since any such
+    total can be split among the hands with the sizes balance requires. Put
+
+    $$
+    \tilde{\theta}(j, u) := \begin{cases} \theta(j, k - u) & u < k \\ c - \sigma(j, 1) & u = k \end{cases}
+    $$
+
+    Then for $u < k$
+
+    $$
+    \begin{align*}
+    \bar{\sigma}'(j, u + 1) + \tilde{\theta}(j, u)
+    &= c - \sigma'(j, k - u) + \theta(j, k - u) \\
+    &= c - \sigma(j, k + 1 - u) = \bar{\sigma}(j, u) && \text{(by transition)}
+    \end{align*}
+    $$
+
+    and $\bar{\sigma}'(j, k + 1) + \tilde{\theta}(j, k) = c - \sigma(j, 1) = \bar{\sigma}(j, k)$;
+    so $\bar{\sigma} = \bar{\sigma}'^{\downarrow} + \tilde{\theta}$, and $\tilde{\theta} \geq 0$
+    with $\sum_{x} \tilde{\theta}(x) = hc - \sum_{j} \theta(j, k) = \sum_{j} \bar{\sigma}'(j, 1)$,
+    which is the total balance requires. Hence $\bar{\sigma}' \to \bar{\sigma}$ is an edge.
+    The converse follows by applying the same to $\bar{\sigma}' \to \bar{\sigma}$, as
+    $\bar{\bar{\sigma}} = \sigma$.
+
+    For $h = 1$ there is at most one edge between two states, so the
+    correspondence of edges is a bijection and the graphs are anti-isomorphic.
+
+    <span class="qed">$\square$</span>
+    ///
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     剩下幾個也是關於 juggling state 的性質，但因為篇幅跟時間因素，就不證明他們了。
     """)
     return
@@ -741,102 +841,25 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Work in Progress
-
-    從這裡以下的內容是我讓 AI 先幫我整理有哪些定理跟簡短的證明，之後會把它們都整理好，或是把過於細節的內容捨棄。
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    接著是有界狀態圖的一個對稱性。
-
-    /// admonition | Theorem (Complement Duality)
-        type: theorem
-
-    For $h, k, c < \infty$, reversing each hand's slots and then replacing every
-    count $x$ by $c - x$ is a bijection $V(b, h, k, c) \to V(hkc - b, h, k, c)$
-    that carries every edge of $\mathcal{G}(b, h, k, c)$ to an edge of
-    $\mathcal{G}(hkc - b, h, k, c)$ in the reverse direction.  The two graphs are
-    therefore anti-isomorphic, and have the same number of closed walks of each
-    length.
-
-    *[Polster, *The Mathematics of Juggling*](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y) §2.8.5 treats the one-hand case without multiplex; the form above, for any $h$ and $c$, is proved below.*
-
-    ///
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    /// admonition
-        type: proof
-
-    Write $\varphi(\sigma)(j, u) := c - \sigma(j, k + 1 - u)$.  Each entry stays
-    in $\{0, \cdots, c\}$, the total becomes $hkc - b$, and $\varphi$ is an
-    involution, so it is a bijection between the two vertex sets.
-
-    Let $\sigma \to \sigma'$ be an edge and write
-    $\theta := \sum_{i \in \mathbb{Z}_{>0}} J(i, t)$ for where its objects land, so
-    that $\sigma'(j, u) = \sigma(j, u + 1) + \theta(j, u)$ throughout, reading
-    $\sigma(j, k + 1) = 0$.  Put
-
-    $$
-    \tilde{\theta}(j, u) := \begin{cases}
-    \theta(j, k - u) & 1 \leq u \leq k - 1 \\
-    c - \sigma(j, 1) & u = k
-    \end{cases}
-    $$
-
-    Then for $u \leq k - 1$
-
-    $$
-    \begin{align*}
-    \varphi(\sigma')(j, u + 1) + \tilde{\theta}(j, u)
-    & = c - \sigma'(j, k - u) + \theta(j, k - u) \\
-    & = c - \sigma(j, k + 1 - u) - \theta(j, k - u) + \theta(j, k - u) \\
-    & = \varphi(\sigma)(j, u)
-    \end{align*}
-    $$
-
-    and at $u = k$ the left side is $0 + c - \sigma(j, 1)$, which is
-    $\varphi(\sigma)(j, k)$ as well.  So $\tilde{\theta}$ carries
-    $\varphi(\sigma')$ to $\varphi(\sigma)$, one step in the reversed direction.
-    It throws the right number of objects:
-
-    $$
-    \begin{align*}
-    \sum_{j, u} \tilde{\theta}(j, u)
-    & = \sum_{j \in \mathbb{Z}_{>0}} \sum_{v = 1}^{k - 1} \theta(j, v)
-        \;+\; hc - \sum_{j \in \mathbb{Z}_{>0}} \sigma(j, 1) \\
-    & = hc - \sum_{j \in \mathbb{Z}_{>0}} \theta(j, k)
-        && \text{(balance for } \sigma \text{)} \\
-    & = \sum_{j \in \mathbb{Z}_{>0}} \bigl( c - \sigma'(j, k) \bigr)
-        \;=\; \sum_{j \in \mathbb{Z}_{>0}} \varphi(\sigma')(j, 1)
-    \end{align*}
-    $$
-
-    and a total may be split among the throwing hands exactly as their individual
-    balances require, because a throw constrains only where objects land, never
-    which hand released them.  Applying the construction to the new edge returns
-    the old one, so $\varphi$ is a bijection on edges as well.
-
-    <span class="qed">$\square$</span>
-    ///
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
     ## Simulation
 
-    以下是我讓 AI vibe 出來的 juggling state 模擬。符號的部分可以參考第一篇雜耍文章。
+    以下是我讓 AI vibe 出來的 juggling state 模擬。關於 juggling matrix 的符號的部分可以參考第一篇雜耍文章。
+
+    有別於 juggling matrix 一行是一拍、行內以 | 分手，juggling state 則一段是一手，段內依高度排列。一來可以讓記號比較精簡，二來也比較方便讀者去觀察狀態隨著時間的變化。
+
+    具體來說，每隻手先寫成一列以空白分隔的數字，第 $u$ 個數是再過 $u$ 拍會落回這隻手的物件數
+
+    $$
+    \sigma(j, 1) \quad \sigma(j, 2) \quad \cdots \quad \sigma(j, k) \;\simeq\; (\sigma(j, u))_{u \in [k]} \in \mathbb{Z}_{\geq 0}^{[k]}
+    $$
+
+    再把各手的列用 $|$ 接起來
+
+    $$
+    r_1 \mid r_2 \mid \cdots \mid r_h \;\simeq\; \sigma \in \mathbb{Z}_{\geq 0}^{[h] \times [k]}
+    $$
+
+    具體例子可以看以下模擬的預設範例。
     """)
     return
 
@@ -954,21 +977,6 @@ def _(background, beat_index, mo, pattern, state_graph, trouble):
             ]
         )
     _view
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo, state_graph):
-    mo.md(
-        "一個狀態是 $\\mathcal{M}(\\mathcal{F})$ 的元素，寫成它在每個格子上的值；"
-        "一次投擲是 juggling matrix 的一欄，每隻手一個 multiset，手與手之間用 `|` 分隔。"
-        "以下由 `state_graph` 的標籤函式直接產生：\n\n"
-        "| | state | throw |\n| --- | --- | --- |\n"
-        + "\n".join(
-            f"| {name} | `{state}` | `{throw}` |"
-            for name, state, throw in state_graph.notation_examples()
-        )
-    )
     return
 
 

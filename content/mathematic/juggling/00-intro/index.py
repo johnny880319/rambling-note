@@ -13,7 +13,9 @@ def _(mo):
 
     雖然如果只是要將理論應用到實際的雜耍招裡，其實只要熟悉名為 **siteswap** 的記號就好，但它也可以衍生出很多有趣的數學問題，所以決定來為這個主題寫一系列筆記。另外扯鈴因為也有拋接的元素在，所以經過適當的調整後，也可以融入 siteswap 的框架之中。
 
-    關於雜耍數學的研究，最經典的著作是 [The Mathematics of Juggling](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y)，裡面講解了許多 siteswap 會用到的記號跟理論，此外這本書的作者也有寫一篇簡短的[文章](https://www.qedcat.com/articles/juggling_survey.pdf)，算是濃縮了這本書的精華。我的筆記應該會 follow 他的 notation 。不過多人雜耍的部分，有至少兩三種不同的表示法，所以除了書裡所講的 Multi-hand notation ，我也會盡量去讀其他文章來補齊內容。
+    關於雜耍數學的研究，最經典的著作是 [The Mathematics of Juggling](https://books.google.com.tw/books/about/The_Mathematics_of_Juggling.html?id=YCARBwAAQBAJ&redir_esc=y)，裡面講解了許多 siteswap 會用到的記號跟理論，此外這本書的作者也有寫一篇簡短的[文章](https://www.qedcat.com/articles/juggling_survey.pdf)，算是濃縮了這本書的精華。
+
+    不過這系列的筆記，考慮到嚴謹性與數學操作上的方便性，我會使用我發明的記號，但它基本上等價於書裡所講的 Multi-hand notation 。此外這系列筆記，我將使用 finite multiset 去描述 multiplex 的操作，但這個 notation 無法區分 multiplex 的不同球，所以基本上沒辦法用我現在用的記號去研究 color code 的理論。但考量到 color code 我目前並沒有知道太多理論，再加上考慮這件事情會讓記號跟規則變得過於複雜，所以這邊暫時會先放棄這一塊的討論。等我文章的框架成熟之後，再考慮要不要研究這方面的東西跟改變 notation 。
 
     除了 The Mathematics of Juggling 外，還有一些不錯的相關資源
 

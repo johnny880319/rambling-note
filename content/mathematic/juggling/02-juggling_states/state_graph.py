@@ -62,17 +62,18 @@ def digit(value: int) -> str:
 
 
 def state_label(state: State) -> str:
-    """A state written as the values it takes on each slot.
+    """A state written as the matrix it is: one row per hand, one column per height.
 
-    That is what ``M(F)`` is -- a function into the non-negative integers --
-    with the hands separated by a slash.
+    Entries are separated by spaces and hands by a bar, the same separators
+    the pattern notation uses for beats and hands, so an entry of ten or more
+    stays readable.
 
     >>> state_label(((1, 1, 1, 0, 0),))
-    '11100'
+    '1 1 1 0 0'
     >>> state_label(((1, 0), (0, 1)))
-    '10/01'
+    '1 0 | 0 1'
     """
-    return "/".join("".join(str(count) for count in hand) for hand in state)
+    return " | ".join(" ".join(str(count) for count in hand) for hand in state)
 
 
 def throw_label(throw: Throw, hands: int) -> str:
@@ -93,27 +94,6 @@ def throw_label(throw: Throw, hands: int) -> str:
             else "[" + ",".join(parts) + "]"
         )
     return "|".join(columns)
-
-
-def notation_examples() -> list[tuple[str, str, str]]:
-    """One worked state and throw per shape the notation has to cover.
-
-    Built by calling the labellers rather than by writing the strings out, so
-    the table in the note cannot drift away from what the code prints.
-
-    >>> [row[0] for row in notation_examples()]
-    ['one hand', 'one hand, multiplex', 'two hands', 'two hands, multiplex']
-    """
-    rows = [
-        ("one hand", ((1, 1, 1, 0, 0),), (((0, 5),),), 1),
-        ("one hand, multiplex", ((2, 1, 0, 0),), (((0, 3), (0, 4)),), 1),
-        ("two hands", ((1, 0, 0), (0, 1, 0)), (((1, 3),), ()), 2),
-        ("two hands, multiplex", ((2, 0), (0, 1)), (((0, 2), (1, 2)), ()), 2),
-    ]
-    return [
-        (name, state_label(state), throw_label(throw, hands))
-        for name, state, throw, hands in rows
-    ]
 
 
 # --------------------------------------------------------------------------
@@ -274,9 +254,9 @@ def ground_state(objects: int, hands: int, height: int, capacity: int) -> State:
     one hand and no multiplex this is the familiar string of ones.
 
     >>> state_label(ground_state(3, 1, 5, 1))
-    '11100'
+    '1 1 1 0 0'
     >>> state_label(ground_state(4, 1, 3, 2))
-    '220'
+    '2 2 0'
     """
     counts = [[0] * height for _ in range(hands)]
     left = objects

@@ -71,6 +71,13 @@ conventions or asides either: standard conventions are assumed, and where one
 would be needed the statement is rewritten so that it is not — a summation
 range instead of a note that out-of-range terms vanish.
 
+Terse means few words, not few lines. Whatever a display can say, a display
+says: a map is set as `$$ \varphi \colon V \longrightarrow W, \quad \sigma
+\longmapsto \bar{\sigma} $$`, a case split as `\begin{cases}`, a chain of
+equalities as `align*` rows, each with its label. A block whose maths is
+folded into running English is harder to read than a longer block whose
+prose is one clause per display.
+
 The boundary is the block, not the subject matter. A definition folded into
 running prose is prose, and stays Chinese; the same definition set off in a
 block is English. A `>` quotation is neither: it is a passage of the article
