@@ -15,39 +15,52 @@ function parseSiteswapValue(text) {
   if (/^[0-9]+$/.test(value)) return Number(value);
   return NaN;
 }
-function endsWithRepeatedLoop(values, states) {
-  const end = values.length;
-  for (let width = 1; width * 2 <= end; width++) {
-    if (states[end] !== states[end - width] || states[end] !== states[end - 2 * width]) continue;
-    let same = true;
-    for (let i = end - width; i < end; i++) {
-      if (values[i] !== values[i - width]) { same = false; break; }
-    }
-    if (same) return true;
+function cycleSignature(cycle) {
+  let first = 0;
+  for (let i = 1; i < cycle.length; i++) if (cycle[i] < cycle[first]) first = i;
+  return Array.from({length: cycle.length}, (_, i) => cycle[(first + i) % cycle.length].toString(36)).join(".");
+}
+function simpleCycleAtEnd(states) {
+  const end = states.length - 1, finish = states[end];
+  for (let start = end - 1; start >= 0; start--) {
+    if (states[start] !== finish) continue;
+    const cycle = states.slice(start, end);
+    return new Set(cycle).size === cycle.length ? cycleSignature(cycle) : null;
+  }
+  return null;
+}
+function hasRepeatedCycle(states) {
+  const used = new Set();
+  for (let end = 1; end < states.length; end++) {
+    const signature = simpleCycleAtEnd(states.slice(0, end + 1));
+    if (signature === null) continue;
+    if (used.has(signature)) return true;
+    used.add(signature);
   }
   return false;
 }
 function validateChallenge({balls, height, minimum, maximum}) {
-  for (const [label, value, limit] of [["球數", balls, 16], ["最大高度", height, 64], ["最小週期", minimum, 64], ["最大週期", maximum, 64]]) {
-    if (!Number.isInteger(value) || value < 1 || value > limit) throw Error(`${label}必須是 1 到 ${limit} 的整數。`);
+  for (const [label, value, limit] of [["Balls", balls, 16], ["Max Throw", height, 35], ["Min Period", minimum, 64], ["Max Period", maximum, 64]]) {
+    if (!Number.isInteger(value) || value < 1 || value > limit) throw Error(`${label} must be an integer from 1 to ${limit}.`);
   }
-  if (minimum > maximum) throw Error("最小週期不能大於最大週期。");
-  if (balls > height) throw Error("找不到符合設定的 pattern：最大高度不能小於球數。");
-  if (balls === height && minimum > 1) throw Error("找不到符合設定的 pattern：球數等於最大高度時，只能有週期為 1 的固定高度投擲。");
+  if (minimum > maximum) throw Error("Min Period cannot exceed Max Period.");
+  if (balls > height) throw Error("No pattern matches these settings: Max Throw cannot be less than Balls.");
+  if (balls === height && minimum > 1) throw Error("No pattern matches these settings: when Balls equals Max Throw, only the period-1 constant pattern is possible.");
 }
 function* searchSiteswap(settings, random = Math.random) {
   validateChallenge(settings);
   const {balls, height, minimum, maximum} = settings;
   const allowZero = settings.allowZero !== false;
+  const primeOnly = settings.primeOnly === true;
   const pick = count => Math.floor(random() * count);
   if (balls === height) return [balls];
   if (balls === 1) {
     if (!allowZero) {
       if (minimum <= 1 && maximum >= 1) return [1];
-      throw Error("找不到符合設定且沒有空拍的 pattern；請讓週期範圍包含 1，或增加球數。");
+      throw Error("No pattern without a 0 matches these settings. Include period 1 or increase Balls.");
     }
     const last = Math.min(maximum, height);
-    if (minimum > last) throw Error("找不到符合設定的首次回到基態的 pattern；請縮短週期或提高最大高度。");
+    if (minimum > last) throw Error("No first-return pattern matches these settings. Shorten the period or increase Max Throw.");
     const period = minimum + pick(last - minimum + 1);
     return [period, ...Array(period - 1).fill(0)];
   }
@@ -58,7 +71,7 @@ function* searchSiteswap(settings, random = Math.random) {
     return values;
   };
   const ground = (1n << BigInt(balls)) - 1n;
-  const path = [], states = [ground];
+  const path = [], states = [ground], usedCycles = new Set();
   let work = 0;
   function* visit(state, remaining) {
     /* An existing landing beyond the final ground-state horizon cannot move. */
@@ -66,15 +79,20 @@ function* searchSiteswap(settings, random = Math.random) {
     const shifted = state >> 1n;
     const choices = (state & 1n) === 0n ? (allowZero ? [0] : []) : shuffle(Array.from({length: height}, (_, i) => i + 1).filter(h => !(shifted & (1n << BigInt(h - 1)))));
     for (const h of choices) {
-      if (++work > 150000) throw Error("這組設定的搜尋量較大，尚未找到結果；請縮小高度或週期範圍後重試。");
+      if (++work > 150000) throw Error("The search is too large and found no result yet. Reduce Max Throw or narrow the period range.");
       if (work % 1000 === 0) yield;
       const next = h ? shifted | (1n << BigInt(h - 1)) : shifted;
       if ((remaining === 1) !== (next === ground)) continue;
+      if (primeOnly && next !== ground && states.includes(next)) continue;
       path.push(h); states.push(next);
-      /* The repeated-loop constraint depends on the entire prefix, so failed
+      /* The repeated-cycle constraint depends on the entire prefix, so failed
          (state, remaining) pairs cannot be memoized across different paths. */
-      const repeated = endsWithRepeatedLoop(path, states);
+      const cycle = simpleCycleAtEnd(states);
+      const repeated = cycle !== null && usedCycles.has(cycle);
+      const added = cycle !== null && !repeated;
+      if (added) usedCycles.add(cycle);
       const suffix = repeated ? null : remaining === 1 ? [] : yield* visit(next, remaining - 1);
+      if (added) usedCycles.delete(cycle);
       path.pop(); states.pop();
       if (suffix) return [h, ...suffix];
     }
@@ -84,7 +102,8 @@ function* searchSiteswap(settings, random = Math.random) {
     const result = yield* visit(ground, period);
     if (result) return result;
   }
-  throw Error("找不到符合設定、途中不經過基態且沒有連續重複循環的 pattern；請調整高度或週期範圍。");
+  const constraint = primeOnly ? "requiring a prime loop" : "avoiding intermediate ground states and repeated cycles";
+  throw Error(`No pattern matches these settings while ${constraint}. Adjust Max Throw or the period range.`);
 }
 function generateSiteswap(settings, random = Math.random) {
   const search = searchSiteswap(settings, random);
@@ -108,8 +127,8 @@ function qualifyRoutine(values, balls) {
     qualifyBeats,
     challengeStart: qualifyBeats,
     challengeEnd: qualifyBeats + values.length,
-    basicName: balls === 1 ? "單球交替" : balls === 2 ? "雙球持球" : balls % 2 ? "Cascade" : "Fountain"
+    basicName: balls === 1 ? "One-Ball Alternation" : balls === 2 ? "Two-Ball Hold" : balls % 2 ? "Cascade" : "Fountain"
   };
 }
-globalThis.SiteswapChallenge = {primitivePeriod, formatSiteswapValue, parseSiteswapValue, endsWithRepeatedLoop, validateChallenge, searchSiteswap, generateSiteswap, alternatingHands, qualifyRoutine};
+globalThis.SiteswapChallenge = {primitivePeriod, formatSiteswapValue, parseSiteswapValue, cycleSignature, simpleCycleAtEnd, hasRepeatedCycle, validateChallenge, searchSiteswap, generateSiteswap, alternatingHands, qualifyRoutine};
 """

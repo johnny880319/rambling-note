@@ -67,6 +67,17 @@ class Note:
     def url(self) -> str:
         return self.relative_directory.as_posix().rstrip("/") + "/"
 
+    @property
+    def index(self) -> str:
+        """The number a note's directory starts with, as the homepage shows it.
+
+        Directories are named ``00-intro``, ``01-general_notation`` and so on,
+        so an introduction is note 00 and the numbers survive gaps and
+        insertions; a directory without a prefix shows no number.
+        """
+        match = re.match(r"(\d+)[-_]", self.relative_directory.name)
+        return match[1] if match else ""
+
 
 @dataclass
 class TopicNode:
@@ -330,12 +341,12 @@ def render_topic(node: TopicNode, path: tuple[str, ...] = ()) -> str:
         )
     if node.notes:
         links = []
-        for index, note in enumerate(node.notes, start=1):
+        for note in node.notes:
             links.append(
                 '<li><a class="note-link" href="'
                 + html.escape(note.url)
                 + '"><span class="note-index">'
-                + f"{index:02d}"
+                + note.index
                 + '</span><span class="note-title">'
                 + html.escape(note.title)
                 + '</span><span class="note-arrow">↗</span></a></li>'

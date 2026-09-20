@@ -15,7 +15,7 @@ from juggling_editor import DEFAULT_PATTERN_JSON
 from juggling_editor import JAVASCRIPT as EDITOR_JAVASCRIPT
 
 _TEMPLATE = r"""<!doctype html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -60,56 +60,57 @@ summary { cursor: pointer; font-weight: 600; }
 __INPUT_CONTROLS__
 <p id="message" role="status" aria-live="polite"></p>
 <div id="animation">
-<canvas id="stage" width="1000" height="600" role="img" aria-label="雜耍動畫：彩色球在各平台間拋接。可拖曳接球圓點與拋球菱形，或使用下方的平台位置設定。"></canvas>
-<div id="stageResizeHandle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="拖曳以調整動畫視窗高度" aria-valuemin="220" aria-valuemax="800" aria-valuenow="360"></div>
+<canvas id="stage" width="1000" height="600" role="img" aria-label="Juggling animation with colored balls moving between hand platforms. Drag the circular catch points and diamond throw points, or use the hand-path controls below."></canvas>
+<div id="stageResizeHandle" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Drag to resize the animation viewport" aria-valuemin="220" aria-valuemax="800" aria-valuenow="360"></div>
 <details id="geometrySettings" class="simulation-setting">
-  <summary>調整平台位置</summary>
-  <p class="hint">圓點是接球點，菱形是拋球點；顏色與平台相同。選擇手與拍次後，可以修改座標或直接拖曳動畫中的控制點。</p>
+  <summary>Adjust Hand Paths</summary>
+  <p class="hint">Circles mark catch points and diamonds mark throw points; their colors match the hand platforms. Select a hand and beat, then edit the coordinates or drag a control point in the animation.</p>
 <div id="coordinates">
   <div class="row">
-    <label>手 <select id="hand" aria-label="編輯哪一隻手"></select></label>
-    <label>位置套用到 <select id="phase" aria-label="位置套用的拍次"></select></label>
-    <button id="resetGeometry">重設位置</button>
+    <label>Hand <select id="hand" aria-label="Hand to edit"></select></label>
+    <label>Apply to <select id="phase" aria-label="Beats that use these positions"></select></label>
+    <button id="resetGeometry">Reset Positions</button>
   </div>
   <div class="row">
-    <label>接球 x <input id="catchX" type="number" min="5" max="95" step="0.5"></label>
-    <label>y <input id="catchY" type="number" min="35" max="90" step="0.5" aria-label="接球點 y 座標"></label>
-    <label>拋球 x <input id="throwX" type="number" min="5" max="95" step="0.5"></label>
-    <label>y <input id="throwY" type="number" min="35" max="90" step="0.5" aria-label="拋球點 y 座標"></label>
+    <label>Catch x <input id="catchX" type="number" min="5" max="95" step="0.5"></label>
+    <label>y <input id="catchY" type="number" min="35" max="90" step="0.5" aria-label="Catch-point y coordinate"></label>
+    <label>Throw x <input id="throwX" type="number" min="5" max="95" step="0.5"></label>
+    <label>y <input id="throwY" type="number" min="35" max="90" step="0.5" aria-label="Throw-point y coordinate"></label>
   </div>
-  <p class="hint">座標以原始場景為基準，y 向下增加；視野縮放不會改變座標。拖曳時視野固定，放開後才重新取景。「所有拍」會把修改的點套用到該手的整個週期；選單一拍可以安排交叉、高低交替的路徑。空拍的位置不參與拋接。</p>
+  <p class="hint">Coordinates use the original scene, with y increasing downward; moving or scaling the camera does not change them. The camera stays fixed while a control point is dragged and refits when released. “All Beats” applies the point to the hand's entire period; selecting one beat allows crossing or alternating paths. Empty beats do not participate in throws or catches.</p>
 </div>
 </details>
 <div id="timelineLabel" class="row" style="margin-top: 8px">
-  <label for="scrub">時間（拖曳會暫停）</label>
+  <label for="scrub">Time (dragging pauses playback)</label>
   <output id="clock"></output>
 </div>
-<input id="scrub" type="range" min="0" max="6" step="0.001" value="0" aria-label="動畫時間，單位為拍">
+<input id="scrub" type="range" min="0" max="6" step="0.001" value="0" aria-label="Animation time in beats">
 <div id="playbackControls" class="row simulation-setting" style="margin-top: 12px">
-  <button id="play" class="primary">暫停</button>
-  <button id="restart">從頭播放</button>
-  <label>速度 <input id="speed" type="range" min="0.25" max="2" step="0.05" value="1"><output id="speedValue">1.00×</output></label>
-  <label>持球 <input id="dwell" type="range" min="0.1" max="0.8" step="0.05" value="0.35"><output id="dwellValue">0.35 拍</output></label>
-  <label>重力 <input id="gravity" type="range" min="4" max="48" step="1" value="12" aria-label="重力加速度，單位為 y 座標單位每拍平方"><output id="gravityValue">12</output></label>
+  <button id="play" class="primary">Pause</button>
+  <button id="restart">Restart</button>
+  <label>Speed <input id="speed" type="range" min="0.25" max="2" step="0.05" value="1"><output id="speedValue">1.00×</output></label>
+  <label>Dwell <input id="dwell" type="range" min="0.1" max="0.8" step="0.05" value="0.35"><output id="dwellValue">0.35 beats</output></label>
+  <label>Gravity <input id="gravity" type="range" min="4" max="48" step="1" value="12" aria-label="Gravitational acceleration in y-coordinate units per beat squared"><output id="gravityValue">12</output></label>
 </div>
-<p id="physicsHint" class="hint simulation-setting">重力以 y 座標單位／拍² 計算；拋接拍數固定時，重力越大，拋球越高。視野會等比例容納整段軌跡，播放中保持固定。</p>
+<p id="physicsHint" class="hint simulation-setting">Gravity is measured in y-coordinate units per beat². For a fixed throw duration, stronger gravity produces a higher throw. The camera fits the entire trajectory proportionally and stays fixed during playback.</p>
 <div id="displayControls" class="row simulation-setting">
-  <label><input id="guides" type="checkbox" checked>顯示控制點</label>
-  <label><input id="trails" type="checkbox" checked>球的尾跡</label>
-  <label><input id="dip" type="checkbox" checked>接球下沉</label>
+  <label><input id="guides" type="checkbox" checked>Control Points</label>
+  <label><input id="trails" type="checkbox" checked>Trails</label>
+  <label><input id="dip" type="checkbox" checked>Catch Dip</label>
 </div>
 <div id="viewportControls" class="row simulation-setting" style="margin-top: 10px">
-  <label>視窗高度 <input id="stageHeight" type="range" min="220" max="800" step="10" value="360"><output id="stageHeightValue">自動</output></label>
-  <button id="fitViewport" type="button">自動取景</button>
+  <label>Viewport Height <input id="stageHeight" type="range" min="220" max="800" step="10" value="360"><output id="stageHeightValue">Auto</output></label>
+  <button id="fitViewport" type="button">Fit View</button>
   <output id="zoomValue" aria-live="polite">100%</output>
 </div>
-<p id="interactionHint" class="hint simulation-setting">滾輪或雙指可縮放，拖曳動畫空白處可移動視野；拖曳下方把手可調整視窗高度。球的顏色與編號會持續跟著同一顆球。圓點可拖曳接球位置，菱形可拖曳拋球位置。</p>
+<p id="interactionHint" class="hint simulation-setting">Use the mouse wheel or pinch to zoom, and drag empty space to pan. Drag the handle below the animation to resize the viewport. A ball keeps the same color and number throughout. Drag a circle to move a catch point or a diamond to move a throw point.</p>
 </div>
 <script>
 "use strict";
 const mod = (x, n) => ((x % n) + n) % n;
 const smooth = x => x * x * (3 - 2 * x);
 const mix = (a, b, t) => a + (b - a) * t;
+const count = (value, unit) => `${value} ${unit}${value === 1 ? "" : "s"}`;
 
 __PARSER__
 
@@ -126,15 +127,15 @@ function buildPattern(beats) {
       incoming[(phase + duration) % period][destination].push(edge);
     }));
   });
-  if (edges.length > 2048) throw Error("一個週期最多支援 2048 次拋球。");
+  if (edges.length > 2048) throw Error("One period can contain at most 2,048 throws.");
   for (let t = 0; t < period; t++) for (let h = 0; h < hands; h++) {
     const arrivals = incoming[t][h], departures = outgoing[t][h];
-    if (arrivals.length !== departures.length) throw Error(`不符合 balance：第 ${t} 拍，手 ${h + 1} 接到 ${arrivals.length} 顆，卻拋出 ${departures.length} 顆。`);
+    if (arrivals.length !== departures.length) throw Error(`Balance fails at beat ${t}: hand ${h + 1} catches ${count(arrivals.length, "object")} but throws ${count(departures.length, "object")}.`);
     /* Pair individual copies, not just distinct destinations, at each vertex. */
     arrivals.forEach((edge, rank) => { edge.next = departures[rank]; edge.landingRank = rank; });
   }
   const objects = edges.reduce((sum, edge) => sum + edge.duration, 0) / period;
-  if (objects > 256) throw Error(`這個 pattern 有 ${objects} 顆球，超過動畫的 256 顆上限。`);
+  if (objects > 256) throw Error(`This pattern has ${objects} objects, exceeding the animation limit of 256.`);
   const seen = new Set(), balls = [];
   for (const first of edges) {
     if (seen.has(first.id)) continue;
@@ -255,7 +256,7 @@ globalThis.Juggling = {parseThrows, buildPattern, defaultGeometry, handPosition,
 const $ = id => document.getElementById(id);
 __EDITOR_JAVASCRIPT__
 const defaultPattern = __DEFAULT_PATTERN__;
-if ($("patternEditor")) createPatternEditor($("patternEditor"), {value: defaultPattern, hint: "修改後按「套用並播放」。", describedBy: "message"});
+if ($("patternEditor")) createPatternEditor($("patternEditor"), {value: defaultPattern, hint: "Select Apply and Play after editing.", describedBy: "message"});
 let pattern, geometry, source, time = 0, lastStamp = null, onFrame = null;
 let running = !matchMedia("(prefers-reduced-motion: reduce)").matches;
 let drag = null, pan = null, resumeAfterDrag = false, frame = null;
@@ -290,7 +291,7 @@ const handColor = h => `hsl(${(h * 137.508 + 210) % 360} 64% 53%)`;
 const ballColor = id => `hsl(${(id * 137.508 + 32) % 360} 80% 53%)`;
 function option(value, name) { const item = document.createElement("option"); item.value = value; item.textContent = name; return item; }
 
-function updatePlay() { $("play").textContent = running ? "暫停" : "播放"; }
+function updatePlay() { $("play").textContent = running ? "Pause" : "Play"; }
 function message(text, error = false) { $("message").textContent = text; $("message").classList.toggle("error", error); }
 function selectedPhase() { return $("phase").value === "all" ? 0 : Number($("phase").value); }
 function syncCoordinates() {
@@ -311,11 +312,11 @@ function load(text, beats = null, options = {}) {
     ? structuredClone(geometry) : defaultGeometry(candidate);
   pattern = candidate; geometry = nextGeometry; source = text; time = 0; lastStamp = null;
   if ($("editor")) $("editor").value = text;
-  $("stats").textContent = `${pattern.hands} 隻手 · ${pattern.period} 拍 · ${pattern.objects} 顆球`;
-  $("hand").replaceChildren(...Array.from({length: pattern.hands}, (_, h) => option(h, pattern.handLabels?.[h] ?? `手 ${h + 1}`)));
-  $("phase").replaceChildren(option("all", "所有拍"), ...Array.from({length: pattern.period}, (_, t) => option(t, `第 ${t} 拍`)));
+  $("stats").textContent = `${count(pattern.hands, "hand")} · ${count(pattern.period, "beat")} · ${count(pattern.objects, "object")}`;
+  $("hand").replaceChildren(...Array.from({length: pattern.hands}, (_, h) => option(h, pattern.handLabels?.[h] ?? `Hand ${h + 1}`)));
+  $("phase").replaceChildren(option("all", "All Beats"), ...Array.from({length: pattern.period}, (_, t) => option(t, `Beat ${t}`)));
   $("scrub").max = pattern.period;
-  message(`已通過 causality 與 balance 檢查；b = ${pattern.edges.reduce((n, edge) => n + edge.duration, 0)} / ${pattern.period} = ${pattern.objects}。`);
+  message(`Causality and balance checks passed; b = ${pattern.edges.reduce((n, edge) => n + edge.duration, 0)} / ${pattern.period} = ${pattern.objects}.`);
   syncCoordinates(); fitViewport(); updatePlay(); draw();
 }
 
@@ -361,7 +362,7 @@ function draw() {
     const halfWidth = Math.max(24, 7 / pixelsPerUnit, Math.abs(slotOffset(0, capacity)) * 10 + 12);
     context.fillStyle = handColor(h); context.beginPath(); context.roundRect(p.x - halfWidth, p.y, halfWidth * 2, Math.max(9, 3 / pixelsPerUnit), 4); context.fill();
     context.fillStyle = muted; context.font = `${Math.max(16, 9 / pixelsPerUnit)}px system-ui`; context.textAlign = "center";
-    context.fillText(pattern.handLabels?.[h] ?? `手 ${h + 1}`, p.x, p.y + Math.max(31, 16 / pixelsPerUnit));
+    context.fillText(pattern.handLabels?.[h] ?? `Hand ${h + 1}`, p.x, p.y + Math.max(31, 16 / pixelsPerUnit));
   }
   for (const ball of pattern.balls) {
     const color = ballColor(ball.id);
@@ -391,10 +392,10 @@ function draw() {
     }
     context.fill(); context.stroke();
     context.fillStyle = handColor(guide.hand); context.font = `${Math.max(14, 9 / pixelsPerUnit)}px system-ui`;
-    context.fillText(`${guide.hand + 1} ${guide.kind === "catch" ? "接" : "拋"}`, p.x, p.y + (guide.kind === "catch" ? Math.max(48, 20 / pixelsPerUnit) : -Math.max(17, 12 / pixelsPerUnit)));
+    context.fillText(`${guide.hand + 1} ${guide.kind}`, p.x, p.y + (guide.kind === "catch" ? Math.max(48, 20 / pixelsPerUnit) : -Math.max(17, 12 / pixelsPerUnit)));
     context.globalAlpha = 1;
   }
-  $("clock").textContent = `t = ${time.toFixed(2)} · 第 ${mod(Math.floor(time), pattern.period)} 拍`;
+  $("clock").textContent = `t = ${time.toFixed(2)} · Beat ${mod(Math.floor(time), pattern.period)}`;
   $("scrub").value = mod(time, pattern.period);
   if (onFrame) onFrame(time);
 }
@@ -414,7 +415,7 @@ $("play").onclick = () => { running = !running; schedule(); };
 $("restart").onclick = () => { time = 0; running = true; schedule(); };
 $("scrub").oninput = () => { running = false; time = Number($("scrub").value); schedule(); };
 $("speed").oninput = () => { $("speedValue").value = Number($("speed").value).toFixed(2) + "×"; };
-$("dwell").oninput = () => { $("dwellValue").value = dwell().toFixed(2) + " 拍"; fitViewport(); draw(); };
+$("dwell").oninput = () => { $("dwellValue").value = dwell().toFixed(2) + " beats"; fitViewport(); draw(); };
 $("gravity").oninput = () => { $("gravityValue").value = String(gravity()); fitViewport(); draw(); };
 $("fitViewport").onclick = () => { fitViewport(); draw(); };
 function setStageHeight(height, custom = true) {
@@ -448,7 +449,7 @@ if ($("apply")) $("apply").onclick = () => {
   try { load($("editor").value); running = true; schedule(); }
   catch (error) { message(error.message, true); }
 };
-if ($("restore")) $("restore").onclick = () => { $("editor").value = source; message("已還原目前播放的拋接資料。"); };
+if ($("restore")) $("restore").onclick = () => { $("editor").value = source; message("Restored the pattern currently being played."); };
 for (const kind of ["catch", "throw"]) for (const axis of ["x", "y"]) {
   const input = $(kind + axis.toUpperCase());
   input.onchange = () => {
@@ -525,7 +526,7 @@ document.addEventListener("visibilitychange", () => {
 new ResizeObserver(() => {
   if (!customHeight) {
     $("stageHeight").value = Math.round(canvas.clientHeight / 10) * 10;
-    $("stageHeightValue").value = "自動";
+    $("stageHeightValue").value = "Auto";
     resizeHandle.setAttribute("aria-valuenow", Math.round(canvas.clientHeight));
   }
   fitViewport(); draw();
@@ -539,8 +540,8 @@ __STARTUP__
 
 _DEFAULT_CONTROLS = """<div id="patternEditor"></div>
 <div class="row">
-  <button id="apply" class="primary">套用並播放</button>
-  <button id="restore">還原目前資料</button>
+  <button id="apply" class="primary">Apply and Play</button>
+  <button id="restore">Restore Current Pattern</button>
   <span id="stats"></span>
 </div>
 """

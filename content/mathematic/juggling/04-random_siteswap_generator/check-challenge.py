@@ -1,6 +1,6 @@
 """Check first returns to ground, fundamental periods, and two-hand animation.
 
-Run with `uv run python content/mathematic/juggling/03-random-siteswap-generator/check-challenge.py`.
+Run with `uv run python content/mathematic/juggling/04-random_siteswap_generator/check-challenge.py`.
 Node.js is required; no browser packages are needed.
 """
 
@@ -63,7 +63,27 @@ function traceStates(values, balls) {
   }
   return states;
 }
-function repeatedLoop(values, balls) {
+function referenceCycleSignature(cycle) {
+  const rotations=cycle.map((_,start)=>Array.from({length:cycle.length},(_,i)=>cycle[(start+i)%cycle.length].toString(36)).join('.'));
+  return rotations.sort()[0];
+}
+function repeatedCycle(values, balls) {
+  const states=traceStates(values,balls), used=new Set();
+  for(let end=1;end<states.length;end++) {
+    for(let start=end-1;start>=0;start--) {
+      if(states[start]!==states[end]) continue;
+      const cycle=states.slice(start,end);
+      if(new Set(cycle).size===cycle.length) {
+        const signature=referenceCycleSignature(cycle);
+        if(used.has(signature)) return true;
+        used.add(signature);
+      }
+      break;
+    }
+  }
+  return false;
+}
+function consecutiveRepeatedLoop(values, balls) {
   const states=traceStates(values,balls);
   for(let start=0;start<values.length;start++) {
     for(let width=1;start+2*width<=values.length;width++) {
@@ -75,28 +95,41 @@ function repeatedLoop(values, balls) {
 }
 const redundant=Array.from('5515045045045041',Number);
 assert.ok(firstReturn(redundant,3));
-assert.ok(repeatedLoop(redundant,3));
+assert.ok(repeatedCycle(redundant,3));
 const trace=traceStates(redundant,3);
-assert.equal(endsWithRepeatedLoop(redundant.slice(0,2),trace.slice(0,3)),false);
-assert.equal(endsWithRepeatedLoop(redundant.slice(0,9),trace.slice(0,10)),true);
-assert.equal(repeatedLoop(Array.from('5515041',Number),3),false);
-function referenceExists({balls,height,minimum,maximum,allowZero=true}) {
+assert.equal(hasRepeatedCycle(trace.slice(0,3)),false);
+assert.equal(hasRepeatedCycle(trace.slice(0,10)),true);
+const allowedRevisit=Array.from('5515041',Number);
+assert.equal(repeatedCycle(allowedRevisit,3),false);
+assert.ok(new Set(traceStates(allowedRevisit,3).slice(0,-1)).size<allowedRevisit.length);
+const separatedRepeat=Array.from('445041',Number);
+assert.ok(firstReturn(separatedRepeat,3));
+assert.equal(consecutiveRepeatedLoop(separatedRepeat,3),false);
+assert.equal(repeatedCycle(separatedRepeat,3),true);
+assert.equal(hasRepeatedCycle(traceStates(separatedRepeat,3)),true);
+function referenceExists({balls,height,minimum,maximum,allowZero=true,primeOnly=false}) {
   const ground=Array.from({length:balls},(_,i)=>i);
-  function visit(landings,path) {
+  const groundKey=ground.join(',');
+  function visit(landings,path,visited) {
     const catching=landings.includes(0);
     const shifted=landings.filter(t=>t>0).map(t=>t-1);
     for(let h=allowZero ? 0 : 1;h<=height;h++) {
       if(catching!==(h>0) || (h>0 && shifted.includes(h-1))) continue;
       const next=(h ? [...shifted,h-1] : shifted).sort((a,b)=>a-b);
+      const nextKey=next.join(','), atGround=nextKey===groundKey;
+      if(primeOnly && !atGround && visited.has(nextKey)) continue;
       const values=[...path,h];
-      if(repeatedLoop(values,balls)) continue;
-      if(next.every((t,i)=>t===ground[i])) {
+      if(repeatedCycle(values,balls)) continue;
+      if(atGround) {
         if(values.length>=minimum) return true;
-      } else if(values.length<maximum && visit(next,values)) return true;
+      } else if(values.length<maximum) {
+        const nextVisited=new Set(visited); nextVisited.add(nextKey);
+        if(visit(next,values,nextVisited)) return true;
+      }
     }
     return false;
   }
-  return visit(ground,[]);
+  return visit(ground,[],new Set([groundKey]));
 }
 function verify(settings, rng = random) {
   const values = generateSiteswap(settings, rng), p = values.length;
@@ -107,8 +140,10 @@ function verify(settings, rng = random) {
   assert.equal(new Set(values.map((h,t) => (t+h)%p)).size, p);
   assert.equal(primitivePeriod(values), p);
   assert.ok(firstReturn(values,settings.balls),values.join(' '));
-  assert.equal(repeatedLoop(values,settings.balls),false,values.join(' '));
-  if(new Set(traceStates(values,settings.balls).slice(0,-1)).size<p) revisiting++;
+  assert.equal(repeatedCycle(values,settings.balls),false,values.join(' '));
+  const challengeStates=traceStates(values,settings.balls).slice(0,-1);
+  if(settings.primeOnly) assert.equal(new Set(challengeStates).size,p,values.join(' '));
+  else if(new Set(challengeStates).size<p) revisiting++;
   const beats = alternatingHands(values), pattern = buildPattern(beats);
   assert.equal(pattern.hands, 2);
   assert.equal(pattern.objects, settings.balls);
@@ -146,47 +181,54 @@ for (let balls=1; balls<=6; balls++) for (let height=balls; height<=12; height++
     else for(let repeat=0;repeat<3;repeat++) {
       try { verify(settings); }
       catch(error) {
-        assert.match(error.message,/找不到符合設定/);
+        assert.match(error.message,/No (?:first-return )?pattern matches these settings/);
         assert.equal(referenceExists(settings),false,JSON.stringify(settings));
         break;
       }
     }
   }
 }
-for(const period of [1,2,31,32,63,64]) {
-  verify({balls:16,height:64,minimum:period,maximum:period});
-  verify({balls:1,height:64,minimum:period,maximum:period},()=>0);
+for(const period of [1,2,31,32,35,63,64]) {
+  verify({balls:16,height:35,minimum:period,maximum:period});
+  if(period<=35) verify({balls:1,height:35,minimum:period,maximum:period},()=>0);
 }
 const periods = new Set();
 for (let i=0;i<100;i++) periods.add(verify({balls:3,height:7,minimum:2,maximum:6}).length);
 assert.deepEqual([...periods].sort(),[2,3,4,5,6]);
 assert.ok(revisiting>0,'The generator must still allow non-prime loops.');
 assert.deepEqual(generateSiteswap({balls:1,height:3,minimum:1,maximum:1,allowZero:false}),[1]);
-assert.throws(()=>generateSiteswap({balls:1,height:3,minimum:2,maximum:3,allowZero:false}),/沒有空拍/);
+assert.throws(()=>generateSiteswap({balls:1,height:3,minimum:2,maximum:3,allowZero:false}),/without a 0/);
 for(let i=0;i<40;i++) verify({balls:3,height:7,minimum:2,maximum:6,allowZero:false});
-for(const [value,label] of [[0,'0'],[9,'9'],[10,'a'],[25,'p'],[35,'z'],[36,'36'],[64,'64']]) {
+for(let i=0;i<40;i++) verify({balls:3,height:7,minimum:2,maximum:6,primeOnly:true});
+for(const [value,label] of [[0,'0'],[9,'9'],[10,'a'],[25,'p'],[35,'z']]) {
   assert.equal(formatSiteswapValue(value),label);
 }
 for(const [source,value] of [['0',0],['09',9],['10',10],['64',64],['a',10],['A',10],['p',25],['z',35]]) {
   assert.equal(parseSiteswapValue(source),value);
 }
 for(const source of ['', 'a0', '-1', '3.5', '_']) assert.ok(Number.isNaN(parseSiteswapValue(source)));
+assert.throws(()=>generateSiteswap({balls:3,height:36,minimum:1,maximum:3}),/Max Throw must be an integer from 1 to 35/);
 // Independently enumerate small spaces to check the feasibility decisions.
 for(let height=1;height<=4;height++) for(let p=1;p<=4;p++) {
-  const possible=new Set();
+  const possible=new Set(), possiblePrime=new Set();
   for(let code=0;code<(height+1)**p;code++) {
     let n=code; const a=Array.from({length:p},()=>{const h=n%(height+1);n=Math.floor(n/(height+1));return h;});
     const balls=a.reduce((x,y)=>x+y,0)/p;
-    if(Number.isInteger(balls) && balls>0 && firstReturn(a,balls) && !repeatedLoop(a,balls)) possible.add(balls);
+    if(Number.isInteger(balls) && balls>0 && firstReturn(a,balls) && !repeatedCycle(a,balls)) {
+      possible.add(balls);
+      if(new Set(traceStates(a,balls).slice(0,-1)).size===p) possiblePrime.add(balls);
+    }
   }
   for(let balls=1;balls<=4;balls++) {
     const settings={balls,height,minimum:p,maximum:p};
     if(possible.has(balls)) verify(settings); else assert.throws(()=>generateSiteswap(settings));
+    const primeSettings={...settings,primeOnly:true};
+    if(possiblePrime.has(balls)) verify(primeSettings); else assert.throws(()=>generateSiteswap(primeSettings));
   }
 }
 for (const settings of [
   {balls:0,height:5,minimum:1,maximum:3}, {balls:17,height:20,minimum:1,maximum:3},
-  {balls:3,height:2,minimum:1,maximum:3}, {balls:3,height:65,minimum:1,maximum:3},
+  {balls:3,height:2,minimum:1,maximum:3}, {balls:3,height:36,minimum:1,maximum:3},
   {balls:3,height:7,minimum:4,maximum:3}, {balls:3,height:7,minimum:0,maximum:3},
   {balls:3,height:7,minimum:1,maximum:65}, {balls:3.5,height:7,minimum:1,maximum:3},
   {balls:NaN,height:7,minimum:1,maximum:3}, {balls:3,height:Infinity,minimum:1,maximum:3}

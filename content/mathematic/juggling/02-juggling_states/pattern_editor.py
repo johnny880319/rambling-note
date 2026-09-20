@@ -28,12 +28,12 @@ export default {
     const wrapper = document.createElement("div");
     wrapper.className = "juggling-editor";
     const root = document.createElement("div");
-    const editor = createPatternEditor(root, {value: model.get("value"), hint: "修改後按「套用」。"});
+    const editor = createPatternEditor(root, {value: model.get("value"), hint: "Select Apply after editing."});
     const actions = document.createElement("div");
     actions.className = "actions";
     const apply = document.createElement("button"), restore = document.createElement("button");
-    apply.textContent = "套用"; apply.className = "primary";
-    restore.textContent = "還原目前資料";
+    apply.textContent = "Apply"; apply.className = "primary";
+    restore.textContent = "Restore Current Pattern";
     const events = new AbortController();
     apply.addEventListener("click", () => {
       model.set("value", editor.input.value);

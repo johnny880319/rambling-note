@@ -20,19 +20,20 @@ CONTROLS = r"""
 #beatHint { min-height: 24px; }
 </style>
 <form id="challengeForm">
-  <label>球數<input id="balls" type="number" min="1" max="16" step="1" value="3" required></label>
-  <label>最大高度<input id="height" type="text" inputmode="text" value="7" maxlength="2" aria-describedby="heightHint" required></label>
-  <label>最小週期<input id="minimum" type="number" min="1" max="64" step="1" value="2" required></label>
-  <label>最大週期<input id="maximum" type="number" min="1" max="64" step="1" value="6" required></label>
-  <label class="option"><input id="allowZero" type="checkbox" checked>允許空拍（0）</label>
-  <button id="generate" type="submit" class="primary">下一題</button>
+  <label>Balls<input id="balls" type="number" min="1" max="16" step="1" value="3" required></label>
+  <label>Max Throw<input id="height" type="text" inputmode="text" value="7" maxlength="2" aria-describedby="heightHint" required></label>
+  <label>Min Period<input id="minimum" type="number" min="1" max="64" step="1" value="2" required></label>
+  <label>Max Period<input id="maximum" type="number" min="1" max="64" step="1" value="6" required></label>
+  <label class="option"><input id="allowZero" type="checkbox" checked>Allow 0</label>
+  <label class="option"><input id="primeOnly" type="checkbox">Prime loops only</label>
+  <button id="generate" type="submit" class="primary">New Pattern</button>
 </form>
-<p id="heightHint" class="hint">最大高度可輸入十進位整數，或以 a–z 代表 10–35。</p>
+<p id="heightHint" class="hint">Enter the maximum throw as a decimal integer, or use a–z for 10–35.</p>
 <output id="challengeStats" aria-live="polite"></output>
-<div id="routinePhases" role="group" aria-label="循環播放流程">
-  <span id="leadIn"></span><span id="challengePhase">挑戰</span><span id="leadOut"></span>
+<div id="routinePhases" role="group" aria-label="Playback phases">
+  <span id="leadIn"></span><span id="challengePhase">Challenge</span><span id="leadOut"></span>
 </div>
-<ol id="sequence" aria-label="本題的 siteswap，各數字依序代表一拍"></ol>
+<ol id="sequence" aria-label="Challenge siteswap, with one value per beat"></ol>
 <p id="beatHint"></p>
 <span id="stats" class="hint"></span>
 """
@@ -53,10 +54,10 @@ onFrame = currentTime => {
   const stage = beat < routine.challengeStart ? "leadIn" : inChallenge ? "challengePhase" : "leadOut";
   for (const id of ["leadIn", "challengePhase", "leadOut"]) $(id).setAttribute("aria-current", String(id === stage));
   [...$("sequence").children].forEach((item, i) => item.setAttribute("aria-current", String(inChallenge && i === beat - routine.challengeStart)));
-  const side = t % 2 === 0 ? "左手" : "右手", value = routine.values[beat];
-  const progress = inChallenge ? `挑戰 · 第 ${beat - routine.challengeStart + 1} / ${challenge.length} 拍`
-    : `${stage === "leadIn" ? "起始運球" : "回穩運球"} · ${routine.basicName} · 第 ${stage === "leadIn" ? beat + 1 : beat - routine.challengeEnd + 1} / ${routine.qualifyBeats} 拍`;
-  $("beatHint").textContent = `${progress} · ${side} · ` + (value === 0 ? "空拍" : value === 2 ? "持球" : `${formatSiteswapValue(value)} 拍後由${(t + value) % 2 === 0 ? "左手" : "右手"}接住`);
+  const side = t % 2 === 0 ? "Left Hand" : "Right Hand", value = routine.values[beat];
+  const progress = inChallenge ? `Challenge · Beat ${beat - routine.challengeStart + 1} / ${challenge.length}`
+    : `${stage === "leadIn" ? "Lead-in" : "Recovery"} · ${routine.basicName} · Beat ${stage === "leadIn" ? beat + 1 : beat - routine.challengeEnd + 1} / ${routine.qualifyBeats}`;
+  $("beatHint").textContent = `${progress} · ${side} · ` + (value === 0 ? "Empty beat" : value === 2 ? "Hold" : `${formatSiteswapValue(value)}-beat throw to the ${(t + value) % 2 === 0 ? "left" : "right"} hand`);
 };
 async function nextChallenge() {
   if ($("generate").disabled) return;
@@ -65,7 +66,8 @@ async function nextChallenge() {
     const settings = Object.fromEntries(["balls", "minimum", "maximum"].map(id => [id, $(id).value === "" ? NaN : Number($(id).value)]));
     settings.height = parseSiteswapValue($("height").value);
     settings.allowZero = $("allowZero").checked;
-    message("正在尋找從基態出發、途中不回到基態的題目…");
+    settings.primeOnly = $("primeOnly").checked;
+    message("Searching for a pattern that first returns to the ground state at the end…");
     const search = searchSiteswap(settings);
     let step;
     do {
@@ -78,21 +80,21 @@ async function nextChallenge() {
     /* Validate before replacing the displayed challenge or animation. */
     buildPattern(beats);
     challenge = candidate; routine = nextRoutine; shownBeat = -1;
-    $("leadIn").textContent = `起始 ${routine.basicName} · ${routine.qualifyBeats} 拍`;
-    $("challengePhase").textContent = `挑戰 · ${candidate.length} 拍`;
-    $("leadOut").textContent = `回穩 ${routine.basicName} · ${routine.qualifyBeats} 拍`;
-    $("sequence").replaceChildren(...candidate.map(value => { const item = document.createElement("li"); item.textContent = formatSiteswapValue(value); item.title = `${value} 拍`; return item; }));
-    load(candidate.join(" "), beats, {holdTwos: true, handLabels: ["左手", "右手"], horizontalScale: 0.35});
-    $("challengeStats").textContent = `${settings.balls} 顆球 · 最短週期 ${candidate.length} 拍 · 本題最高 ${formatSiteswapValue(Math.max(...candidate))}`;
-    $("stats").textContent = `每輪 ${routine.values.length} 拍 · 雙手動作循環 ${beats.length} 拍 · 持續循環播放`;
-    message("前後各接一個 qualify；完成題目後還要穩定回運，才算挑戰成功。");
+    $("leadIn").textContent = `Lead-in ${routine.basicName} · ${count(routine.qualifyBeats, "beat")}`;
+    $("challengePhase").textContent = `Challenge · ${count(candidate.length, "beat")}`;
+    $("leadOut").textContent = `Recovery ${routine.basicName} · ${count(routine.qualifyBeats, "beat")}`;
+    $("sequence").replaceChildren(...candidate.map(value => { const item = document.createElement("li"); item.textContent = formatSiteswapValue(value); item.title = `${value} beats`; return item; }));
+    load(candidate.join(" "), beats, {holdTwos: true, handLabels: ["L", "R"], horizontalScale: 0.35});
+    $("challengeStats").textContent = `${count(settings.balls, "ball")} · shortest period ${count(candidate.length, "beat")} · highest throw ${formatSiteswapValue(Math.max(...candidate))}${settings.primeOnly ? " · prime loop" : ""}`;
+    $("stats").textContent = `${count(routine.values.length, "beat")} per round · ${beats.length}-beat two-hand cycle · loops continuously`;
+    message("A qualify comes before the challenge and another follows it. Recover into a stable basic pattern to complete the challenge.");
     running = !matchMedia("(prefers-reduced-motion: reduce)").matches;
     schedule();
   } catch (error) { message(error.message, true); }
   finally { $("generate").disabled = false; }
 }
 $("challengeForm").onsubmit = event => { event.preventDefault(); nextChallenge(); };
-$("challengeForm").oninput = () => { message("設定已修改；按「下一題」套用。"); };
+$("challengeForm").oninput = () => { message("Settings changed. Select New Pattern to apply them."); };
 $("guides").checked = false;
 nextChallenge();
 """

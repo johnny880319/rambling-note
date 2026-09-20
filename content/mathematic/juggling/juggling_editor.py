@@ -43,11 +43,11 @@ CSS = """
 JAVASCRIPT = r"""
 function createPatternEditor(root, {value, hint = "", describedBy = ""}) {
   root.classList.add("juggling-editor");
-  root.innerHTML = `<label for="editor">一個週期的拋接資料</label>
+  root.innerHTML = `<label for="editor">Throws in One Period</label>
     <p id="editorHint" class="editor-hint"></p>
     <textarea id="editor" rows="6" wrap="off" spellcheck="false"></textarea>`;
   const input = root.querySelector("textarea");
-  root.querySelector(".editor-hint").textContent = "Tab 可對齊欄位；先按 Esc 再按 Tab 可離開輸入框。" + hint;
+  root.querySelector(".editor-hint").textContent = "Use Tab to align columns. Press Esc, then Tab, to leave the editor. " + hint;
   input.setAttribute("aria-describedby", ["editorHint", describedBy].filter(Boolean).join(" "));
   input.value = value;
   let allowTabExit = false;

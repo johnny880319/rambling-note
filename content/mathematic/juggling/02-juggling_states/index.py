@@ -892,13 +892,13 @@ def _(pattern_input, set_beat, state_graph):
 @app.cell(hide_code=True)
 def _(mo, pattern, set_beat):
     previous_beat_button = mo.ui.button(
-        label="← 上一拍",
+        label="← Previous Beat",
         value=0,
         on_click=lambda clicks: clicks + 1,
         on_change=lambda _: set_beat(lambda beat: max(0, beat - 1)),
     )
     next_beat_button = mo.ui.button(
-        label="下一拍 →",
+        label="Next Beat →",
         value=0,
         on_click=lambda clicks: clicks + 1,
         on_change=lambda _: set_beat(
@@ -928,7 +928,7 @@ def _(get_beat, mo, pattern, set_beat):
         value=min(get_beat(), _last),
         show_value=True,
         full_width=True,
-        label="第幾拍",
+        label="Beat",
         on_change=set_beat,
     )
     beat_slider if pattern else mo.md("")
@@ -947,15 +947,15 @@ def _(background, beat_index, mo, pattern, state_graph, trouble):
         _view = mo.md(f"*{trouble}*")
     else:
         _shape = (
-            f"{pattern.objects} 個物件、{pattern.hands} 隻手、"
-            f"最大滯空 {pattern.height}、一格最多 {pattern.capacity} 顆"
+            f"{pattern.objects} objects · {pattern.hands} hands · "
+            f"max throw {pattern.height} · capacity {pattern.capacity}"
         )
         if background is None:
-            _shape += "（狀態空間太大，只畫這個 pattern 走過的循環）"
+            _shape += " (state space too large; showing only this pattern's cycle)"
 
         _here = state_graph.state_label(pattern.states[beat_index % len(pattern)])
         if beat_index == 0:
-            _step = f"起點 `{_here}`，尚未投擲"
+            _step = f"Start at `{_here}`; no throw yet"
         else:
             # The figure lights the throws already made, so the caption names
             # the last of them rather than the one still to come.
@@ -963,9 +963,11 @@ def _(background, beat_index, mo, pattern, state_graph, trouble):
                 pattern.throws[beat_index - 1], pattern.hands
             )
             _from = state_graph.state_label(pattern.states[beat_index - 1])
-            _step = f"第 {beat_index} 拍：從 `{_from}` 丟 `{_throw}` 到 `{_here}`"
+            _step = (
+                f"Beat {beat_index}: throw `{_throw}` from `{_from}` to `{_here}`"
+            )
             if beat_index == len(pattern):
-                _step += "，走完一個週期"
+                _step += "; period complete"
 
         _view = mo.vstack(
             [

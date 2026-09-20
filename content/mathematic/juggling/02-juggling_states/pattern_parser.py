@@ -11,7 +11,7 @@ _PAIR = re.compile(r"\(\s*([0-9]+)\s*,\s*([0-9a-z]+)\s*\)", re.IGNORECASE)
 
 def parse_throws(text: str) -> tuple[Throw, ...]:
     if len(text) > 60000:
-        raise ValueError("輸入太長，請縮短週期。")
+        raise ValueError("The input is too long. Shorten the period.")
     position = 0
     beats = []
 
@@ -29,26 +29,29 @@ def parse_throws(text: str) -> tuple[Throw, ...]:
         elif _WORD.fullmatch(token):
             target, value = (0 if legacy else None), token
         else:
-            raise ValueError(f"無法讀取投擲「{token}」。")
+            raise ValueError(f"Cannot parse the throw “{token}”.")
         if not re.fullmatch(r"[0-9]+|[a-z]", value, re.IGNORECASE):
-            raise ValueError("拋接時長請使用十進位整數或單一字母；不同拍請以空白或換行分隔。")
+            raise ValueError(
+                "Write a throw as a decimal integer or one letter, and separate "
+                "beats with whitespace."
+            )
         duration = int(value, 10 if value.isascii() and value.isdigit() else 36)
         if target is not None and not 0 <= target < 16:
-            raise ValueError("接球手編號必須介於 1 與 16。")
+            raise ValueError("The catching-hand number must be between 1 and 16.")
         if duration > 64:
-            raise ValueError("拋接時長最多 64 拍。")
+            raise ValueError("A throw can span at most 64 beats.")
         return target, duration
 
     def column():
         nonlocal position
         if position >= len(text):
-            raise ValueError("分隔符號後缺少手的投擲資料。")
+            raise ValueError("Missing hand data after the separator.")
         opener = text[position]
         if opener in "[{":
             closer = "]" if opener == "[" else "}"
             end = text.find(closer, position + 1)
             if end < 0:
-                raise ValueError(f"缺少右括號 {closer}。")
+                raise ValueError(f"Missing closing bracket {closer}.")
             inside = text[position + 1 : end].strip()
             position = end + 1
             if not inside:
@@ -63,9 +66,12 @@ def parse_throws(text: str) -> tuple[Throw, ...]:
             result = []
             for token in tokens:
                 if not token:
-                    raise ValueError("逗號前後缺少投擲資料。")
+                    raise ValueError("Missing throw data before or after a comma.")
                 if _RETIRED_TARGET.fullmatch(token):
-                    raise ValueError("接球手的分隔符已改為 _；請改寫舊的 p 分隔格式。")
+                    raise ValueError(
+                        "Use _ to mark the catching hand; the old p separator is "
+                        "no longer supported."
+                    )
                 result.append(slot(token, legacy=opener == "{"))
             return result
         end = position
@@ -77,11 +83,16 @@ def parse_throws(text: str) -> tuple[Throw, ...]:
             end += 1
         token = text[position:end]
         if _RETIRED_TARGET.fullmatch(token):
-            raise ValueError("接球手的分隔符已改為 _；請改寫舊的 p 分隔格式。")
+            raise ValueError(
+                "Use _ to mark the catching hand; the old p separator is no "
+                "longer supported."
+            )
         if "_" in token and not _TARGET.fullmatch(token):
-            raise ValueError("接球手格式不完整，請使用「時長_手編號」。")
+            raise ValueError(
+                "The catching-hand suffix is incomplete. Use throw_hand."
+            )
         if not token:
-            raise ValueError(f"無法讀取位置 {position + 1} 的投擲資料。")
+            raise ValueError(f"Cannot parse a throw at position {position + 1}.")
         position = end
         return [slot(token)]
 
@@ -97,12 +108,12 @@ def parse_throws(text: str) -> tuple[Throw, ...]:
             boundary = position
             skip()
         if position < len(text) and position == boundary:
-            raise ValueError("不同拍請以空白或換行分隔。")
+            raise ValueError("Separate beats with a space or newline.")
         beats.append(columns)
         if len(beats) > 128 or len(columns) > 16:
-            raise ValueError("最多支援 16 隻手、128 拍。")
+            raise ValueError("The simulator supports at most 16 hands and 128 beats.")
     if not beats:
-        raise ValueError("請輸入至少一拍。")
+        raise ValueError("Enter at least one beat.")
     hands = max(
         max(len(beat) for beat in beats),
         max(
@@ -123,7 +134,10 @@ def parse_throws(text: str) -> tuple[Throw, ...]:
             if hands > 1 and any(
                 target is None and duration for target, duration in hand
             ):
-                raise ValueError("多手時，非空投擲需要指定接球手。")
+                raise ValueError(
+                    "Every nonzero throw in a multi-hand pattern must specify "
+                    "its catching hand."
+                )
             columns.append(
                 tuple(
                     sorted(
@@ -133,5 +147,5 @@ def parse_throws(text: str) -> tuple[Throw, ...]:
             )
         normalized.append(tuple(columns) + ((),) * (hands - len(columns)))
     if sum(len(hand) for beat in normalized for hand in beat) > 2048:
-        raise ValueError("一個週期最多支援 2048 次拋球。")
+        raise ValueError("One period can contain at most 2,048 throws.")
     return tuple(normalized)
