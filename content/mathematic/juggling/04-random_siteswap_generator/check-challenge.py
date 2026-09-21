@@ -200,14 +200,15 @@ assert.deepEqual(generateSiteswap({balls:1,height:3,minimum:1,maximum:1,allowZer
 assert.throws(()=>generateSiteswap({balls:1,height:3,minimum:2,maximum:3,allowZero:false}),/without a 0/);
 for(let i=0;i<40;i++) verify({balls:3,height:7,minimum:2,maximum:6,allowZero:false});
 for(let i=0;i<40;i++) verify({balls:3,height:7,minimum:2,maximum:6,primeOnly:true});
-for(const [value,label] of [[0,'0'],[9,'9'],[10,'a'],[25,'p'],[35,'z']]) {
+for(const [value,label] of [[0,'0'],[9,'9'],[10,'a'],[25,'p'],[35,'z'],[36,'α'],[52,'ρ'],[59,'ω'],[60,'60']]) {
   assert.equal(formatSiteswapValue(value),label);
 }
-for(const [source,value] of [['0',0],['09',9],['10',10],['64',64],['a',10],['A',10],['p',25],['z',35]]) {
+for(const [source,value] of [['0',0],['09',9],['10',10],['64',64],['a',10],['A',10],['p',25],['z',35],['α',36],[' ω ',59]]) {
   assert.equal(parseSiteswapValue(source),value);
 }
-for(const source of ['', 'a0', '-1', '3.5', '_']) assert.ok(Number.isNaN(parseSiteswapValue(source)));
-assert.throws(()=>generateSiteswap({balls:3,height:36,minimum:1,maximum:3}),/Max Throw must be an integer from 1 to 35/);
+for(const source of ['', 'a0', '-1', '3.5', '_', 'ς', 'αβ']) assert.ok(Number.isNaN(parseSiteswapValue(source)));
+assert.throws(()=>generateSiteswap({balls:3,height:60,minimum:1,maximum:3}),/Max Throw must be an integer from 1 to 59/);
+verify({balls:2,height:59,minimum:2,maximum:2});
 // Independently enumerate small spaces to check the feasibility decisions.
 for(let height=1;height<=4;height++) for(let p=1;p<=4;p++) {
   const possible=new Set(), possiblePrime=new Set();
@@ -228,7 +229,7 @@ for(let height=1;height<=4;height++) for(let p=1;p<=4;p++) {
 }
 for (const settings of [
   {balls:0,height:5,minimum:1,maximum:3}, {balls:17,height:20,minimum:1,maximum:3},
-  {balls:3,height:2,minimum:1,maximum:3}, {balls:3,height:36,minimum:1,maximum:3},
+  {balls:3,height:2,minimum:1,maximum:3}, {balls:3,height:60,minimum:1,maximum:3},
   {balls:3,height:7,minimum:4,maximum:3}, {balls:3,height:7,minimum:0,maximum:3},
   {balls:3,height:7,minimum:1,maximum:65}, {balls:3.5,height:7,minimum:1,maximum:3},
   {balls:NaN,height:7,minimum:1,maximum:3}, {balls:3,height:Infinity,minimum:1,maximum:3}

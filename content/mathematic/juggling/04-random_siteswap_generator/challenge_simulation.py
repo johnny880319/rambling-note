@@ -28,7 +28,7 @@ CONTROLS = r"""
   <label class="option"><input id="primeOnly" type="checkbox">Prime loops only</label>
   <button id="generate" type="submit" class="primary">New Pattern</button>
 </form>
-<p id="heightHint" class="hint">Enter the maximum throw as a decimal integer, or use a–z for 10–35.</p>
+<p id="heightHint" class="hint">Enter the maximum throw as a decimal integer, or use a–z for 10–35 and α–ω for 36–59.</p>
 <output id="challengeStats" aria-live="polite"></output>
 <div id="routinePhases" role="group" aria-label="Playback phases">
   <span id="leadIn"></span><span id="challengePhase">Challenge</span><span id="leadOut"></span>

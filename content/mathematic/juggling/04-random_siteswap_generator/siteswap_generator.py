@@ -6,12 +6,18 @@ function primitivePeriod(values) {
     if (values.length % p === 0 && values.every((value, i) => value === values[i % p])) return p;
   }
 }
+/* Siteswap digits: 0-9, then a-z for 10-35, then the Greek alphabet for 36-59. */
+const GREEK = [..."αβγδεζηθικλμνξοπρστυφχψω"];
+const MAX_THROW = 35 + GREEK.length;
 function formatSiteswapValue(value) {
-  return value >= 10 && value < 36 ? String.fromCharCode(87 + value) : String(value);
+  if (value >= 10 && value < 36) return String.fromCharCode(87 + value);
+  if (value >= 36 && value <= MAX_THROW) return GREEK[value - 36];
+  return String(value);
 }
 function parseSiteswapValue(text) {
   const value = String(text).trim();
   if (/^[a-z]$/i.test(value)) return value.toLowerCase().charCodeAt(0) - 87;
+  if (GREEK.includes(value)) return 36 + GREEK.indexOf(value);
   if (/^[0-9]+$/.test(value)) return Number(value);
   return NaN;
 }
@@ -40,7 +46,7 @@ function hasRepeatedCycle(states) {
   return false;
 }
 function validateChallenge({balls, height, minimum, maximum}) {
-  for (const [label, value, limit] of [["Balls", balls, 16], ["Max Throw", height, 35], ["Min Period", minimum, 64], ["Max Period", maximum, 64]]) {
+  for (const [label, value, limit] of [["Balls", balls, 16], ["Max Throw", height, MAX_THROW], ["Min Period", minimum, 64], ["Max Period", maximum, 64]]) {
     if (!Number.isInteger(value) || value < 1 || value > limit) throw Error(`${label} must be an integer from 1 to ${limit}.`);
   }
   if (minimum > maximum) throw Error("Min Period cannot exceed Max Period.");
