@@ -61,11 +61,20 @@ class Note:
 
     @property
     def output_directory(self) -> Path:
-        return self.relative_directory
+        """Where the note is published, without the ordering prefix.
+
+        A directory is named ``03-juggling_states`` so that the filesystem
+        carries the order, but the number stays out of the URL: inserting a
+        note renumbers its neighbours, and every published link would move
+        with them.
+        """
+        return self.relative_directory.with_name(
+            re.sub(r"^\d+[-_]", "", self.relative_directory.name)
+        )
 
     @property
     def url(self) -> str:
-        return self.relative_directory.as_posix().rstrip("/") + "/"
+        return self.output_directory.as_posix().rstrip("/") + "/"
 
     @property
     def index(self) -> str:
@@ -122,7 +131,16 @@ def discover_notes() -> list[Note]:
     ]
     if not notes:
         raise RuntimeError(f"No index.py notebooks found under {CONTENT_ROOT}")
-    return sorted(notes, key=lambda note: note.relative_directory.parts)
+    notes.sort(key=lambda note: note.relative_directory.parts)
+    published: dict[Path, Note] = {}
+    for note in notes:
+        clash = published.setdefault(note.output_directory, note)
+        if clash is not note:
+            raise SystemExit(
+                f"{note.relative_directory} and {clash.relative_directory} "
+                "publish to the same URL; give them different names."
+            )
+    return notes
 
 
 def humanize(name: str) -> str:
