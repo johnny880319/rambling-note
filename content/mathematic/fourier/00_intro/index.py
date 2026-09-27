@@ -44,9 +44,9 @@ def _(mo):
         : 這個課程我只有看前幾堂，因為我覺得不嚴謹。但如果只是想用比較直覺的方式去理解傅立葉，我覺得可能會有幫助。
 
     - 比較數學的文章及書籍:
-      - [273022 FOURIERSERIER 5|Kursernas Hemsidor|Matematiska Institutionen](https://web.abo.fi/fak/mnf/mate/kurser/fourieranalys//)
+      - [273022 FOURIERSERIER 5|Kursernas Hemsidor|Matematiska Institutionen](https://web.abo.fi/fak/mnf/mate/kurser/fourieranalys/)
         : 神奇的lecture notes，跳過了不少證明但敘述是嚴謹的。適合有實分析底子的人快速複習傅立葉。
-      - [Measure and Integral: An Introduction to Real Analysis|Richard Wheeden, Richard L. Wheeden, Antoni Zygmund](https://books.google.com.tw/books/about/Measure_and_Integral.html?id=YDkDmQ_hdmcC&redir_esc=y)
+      - [Measure and Integral: An Introduction to Real Analysis|Richard L. Wheeden, Antoni Zygmund](https://books.google.com.tw/books/about/Measure_and_Integral.html?id=YDkDmQ_hdmcC&redir_esc=y)
         : 我的實分析啟蒙書，後面的有稍微帶過傅立葉的基礎。
 
       - [Fourier Analysis on Groups|Walter Rudin](https://books.google.com.tw/books/about/Fourier_Analysis_on_Groups.html?id=DKizDgAAQBAJ&redir_esc=y)

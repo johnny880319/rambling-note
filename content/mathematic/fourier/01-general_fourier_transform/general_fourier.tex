@@ -6,13 +6,13 @@
 \begin{document}
 
 \begin{tikzcd}[column sep=huge, row sep=large]
-T \in \mathcal{S}'(\mathbb{R};\mathbb{C}): g
+T : g \in \mathcal{X}
   \arrow[r, mapsto]
   \arrow[d, "\mathcal{F} \colon \text{Fourier Transform}"]
-& T(g) \\
-\mathcal{F}(T) \in \mathcal{S}'(\mathbb{R};\mathbb{C}): g
+& T(g) \in \mathbb{C} \\
+\mathcal{F}(T) : g \in \mathcal{X}
   \arrow[r, mapsto]
-& T(\mathcal{F}^{-1}(g))
+& (T \circ \mathcal{F})(g) \in \mathbb{C}
 \end{tikzcd}
 
 \end{document}
