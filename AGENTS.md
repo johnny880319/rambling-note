@@ -78,6 +78,19 @@ equalities as `align*` rows, each with its label. A block whose maths is
 folded into running English is harder to read than a longer block whose
 prose is one clause per display.
 
+A statement is either proved in the note or cited, never left bare. A cited
+statement carries its source inside the block, as the last line and in italics,
+and takes no proof block and no `remark` pointing at the source:
+
+```markdown
+*[Stein & Shakarchi, *Fourier Analysis: An Introduction*](https://press.princeton.edu/books/hardcover/9780691113845/fourier-analysis) Ch. 5, Theorem 1.3.*
+```
+
+The citation names the chapter or section, and the numbered result when the
+source numbers it, so a reader can open the book at the right page. The link
+goes to the publisher, Google Books or a DOI, not to a copy of the book hosted
+elsewhere.
+
 The boundary is the block, not the subject matter. A definition folded into
 running prose is prose, and stays Chinese; the same definition set off in a
 block is English. A `>` quotation is neither: it is a passage of the article
@@ -133,6 +146,16 @@ with its own label.  A label in an alignment column is part of the layout and
 moves with the maths; the worst it can do is widen the block until it scrolls,
 which stays readable.  A display with nowhere to hang a column takes the label
 after the maths instead, `\qquad \text{(balance)}`.
+
+Set-builder notation separates with a plain `:`, never `|` or `\middle|`: a
+condition such as `\sup_x \lvert x^m g^{(n)}(x) \rvert < \infty` or
+`\lvert \mathcal{A} \rvert` already carries bars, and a bar separator leaves the
+reader to work out which one splits the set.  The separator is `:`, not
+`\colon`: `:` is a relation and spaces evenly on both sides, while `\colon` is
+punctuation for a map's signature, `f \colon X \to Y`.  When the elements are
+maps, their space is written as a power, `T \in \mathbb{C}^{\mathcal{S}}`, so
+that the signature's colon never meets the separator:
+`\left\{ T \in \mathbb{C}^{\mathcal{S}} : T \text{ linear and continuous} \right\}`.
 
 Every way of mistyping the block syntax degrades quietly rather than failing:
 an option line that lost its four-space indent drops the type, an opener with
