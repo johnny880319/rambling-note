@@ -7,7 +7,7 @@ app = marimo.App(width="medium")
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # What Is the Dirac Delta Function
+    # Generalizing the Fourier Transform
 
     ---
 
@@ -50,7 +50,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Extending the Definition of the Fourier Transform
+    ## From Functions to Functionals
 
     除了常數函數外，其實你會發現有一堆函數都是無法用積分去算傅立葉變換的。比如 $x, \sin x, \log \lvert x \rvert$ 等等。
     明明這些都是常見的函數，卻都沒辦法算，這或許在暗示我們需要一個更廣義的傅立葉變換定義。
@@ -495,7 +495,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Back to the Fourier Transform of a Constant
+    ## What Is the Dirac Delta Function
 
     現在我們能回到常數函數的例子了，不過在計算常數函數的傅立葉變換之前，我們需要逆變換作為我們計算的工具
 
