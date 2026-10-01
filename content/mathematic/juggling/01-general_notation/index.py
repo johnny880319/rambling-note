@@ -49,7 +49,12 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    最後，並不是所有的 $T$ 都能被實際拋接出來。事實上一個 juggling function 要能被拋接若且唯若
+    最後，並不是所有的 $T$ 都能被實際拋接出來。事實上一個 juggling function 要能被拋接需要滿足以下事實
+
+    /// admonition | Definition (Juggling Pattern)
+        type: definition
+
+    The juggling function $T \neq 0$ is a **juggling pattern** if it satisfies the following two properties
 
     $$
     \begin{align*}
@@ -57,10 +62,9 @@ def _(mo):
     & \sum_{x \in \mathcal{S}} T(s)(x) \;=\; \sum_{x \in \mathcal{S}} T(x)(s), \quad \forall s \in \mathcal{S}. && \text{(balance)}
     \end{align*}
     $$
+    ///
 
     `causality` 是因為時光無法倒流，我們拋出去的物件只能在更後面的時間點接到。而 `balance` 則保證了我們接到的物件數量等於接下來要拋出去的球的數量，讓物件不會憑空消失。
-
-    滿足以上兩個性質的 juggling function ，在這系列文章中，我們就稱他為 **juggling pattern** 。
     """)
     return
 
@@ -117,7 +121,7 @@ def _(mo):
     /// admonition | Theorem (Permutation Test)
         type: theorem
 
-    Let $T$ be a causal, $p$-periodic juggling function. Then $T$ is a juggling
+    Let $T \neq 0$ be a causal, $p$-periodic juggling function. Then $T$ is a juggling
     pattern if and only if
 
     $$
@@ -186,7 +190,7 @@ def _(mo):
     /// admonition
         type: remark
 
-    當 $h = 1$ 且每個時間點恰好丟出一顆球時，等式左邊恆為 1 ，於是條件變成「每個時間點恰好落進一顆球」。換句話說，拋接形成了 $\mathbb{Z}/p\mathbb{Z}$ 上的permutation。
+    當只有一隻手、而且每個時間點恰好丟出一顆球時，等式左邊恆為 1 ，於是條件變成「每個時間點恰好落進一顆球」。換句話說，拋接形成了 $\mathbb{Z}/p\mathbb{Z}$ 上的 permutation 。
     ///
     """)
     return
@@ -233,7 +237,12 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    當我們要驗證一個 matrix 是否是 juggling matrix 時，只要把 juggling pattern 的條件翻譯過來即可。而前面提及過，causality 的條件因 co-domain 的性質會自動滿足，所以只要翻譯 balance 的條件即可。
+    當我們要驗證一個 matrix 是否是 (periodic) juggling matrix 時，只要把 juggling pattern 的條件翻譯過來即可。而前面提及過，causality 的條件因 co-domain 的性質會自動滿足，所以只要翻譯 balance 跟 periodic 的條件即可。因為這個條件過於顯然，細節就留給讀者自證，這裡我們直接寫下定義
+
+    /// admonition | Definition (Juggling Matrix)
+        type: definition
+
+    The matrix $J \neq 0$ is a **juggling matrix** if it satisfies the balance property
 
     $$
     \sum_{x \in \mathcal{F}} J(i, t)(x)
@@ -242,13 +251,14 @@ def _(mo):
     \qquad \forall (i, t) \in \mathcal{S} \qquad \text{(balance)}
     $$
 
-    另外 periodic 的性質也可以翻譯成 juggling matrices 的語言，可以看出其意義就是每隔一個週期，就會拋出拋接時長、拋出手跟接入手一模一樣的物件
+    Moreover, it is $p$-periodic iff
 
     $$
     J(i, t)(j, u) = J(i, t + p)(j, u), \quad \forall (i, t), (j, u) \in \mathcal{F}, \qquad \text{(periodic)}
     $$
+    ///
 
-    上述兩性質的翻譯因過於顯然，所以就讀者自證吧。
+    可以看出 periodic 的意義就是每隔一個週期，就會拋出拋接時長、拋出手跟接入手一模一樣的物件。
     """)
     return
 

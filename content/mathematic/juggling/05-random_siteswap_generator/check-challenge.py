@@ -1,6 +1,6 @@
 """Check first returns to ground, fundamental periods, and two-hand animation.
 
-Run with `uv run python content/mathematic/juggling/04-random_siteswap_generator/check-challenge.py`.
+Run with `uv run python content/mathematic/juggling/05-random_siteswap_generator/check-challenge.py`.
 Node.js is required; no browser packages are needed.
 """
 

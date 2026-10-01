@@ -91,6 +91,21 @@ source numbers it, so a reader can open the book at the right page. The link
 goes to the publisher, Google Books or a DOI, not to a copy of the book hosted
 elsewhere.
 
+A proof may be a single sentence when the statement follows by unfolding
+definitions and one or two elementary facts, and the sentence names those
+facts, so that a reader could write the full proof without a new idea:
+
+```markdown
+Unfold the definitions: every term is non-negative, so the sums may be
+reordered; and the periods of $J$ form $p_J \mathbb{Z}$.
+```
+
+Anything that needs a new idea — a construction, a choice, a case split, an
+induction, a limit — gets a full proof. "Left to the reader" with no reason
+given is not a proof. The one-line proof is complete as it stands, so it does
+not end with a note that the details are omitted; an invitation to write them
+out belongs in the Chinese prose after the block.
+
 The boundary is the block, not the subject matter. A definition folded into
 running prose is prose, and stays Chinese; the same definition set off in a
 block is English. A `>` quotation is neither: it is a passage of the article

@@ -40,9 +40,9 @@ simulation = load_module(
     "juggling_simulation", JUGGLING / "01-general_notation/juggling_simulation.py"
 )
 
-# Both frontends must keep the same tab stops and initial canonical pattern.
+# Both frontends must keep aligned columns and the same initial canonical pattern.
 for line in editor.DEFAULT_PATTERN.splitlines():
-    assert [i for i, char in enumerate(line.expandtabs(4)) if char == "|"] == [12, 28]
+    assert [i for i, char in enumerate(line.expandtabs(4)) if char == "|"] == [16, 34]
 assert (
     widget_adapter.PatternEditor.class_traits()["value"].default_value
     == editor.DEFAULT_PATTERN

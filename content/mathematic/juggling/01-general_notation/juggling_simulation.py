@@ -114,7 +114,7 @@ const count = (value, unit) => `${value} ${unit}${value === 1 ? "" : "s"}`;
 
 __PARSER__
 
-function buildPattern(beats) {
+function buildPattern(beats, options = {}) {
   const hands = beats[0].length, period = beats.length;
   const outgoing = Array.from({length: period}, () => Array.from({length: hands}, () => []));
   const incoming = Array.from({length: period}, () => Array.from({length: hands}, () => []));
@@ -131,8 +131,22 @@ function buildPattern(beats) {
   for (let t = 0; t < period; t++) for (let h = 0; h < hands; h++) {
     const arrivals = incoming[t][h], departures = outgoing[t][h];
     if (arrivals.length !== departures.length) throw Error(`Balance fails at beat ${t}: hand ${h + 1} catches ${count(arrivals.length, "object")} but throws ${count(departures.length, "object")}.`);
+    arrivals.forEach((edge, rank) => { edge.landingRank = rank; });
     /* Pair individual copies, not just distinct destinations, at each vertex. */
-    arrivals.forEach((edge, rank) => { edge.next = departures[rank]; edge.landingRank = rank; });
+    if (!options.edgeCycles) arrivals.forEach((edge, rank) => { edge.next = departures[rank]; });
+  }
+  if (options.edgeCycles) {
+    const assigned = new Set();
+    options.edgeCycles.forEach((cycle, colorId) => {
+      if (!cycle.length) throw Error("A color component cannot be empty.");
+      cycle.forEach((id, index) => {
+        if (!Number.isInteger(id) || id < 0 || id >= edges.length || assigned.has(id)) throw Error("The color decomposition does not partition the throws.");
+        const edge = edges[id], next = edges[cycle[(index + 1) % cycle.length]];
+        if (!next || next.phase !== (edge.phase + edge.duration) % period || next.source !== edge.destination) throw Error("A color component is not balanced.");
+        assigned.add(id); edge.next = next; edge.colorId = colorId;
+      });
+    });
+    if (assigned.size !== edges.length) throw Error("The color decomposition does not cover every throw.");
   }
   const objects = edges.reduce((sum, edge) => sum + edge.duration, 0) / period;
   if (objects > 256) throw Error(`This pattern has ${objects} objects, exceeding the animation limit of 256.`);
@@ -149,7 +163,9 @@ function buildPattern(beats) {
     } while (edge !== first);
     /* A quotient cycle winds length / period times around the time cylinder. */
     for (let k = 0; k < length / period; k++) {
-      balls.push({id: balls.length, segments, length, origin: first.phase + k * period});
+      const id = balls.length, colorId = first.colorId ?? id;
+      balls.push({id, colorId, label: first.colorId === undefined ? id + 1 : colorId + 1,
+        segments, length, origin: first.phase + k * period});
     }
   }
   const active = Array.from({length: hands}, (_, h) => outgoing.flatMap((row, t) => row[h].length ? [t] : []));
@@ -307,7 +323,7 @@ function setPoint(hand, kind, point) {
 }
 function load(text, beats = null, options = {}) {
   /* Validate before replacing a working animation or its edited geometry. */
-  const candidate = Object.assign(buildPattern(beats ?? parseThrows(text)), options);
+  const candidate = Object.assign(buildPattern(beats ?? parseThrows(text), options), options);
   const nextGeometry = geometry && pattern.hands === candidate.hands && pattern.period === candidate.period
     ? structuredClone(geometry) : defaultGeometry(candidate);
   pattern = candidate; geometry = nextGeometry; source = text; time = 0; lastStamp = null;
@@ -365,7 +381,7 @@ function draw() {
     context.fillText(pattern.handLabels?.[h] ?? `Hand ${h + 1}`, p.x, p.y + Math.max(31, 16 / pixelsPerUnit));
   }
   for (const ball of pattern.balls) {
-    const color = ballColor(ball.id);
+    const color = pattern.ballColors?.[ball.colorId] ?? ballColor(ball.colorId);
     if ($("trails").checked) {
       for (let back = 6; back > 0; back--) {
         context.globalAlpha = (7 - back) / 30;
@@ -378,7 +394,7 @@ function draw() {
     const p = screenPoint(point);
     const fontSize = Math.max(11, 8 / pixelsPerUnit);
     context.fillStyle = "#172333"; context.font = `bold ${fontSize}px system-ui`; context.textAlign = "center";
-    context.fillText(ball.id + 1, p.x, p.y + fontSize * 0.35);
+    context.fillText(ball.label, p.x, p.y + fontSize * 0.35);
   }
   if ($("guides").checked) for (const guide of guidePoints()) {
     const p = screenPoint(guide.point), selected = guide.hand === Number($("hand").value);
