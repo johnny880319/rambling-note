@@ -100,7 +100,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition
+    /// details
         type: proof
 
     For $f, g \in L^1(\mathbb{R}; \mathbb{C})$, note that
@@ -223,7 +223,7 @@ def _(mo):
     $$
     ///
 
-    /// admonition
+    /// details
         type: proof
 
     (i) By local absolute continuity, write

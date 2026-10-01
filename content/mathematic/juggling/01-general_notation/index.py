@@ -139,7 +139,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition
+    /// details
         type: proof
 
     It suffices to prove the following
@@ -296,7 +296,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition
+    /// details
         type: proof
 
     Split $b(t - 1), b(t)$ into two parts
@@ -401,7 +401,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition
+    /// details
         type: proof
 
 
@@ -445,7 +445,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition
+    /// details
         type: proof
 
     Apply the average theorem with $m = 0$ and $n = p$.
@@ -510,7 +510,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition
+    /// details
         type: proof
 
     Write

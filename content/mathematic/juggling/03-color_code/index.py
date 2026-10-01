@@ -53,7 +53,7 @@ def _(mo):
     $$
     ///
 
-    /// admonition
+    /// details
         type: proof
 
     $$
@@ -98,8 +98,9 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition
+    /// details
         type: proof
+        open: true
 
     Unfold the definitions:
 
@@ -126,8 +127,9 @@ def _(mo):
     $J$ has a color decomposition with period $p$ if and only if $p_J \mid p$.
     ///
 
-    /// admonition
+    /// details
         type: proof
+        open: true
 
     $(\Rightarrow)$ $p_J \mid \operatorname{lcm}_{\alpha \in \mathcal{A}} p_{J_\alpha} \mid p$, by the proposition and the definition of color decomposition.
 
@@ -166,7 +168,7 @@ def _(mo):
     If $p_J \mid p$, then $J$ has a minimal color decomposition with period $p$.
     ///
 
-    /// admonition | Proof (by AI)
+    /// details | Proof (by AI)
         type: proof
 
     Write $\mathcal{S}_{\infty} := \mathcal{S}$, and let $G$ be the multigraph on $\mathcal{S}_p$ with one edge from $(i, \overline{t})$ to $(j, \overline{t + u})$ for each object thrown by $J$ at $(i, t)$ with flight $u$, for $t$ in one period. A $p$-periodic $K \leq J$ is determined by its set of edges, and it is a juggling matrix if and only if that set is non-empty and every vertex has as many of its edges in as out. So the color decompositions of $J$ with period $p$ are the partitions of the edges of $G$ into non-empty balanced sets. Call a simple directed cycle or a simple two-way infinite directed path a *strand*.
@@ -206,7 +208,7 @@ def _(mo):
     In particular $J$ has such a decomposition, and every such decomposition has $\lvert \mathcal{A} \rvert = b_J$.
     ///
 
-    /// admonition | Proof (by AI)
+    /// details | Proof (by AI)
         type: proof
 
     $(\Leftarrow)$ Every part of a color decomposition of $J_{\alpha}$ has $b \geq 1$, and these sum to $b_{J_{\alpha}} = 1$ by additivity, so there is a single part.
@@ -244,7 +246,7 @@ def _(mo):
     If $c_J = 1$ and $p_J \mid p$, then $J$ has exactly one minimal color decomposition with period $p$, up to reindexing.
     ///
 
-    /// admonition | Proof (by AI)
+    /// details | Proof (by AI)
         type: proof
 
     Let $P := \{\, s \in \mathcal{S} : J(s) \neq 0 \,\}$. As $c_J = 1$, each $s = (i, t) \in P$ has $J(s) = \{(j, u)\}$ for a single $(j, u)$; put $\mathrm{next}(s) := (j, t + u)$. By balance $J$ catches exactly once where it throws and nowhere else, so
@@ -292,8 +294,9 @@ def _(mo):
     $$
     ///
 
-    /// admonition | Proof (by AI)
+    /// details | Proof (by AI)
         type: proof
+        open: true
 
     In the uniqueness theorem $P$ is the set of beats with $a_t > 0$ and $\mathrm{next}(t) = t + a_t$, so $\overline{\mathrm{next}(t)} = \pi(\overline{t})$. A beat with $a_t = 0$ is a fixed point of $\pi$, so each cycle lies either in $\overline{P}$ or outside it. If $\overline{t'} = \pi^{k}(\overline{t})$ then $t' = \mathrm{next}^{k}(t) + m p$ for some $m$, so $t \sim t'$; conversely $\sim$ preserves the $\pi$-orbit of $\overline{t}$. Hence the classes of $\sim$ are the preimages of the cycles in $\overline{P}$, and the count of objects is the average theorem applied to $J_Z$.
 

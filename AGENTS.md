@@ -106,6 +106,24 @@ given is not a proof. The one-line proof is complete as it stands, so it does
 not end with a note that the details are omitted; an invitation to write them
 out belongs in the Chinese prose after the block.
 
+A proof is a `details` block rather than an `admonition`, so it renders as a
+native `<details>` element and starts folded:
+
+```markdown
+/// details
+    type: proof
+
+...
+///
+```
+
+The prose around each statement already carries its idea, so the article reads
+statement by statement and a reader opens a proof when they want the steps;
+thirty lines of algebra no longer sit between one idea and the next. A one-line
+proof takes `open: true` on the line after `type:`, since folding a single
+sentence behind a click costs more than it saves. So may a proof that is itself
+the point of the note.
+
 The boundary is the block, not the subject matter. A definition folded into
 running prose is prose, and stays Chinese; the same definition set off in a
 block is English. A `>` quotation is neither: it is a passage of the article

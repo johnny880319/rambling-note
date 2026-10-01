@@ -27,16 +27,23 @@ DOUBLED_PUNCTUATION = re.compile(r"[。，、：；]{2,}")
 # A LaTeX subscript or command that escaped its math delimiters.
 BARE_LATEX = re.compile(r"[A-Za-z]_\{|\\[a-zA-Z]+")
 # marimo hands KaTeX its input inside this element; everything else is prose.
-# pymdownx's block syntax: an opener `/// admonition | Title`, its options
-# indented four spaces, and a bare `///` to close.  Every way of getting it
-# wrong degrades quietly instead of failing, so the checks below compare what
-# the source asked for against what came out of the renderer.
+# pymdownx's block syntax: an opener `/// admonition | Title` (or `/// details`
+# for a proof, which folds), its options indented four spaces, and a bare `///`
+# to close.  Every way of getting it wrong degrades quietly instead of failing,
+# so the checks below compare what the source asked for against what came out
+# of the renderer.
 BLOCK_OPEN = re.compile(r"^[ \t]*/{3}[ \t]+\S.*$", re.MULTILINE)
 BLOCK_CLOSE = re.compile(r"^[ \t]*/{3}[ \t]*$", re.MULTILINE)
 BLOCK_TYPE = re.compile(r"^[ \t]+type:[ \t]*(\S+)[ \t]*$", re.MULTILINE)
+# An opener and the option lines indented beneath it.
+BLOCK_HEADER = re.compile(
+    r"^([ \t]*)/{3}[ \t]+(\w+)[^\n]*\n((?:\1[ \t]+\S[^\n]*\n)*)", re.MULTILINE
+)
 # One or two slashes is a typo for three; four or more is legal nesting.
-BLOCK_TYPO = re.compile(r"^[ \t]*/{1,2}[ \t]*admonition\b", re.MULTILINE)
-RENDERED_BLOCK = re.compile(r'<div class="admonition([^"]*)"')
+BLOCK_TYPO = re.compile(r"^[ \t]*/{1,2}[ \t]*(?:admonition|details)\b", re.MULTILINE)
+RENDERED_ADMONITION = re.compile(r'<div class="admonition([^"]*)"')
+RENDERED_DETAILS = re.compile(r"<details\b([^>]*)>")
+CLASS_ATTRIBUTE = re.compile(r'\bclass="([^"]*)"')
 # A label belongs in an alignment column; KaTeX floats a tag over the maths.
 DISPLAY_TAG = re.compile(r"\\tag\b")
 # The starred form never numbers; the unstarred one numbers through a CSS
@@ -75,6 +82,15 @@ def markdown_blocks(path: Path) -> list[tuple[int, str]]:
 
 def line_of(block_start: int, source: str, offset: int) -> int:
     return block_start + source.count("\n", 0, offset)
+
+
+def rendered_blocks(html: str) -> list[str]:
+    """Return the class list of every block the renderer produced."""
+    classes = [found.strip() for found in RENDERED_ADMONITION.findall(html)]
+    for attributes in RENDERED_DETAILS.findall(html):
+        found = CLASS_ATTRIBUTE.search(attributes)
+        classes.append(found.group(1) if found else "")
+    return classes
 
 
 def check_block(path: Path, start: int, source: str, render) -> list[Finding]:
@@ -134,12 +150,20 @@ def check_block(path: Path, start: int, source: str, render) -> list[Finding]:
         # follows it into the panel.
         report(start, f"{opened} /// block(s) opened, but the /// fences do not pair up")
 
-    rendered = RENDERED_BLOCK.findall(html)
+    rendered = rendered_blocks(html)
     if opened != len(rendered):
         report(start, f"{opened} /// block(s) opened but {len(rendered)} rendered")
 
+    for match in BLOCK_HEADER.finditer(source):
+        kind = BLOCK_TYPE.search(match.group(3))
+        if match.group(2) == "admonition" and kind and kind.group(1) == "proof":
+            report(
+                line_of(start, source, match.start()),
+                "a proof is a /// details block, so that it folds",
+            )
+
     wanted = Counter(BLOCK_TYPE.findall(source))
-    got = Counter(kind.strip() for kind in rendered if kind.strip())
+    got = Counter(kind for classes in rendered for kind in classes.split())
     for kind, count in wanted.items():
         if got[kind] < count:
             # Almost always the option line lost its four-space indent, which

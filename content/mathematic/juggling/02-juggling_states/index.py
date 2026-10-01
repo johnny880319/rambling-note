@@ -120,7 +120,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition
+    /// details
         type: proof
 
     $$
@@ -175,7 +175,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition
+    /// details
         type: proof
 
     **$\gamma \in M_{\infty}(\mathcal{F})^{\mathbb{Z}}$.**
@@ -304,7 +304,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition
+    /// details
         type: proof
 
     Since $J$ is $p$-periodic, so is $\gamma$ by uniqueness. Then
@@ -363,7 +363,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition
+    /// details
         type: proof
 
     $J''$ is causal, so it is a juggling matrix if and only if it is balanced, that
@@ -498,7 +498,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition | Proof (by AI)
+    /// details | Proof (by AI)
         type: proof
 
     *Objects.*
@@ -604,7 +604,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition
+    /// details
         type: proof
 
     The conditions $h_{\sigma} \leq h$ and $k_{\sigma} \leq k$ confine $\sigma$ to
@@ -657,7 +657,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition | Proof (by AI)
+    /// details | Proof (by AI)
         type: proof
 
     If $k = \infty$ there is no bound on flights: throw each object, when it
@@ -740,7 +740,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    /// admonition | Proof (by AI)
+    /// details | Proof (by AI)
         type: proof
 
     Each entry of $\bar{\sigma}$ lies in $\{0, \cdots, c\}$, its total is
