@@ -119,10 +119,13 @@ native `<details>` element and starts folded:
 
 The prose around each statement already carries its idea, so the article reads
 statement by statement and a reader opens a proof when they want the steps;
-thirty lines of algebra no longer sit between one idea and the next. A one-line
-proof takes `open: true` on the line after `type:`, since folding a single
-sentence behind a click costs more than it saves. So may a proof that is itself
-the point of the note.
+thirty lines of algebra no longer sit between one idea and the next. Every
+proof folds, however short, and none takes `open: true`: a reader learns once
+that a proof is a heading to click, and never has to guess why one is open and
+the next is not. When a proof is a single sentence, the Chinese prose before
+the statement can say that it follows directly, so a reader knows there is
+nothing to open for. A proof that seems too central to fold is a sign that the
+prose has not yet carried its idea.
 
 The boundary is the block, not the subject matter. A definition folded into
 running prose is prose, and stays Chinese; the same definition set off in a

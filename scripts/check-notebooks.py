@@ -35,6 +35,7 @@ BARE_LATEX = re.compile(r"[A-Za-z]_\{|\\[a-zA-Z]+")
 BLOCK_OPEN = re.compile(r"^[ \t]*/{3}[ \t]+\S.*$", re.MULTILINE)
 BLOCK_CLOSE = re.compile(r"^[ \t]*/{3}[ \t]*$", re.MULTILINE)
 BLOCK_TYPE = re.compile(r"^[ \t]+type:[ \t]*(\S+)[ \t]*$", re.MULTILINE)
+BLOCK_OPEN_OPTION = re.compile(r"^[ \t]+open:", re.MULTILINE)
 # An opener and the option lines indented beneath it.
 BLOCK_HEADER = re.compile(
     r"^([ \t]*)/{3}[ \t]+(\w+)[^\n]*\n((?:\1[ \t]+\S[^\n]*\n)*)", re.MULTILINE
@@ -156,10 +157,19 @@ def check_block(path: Path, start: int, source: str, render) -> list[Finding]:
 
     for match in BLOCK_HEADER.finditer(source):
         kind = BLOCK_TYPE.search(match.group(3))
-        if match.group(2) == "admonition" and kind and kind.group(1) == "proof":
+        if not kind or kind.group(1) != "proof":
+            continue
+        if match.group(2) == "admonition":
             report(
                 line_of(start, source, match.start()),
                 "a proof is a /// details block, so that it folds",
+            )
+        if BLOCK_OPEN_OPTION.search(match.group(3)):
+            # Every proof starts folded, so a reader never has to guess why
+            # one is open and the next is not.
+            report(
+                line_of(start, source, match.start()),
+                "a proof starts folded; drop its open: option",
             )
 
     wanted = Counter(BLOCK_TYPE.findall(source))

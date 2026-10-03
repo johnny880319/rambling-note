@@ -100,7 +100,6 @@ def _(mo):
     mo.md(r"""
     /// details
         type: proof
-        open: true
 
     Unfold the definitions:
 
@@ -129,7 +128,6 @@ def _(mo):
 
     /// details
         type: proof
-        open: true
 
     $(\Rightarrow)$ $p_J \mid \operatorname{lcm}_{\alpha \in \mathcal{A}} p_{J_\alpha} \mid p$, by the proposition and the definition of color decomposition.
 
@@ -296,7 +294,6 @@ def _(mo):
 
     /// details | Proof (by AI)
         type: proof
-        open: true
 
     In the uniqueness theorem $P$ is the set of beats with $a_t > 0$ and $\mathrm{next}(t) = t + a_t$, so $\overline{\mathrm{next}(t)} = \pi(\overline{t})$. A beat with $a_t = 0$ is a fixed point of $\pi$, so each cycle lies either in $\overline{P}$ or outside it. If $\overline{t'} = \pi^{k}(\overline{t})$ then $t' = \mathrm{next}^{k}(t) + m p$ for some $m$, so $t \sim t'$; conversely $\sim$ preserves the $\pi$-orbit of $\overline{t}$. Hence the classes of $\sim$ are the preimages of the cycles in $\overline{P}$, and the count of objects is the average theorem applied to $J_Z$.
 
