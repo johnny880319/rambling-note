@@ -21,6 +21,11 @@ function parseSiteswapValue(text) {
   if (/^[0-9]+$/.test(value)) return Number(value);
   return NaN;
 }
+function isIdlePair(left, right) {
+  return (left === 0 && (right === 0 || right === 2))
+    || (left === 1 && right === 1)
+    || (left === 2 && (right === 0 || right === 2));
+}
 function cycleSignature(cycle) {
   let first = 0;
   for (let i = 1; i < cycle.length; i++) if (cycle[i] < cycle[first]) first = i;
@@ -56,15 +61,13 @@ function validateChallenge({balls, height, minimum, maximum}) {
 function* searchSiteswap(settings, random = Math.random) {
   validateChallenge(settings);
   const {balls, height, minimum, maximum} = settings;
-  const allowZero = settings.allowZero !== false;
+  const avoidIdlePairs = settings.avoidIdlePairs === true;
   const primeOnly = settings.primeOnly === true;
   const pick = count => Math.floor(random() * count);
+  const idleError = "No pattern matches these settings while avoiding 00, 11, 22, 02 and 20. Increase Balls or Max Throw, change the period range, or turn off Avoid idle pairs.";
+  if (avoidIdlePairs && (balls === 1 || (balls === height && balls === 2))) throw Error(idleError);
   if (balls === height) return [balls];
   if (balls === 1) {
-    if (!allowZero) {
-      if (minimum <= 1 && maximum >= 1) return [1];
-      throw Error("No pattern without a 0 matches these settings. Include period 1 or increase Balls.");
-    }
     const last = Math.min(maximum, height);
     if (minimum > last) throw Error("No first-return pattern matches these settings. Shorten the period or increase Max Throw.");
     const period = minimum + pick(last - minimum + 1);
@@ -83,10 +86,16 @@ function* searchSiteswap(settings, random = Math.random) {
     /* An existing landing beyond the final ground-state horizon cannot move. */
     if ((state >> BigInt(balls + remaining)) !== 0n) return null;
     const shifted = state >> 1n;
-    const choices = (state & 1n) === 0n ? (allowZero ? [0] : []) : shuffle(Array.from({length: height}, (_, i) => i + 1).filter(h => !(shifted & (1n << BigInt(h - 1)))));
+    const choices = (state & 1n) === 0n ? [0] : shuffle(Array.from({length: height}, (_, i) => i + 1).filter(h => !(shifted & (1n << BigInt(h - 1)))));
     for (const h of choices) {
       if (++work > 150000) throw Error("The search is too large and found no result yet. Reduce Max Throw or narrow the period range.");
       if (work % 1000 === 0) yield;
+      if (avoidIdlePairs) {
+        /* Check the periodic challenge and its two joins to the qualify. The
+           deliberate steady qualify itself is outside the challenge filter. */
+        if (isIdlePair(path.at(-1) ?? balls, h)) continue;
+        if (remaining === 1 && (isIdlePair(h, path[0] ?? h) || isIdlePair(h, balls))) continue;
+      }
       const next = h ? shifted | (1n << BigInt(h - 1)) : shifted;
       if ((remaining === 1) !== (next === ground)) continue;
       if (primeOnly && next !== ground && states.includes(next)) continue;
@@ -109,7 +118,7 @@ function* searchSiteswap(settings, random = Math.random) {
     if (result) return result;
   }
   const constraint = primeOnly ? "requiring a prime loop" : "avoiding intermediate ground states and repeated cycles";
-  throw Error(`No pattern matches these settings while ${constraint}. Adjust Max Throw or the period range.`);
+  throw Error(`No pattern matches these settings while ${constraint}${avoidIdlePairs ? " and avoiding 00, 11, 22, 02 and 20" : ""}. Adjust Max Throw or the period range${avoidIdlePairs ? ", or turn off Avoid idle pairs" : ""}.`);
 }
 function generateSiteswap(settings, random = Math.random) {
   const search = searchSiteswap(settings, random);
@@ -136,5 +145,5 @@ function qualifyRoutine(values, balls) {
     basicName: balls === 1 ? "One-Ball Alternation" : balls === 2 ? "Two-Ball Hold" : balls % 2 ? "Cascade" : "Fountain"
   };
 }
-globalThis.SiteswapChallenge = {primitivePeriod, formatSiteswapValue, parseSiteswapValue, cycleSignature, simpleCycleAtEnd, hasRepeatedCycle, validateChallenge, searchSiteswap, generateSiteswap, alternatingHands, qualifyRoutine};
+globalThis.SiteswapChallenge = {primitivePeriod, formatSiteswapValue, parseSiteswapValue, isIdlePair, cycleSignature, simpleCycleAtEnd, hasRepeatedCycle, validateChallenge, searchSiteswap, generateSiteswap, alternatingHands, qualifyRoutine};
 """

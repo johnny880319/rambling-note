@@ -107,21 +107,34 @@ assert.ok(firstReturn(separatedRepeat,3));
 assert.equal(consecutiveRepeatedLoop(separatedRepeat,3),false);
 assert.equal(repeatedCycle(separatedRepeat,3),true);
 assert.equal(hasRepeatedCycle(traceStates(separatedRepeat,3)),true);
-function referenceExists({balls,height,minimum,maximum,allowZero=true,primeOnly=false}) {
+const idlePairs=new Set(['0,0','1,1','2,2','0,2','2,0']);
+const referenceIdlePair=(a,b)=>idlePairs.has(`${a},${b}`);
+function hasIdleChallenge(values,balls) {
+  return values.some((h,t)=>referenceIdlePair(h,values[(t+1)%values.length]))
+    || referenceIdlePair(balls,values[0]) || referenceIdlePair(values.at(-1),balls);
+}
+for(let a=0;a<=6;a++) for(let b=0;b<=6;b++) assert.equal(isIdlePair(a,b),referenceIdlePair(a,b));
+// Wraparound, qualify joins, and the allowed single zero are checked separately.
+assert.ok(hasIdleChallenge([0,3,4,2],3));
+assert.ok(hasIdleChallenge([4,1],1));
+assert.ok(hasIdleChallenge([2,4],2));
+assert.equal(hasIdleChallenge([4,0,5,3],3),false);
+function referenceExists({balls,height,minimum,maximum,avoidIdlePairs=false,primeOnly=false}) {
   const ground=Array.from({length:balls},(_,i)=>i);
   const groundKey=ground.join(',');
   function visit(landings,path,visited) {
     const catching=landings.includes(0);
     const shifted=landings.filter(t=>t>0).map(t=>t-1);
-    for(let h=allowZero ? 0 : 1;h<=height;h++) {
+    for(let h=0;h<=height;h++) {
       if(catching!==(h>0) || (h>0 && shifted.includes(h-1))) continue;
+      if(avoidIdlePairs && referenceIdlePair(path.at(-1) ?? balls,h)) continue;
       const next=(h ? [...shifted,h-1] : shifted).sort((a,b)=>a-b);
       const nextKey=next.join(','), atGround=nextKey===groundKey;
       if(primeOnly && !atGround && visited.has(nextKey)) continue;
       const values=[...path,h];
       if(repeatedCycle(values,balls)) continue;
       if(atGround) {
-        if(values.length>=minimum) return true;
+        if(values.length>=minimum && (!avoidIdlePairs || !hasIdleChallenge(values,balls))) return true;
       } else if(values.length<maximum) {
         const nextVisited=new Set(visited); nextVisited.add(nextKey);
         if(visit(next,values,nextVisited)) return true;
@@ -135,7 +148,7 @@ function verify(settings, rng = random) {
   const values = generateSiteswap(settings, rng), p = values.length;
   assert.ok(p >= settings.minimum && p <= settings.maximum);
   assert.ok(values.every(h => Number.isInteger(h) && h >= 0 && h <= settings.height));
-  if(settings.allowZero===false) assert.ok(values.every(h=>h>0));
+  if(settings.avoidIdlePairs) assert.equal(hasIdleChallenge(values,settings.balls),false,values.join(' '));
   assert.equal(values.reduce((a,b) => a+b, 0), settings.balls * p);
   assert.equal(new Set(values.map((h,t) => (t+h)%p)).size, p);
   assert.equal(primitivePeriod(values), p);
@@ -196,10 +209,21 @@ const periods = new Set();
 for (let i=0;i<100;i++) periods.add(verify({balls:3,height:7,minimum:2,maximum:6}).length);
 assert.deepEqual([...periods].sort(),[2,3,4,5,6]);
 assert.ok(revisiting>0,'The generator must still allow non-prime loops.');
-assert.deepEqual(generateSiteswap({balls:1,height:3,minimum:1,maximum:1,allowZero:false}),[1]);
-assert.throws(()=>generateSiteswap({balls:1,height:3,minimum:2,maximum:3,allowZero:false}),/without a 0/);
-for(let i=0;i<40;i++) verify({balls:3,height:7,minimum:2,maximum:6,allowZero:false});
+assert.deepEqual(generateSiteswap({balls:1,height:3,minimum:1,maximum:1}),[1]);
+assert.throws(()=>generateSiteswap({balls:1,height:3,minimum:1,maximum:3,avoidIdlePairs:true}),/avoiding 00/);
+assert.throws(()=>generateSiteswap({balls:2,height:2,minimum:1,maximum:1,avoidIdlePairs:true}),/avoiding 00/);
+assert.deepEqual(generateSiteswap({balls:2,height:2,minimum:1,maximum:1,avoidIdlePairs:false}),[2]);
+for(let i=0;i<40;i++) verify({balls:3,height:7,minimum:2,maximum:6,avoidIdlePairs:true});
 for(let i=0;i<40;i++) verify({balls:3,height:7,minimum:2,maximum:6,primeOnly:true});
+let filteredZeros=0;
+for(const primeOnly of [false,true]) for(let i=0;i<80;i++) {
+  const values=verify({balls:3,height:8,minimum:2,maximum:8,avoidIdlePairs:true,primeOnly});
+  if(values.includes(0)) filteredZeros++;
+}
+assert.ok(filteredZeros>0,'The idle-pair filter must still allow isolated zeros.');
+verify({balls:2,height:3,minimum:2,maximum:2,avoidIdlePairs:true});
+// Reject 11 and 22 for period-1 challenges, including nonconstant-height settings.
+assert.throws(()=>generateSiteswap({balls:2,height:5,minimum:1,maximum:1,avoidIdlePairs:true}),/avoiding 00/);
 for(const [value,label] of [[0,'0'],[9,'9'],[10,'a'],[25,'p'],[35,'z'],[36,'α'],[52,'ρ'],[59,'ω'],[60,'60']]) {
   assert.equal(formatSiteswapValue(value),label);
 }
@@ -211,13 +235,17 @@ assert.throws(()=>generateSiteswap({balls:3,height:60,minimum:1,maximum:3}),/Max
 verify({balls:2,height:59,minimum:2,maximum:2});
 // Independently enumerate small spaces to check the feasibility decisions.
 for(let height=1;height<=4;height++) for(let p=1;p<=4;p++) {
-  const possible=new Set(), possiblePrime=new Set();
+  const possible=new Set(), possiblePrime=new Set(), possibleFiltered=new Set(), possibleFilteredPrime=new Set();
   for(let code=0;code<(height+1)**p;code++) {
     let n=code; const a=Array.from({length:p},()=>{const h=n%(height+1);n=Math.floor(n/(height+1));return h;});
     const balls=a.reduce((x,y)=>x+y,0)/p;
     if(Number.isInteger(balls) && balls>0 && firstReturn(a,balls) && !repeatedCycle(a,balls)) {
       possible.add(balls);
       if(new Set(traceStates(a,balls).slice(0,-1)).size===p) possiblePrime.add(balls);
+      if(!hasIdleChallenge(a,balls)) {
+        possibleFiltered.add(balls);
+        if(new Set(traceStates(a,balls).slice(0,-1)).size===p) possibleFilteredPrime.add(balls);
+      }
     }
   }
   for(let balls=1;balls<=4;balls++) {
@@ -225,6 +253,12 @@ for(let height=1;height<=4;height++) for(let p=1;p<=4;p++) {
     if(possible.has(balls)) verify(settings); else assert.throws(()=>generateSiteswap(settings));
     const primeSettings={...settings,primeOnly:true};
     if(possiblePrime.has(balls)) verify(primeSettings); else assert.throws(()=>generateSiteswap(primeSettings));
+    for(const primeOnly of [false,true]) {
+      const filteredSettings={...settings,avoidIdlePairs:true,primeOnly};
+      const expected=primeOnly ? possibleFilteredPrime : possibleFiltered;
+      if(expected.has(balls)) verify(filteredSettings); else assert.throws(()=>generateSiteswap(filteredSettings));
+      assert.equal(referenceExists(filteredSettings),expected.has(balls));
+    }
   }
 }
 for (const settings of [

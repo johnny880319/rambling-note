@@ -24,11 +24,12 @@ CONTROLS = r"""
   <label>Max Throw<input id="height" type="text" inputmode="text" value="7" maxlength="2" aria-describedby="heightHint" required></label>
   <label>Min Period<input id="minimum" type="number" min="1" max="64" step="1" value="2" required></label>
   <label>Max Period<input id="maximum" type="number" min="1" max="64" step="1" value="6" required></label>
-  <label class="option"><input id="allowZero" type="checkbox" checked>Allow 0</label>
+  <label class="option"><input id="avoidIdlePairs" type="checkbox" checked aria-describedby="idlePairsHint">Avoid idle pairs</label>
   <label class="option"><input id="primeOnly" type="checkbox">Prime loops only</label>
   <button id="generate" type="submit" class="primary">New Pattern</button>
 </form>
 <p id="heightHint" class="hint">Enter the maximum throw as a decimal integer, or use a–z for 10–35 and α–ω for 36–59.</p>
+<p id="idlePairsHint" class="hint">Avoid 00, 11, 22, 02 and 20. Isolated 0s are allowed. Checks include the pattern's wraparound and its joins to the qualify; the steady qualify itself is exempt.</p>
 <output id="challengeStats" aria-live="polite"></output>
 <div id="routinePhases" role="group" aria-label="Playback phases">
   <span id="leadIn"></span><span id="challengePhase">Challenge</span><span id="leadOut"></span>
@@ -65,7 +66,7 @@ async function nextChallenge() {
   try {
     const settings = Object.fromEntries(["balls", "minimum", "maximum"].map(id => [id, $(id).value === "" ? NaN : Number($(id).value)]));
     settings.height = parseSiteswapValue($("height").value);
-    settings.allowZero = $("allowZero").checked;
+    settings.avoidIdlePairs = $("avoidIdlePairs").checked;
     settings.primeOnly = $("primeOnly").checked;
     message("Searching for a pattern that first returns to the ground state at the end…");
     const search = searchSiteswap(settings);
