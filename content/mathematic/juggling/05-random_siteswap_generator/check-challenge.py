@@ -28,8 +28,28 @@ class IframeSource(HTMLParser):
             self.source = dict(attrs)["srcdoc"]
 
 
+class ExclusionField(HTMLParser):
+    active = False
+    value = ""
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "textarea" and dict(attrs).get("id") == "excludedSubpatterns":
+            self.active = True
+
+    def handle_data(self, data):
+        if self.active:
+            self.value += data
+
+    def handle_endtag(self, tag):
+        if tag == "textarea":
+            self.active = False
+
+
 iframe = IframeSource()
 iframe.feed(mo.iframe(challenge_simulation.HTML).text)
+exclusions = ExclusionField()
+exclusions.feed(iframe.source)
+assert exclusions.value == "00\n22\n02\n20", "Default exclusions must retain line breaks in marimo's iframe."
 scripts = re.findall(r"<script>(.*?)</script>", iframe.source, re.DOTALL)
 
 CHECKS = r"""
@@ -107,19 +127,57 @@ assert.ok(firstReturn(separatedRepeat,3));
 assert.equal(consecutiveRepeatedLoop(separatedRepeat,3),false);
 assert.equal(repeatedCycle(separatedRepeat,3),true);
 assert.equal(hasRepeatedCycle(traceStates(separatedRepeat,3)),true);
-const idlePairs=new Set(['0,0','1,1','2,2','0,2','2,0']);
-const referenceIdlePair=(a,b)=>idlePairs.has(`${a},${b}`);
-function hasIdleChallenge(values,balls) {
-  return values.some((h,t)=>referenceIdlePair(h,values[(t+1)%values.length]))
-    || referenceIdlePair(balls,values[0]) || referenceIdlePair(values.at(-1),balls);
+const defaultExcluded = [[0,0],[2,2],[0,2],[2,0]];
+function referenceExcluded(values,balls,patterns) {
+  const q=2*balls, p=values.length;
+  const routine=[...Array(q).fill(balls),...values,...Array(q).fill(balls)];
+  for(const pattern of patterns) {
+    const cyclic=Array.from({length:p+pattern.length-1},(_,t)=>values[t%p]);
+    for(let start=0;start<p;start++) {
+      if(cyclic.slice(start,start+pattern.length).join(',')===pattern.join(',')) return true;
+    }
+    const playback=Array.from({length:routine.length+pattern.length-1},(_,t)=>routine[t%routine.length]);
+    for(let start=0;start<routine.length;start++) {
+      const touches=Array.from({length:pattern.length},(_,i)=>(start+i)%routine.length).some(t=>t>=q && t<q+p);
+      if(touches && playback.slice(start,start+pattern.length).join(',')===pattern.join(',')) return true;
+    }
+  }
+  return false;
 }
-for(let a=0;a<=6;a++) for(let b=0;b<=6;b++) assert.equal(isIdlePair(a,b),referenceIdlePair(a,b));
-// Wraparound, qualify joins, and the allowed single zero are checked separately.
-assert.ok(hasIdleChallenge([0,3,4,2],3));
-assert.ok(hasIdleChallenge([4,1],1));
-assert.ok(hasIdleChallenge([2,4],2));
-assert.equal(hasIdleChallenge([4,0,5,3],3),false);
-function referenceExists({balls,height,minimum,maximum,avoidIdlePairs=false,primeOnly=false}) {
+assert.deepEqual(parseExcludedSubpatterns('00\n22\n02\n20'),defaultExcluded);
+assert.deepEqual(parseExcludedSubpatterns(' \r\n00\r\n\n Aβ \n aβ \n11\n'),[[0,0],[10,37],[1,1]]);
+assert.deepEqual(parseExcludedSubpatterns('10\nb\nαω'),[[1,0],[11],[36,59]]);
+assert.deepEqual(parseExcludedSubpatterns(' \n\t\r\n'),[]);
+for(const source of ['00,22','0 0','-1','3.5','[00]','ς','0_2']) {
+  assert.throws(()=>parseExcludedSubpatterns(source),/line 1/);
+}
+assert.throws(()=>parseExcludedSubpatterns('00\n\n!'),/line 3/);
+// Wraparound, long patterns, looping qualify joins, and exempt steady qualifies.
+for(const [values,balls,patterns,expected] of [
+  [[0,3,4,2],3,defaultExcluded,true],
+  [[4,0,5,3],3,defaultExcluded,false],
+  [[3,1],2,[[1,3,1,3,1]],true],
+  [[3],3,[[3,3,3,3]],true],
+  [[5,3,1],3,[[1,5]],true],
+  [[5,3,1],3,[[3,3,5]],true],
+  [[5,3,1],3,[[1,3,3]],true],
+  [[5,3,1],3,[[3,3,5,3,1,3,3]],true],
+  [[5,3,1],3,[[3,3]],false],
+  [[5,3,1],3,[[...Array(7).fill(3),5]],true],
+  [[5,3,1],3,[[1,...Array(7).fill(3)]],true],
+  [[5,3,1],3,[[...Array(13).fill(3),5]],false],
+  [[5,3,1],3,[[1,...Array(13).fill(3)]],false],
+  [[5,3,1],3,[[1,...Array(12).fill(3),5]],true],
+  [[5,3,1],3,[[5,3,1,...Array(12).fill(3),5,3,1]],true],
+  [[5,3,1],3,[[3,1,5,3,1,5,3,1]],true],
+  [[10,3],3,[[1,0]],false],
+  [[11],11,[[1,1]],false],
+  [[11],11,[[11]],true]
+]) {
+  assert.equal(referenceExcluded(values,balls,patterns),expected);
+  assert.equal(hasExcludedSubpattern(values,balls,patterns),expected);
+}
+function referenceExists({balls,height,minimum,maximum,excludedSubpatterns=[],primeOnly=false}) {
   const ground=Array.from({length:balls},(_,i)=>i);
   const groundKey=ground.join(',');
   function visit(landings,path,visited) {
@@ -127,14 +185,13 @@ function referenceExists({balls,height,minimum,maximum,avoidIdlePairs=false,prim
     const shifted=landings.filter(t=>t>0).map(t=>t-1);
     for(let h=0;h<=height;h++) {
       if(catching!==(h>0) || (h>0 && shifted.includes(h-1))) continue;
-      if(avoidIdlePairs && referenceIdlePair(path.at(-1) ?? balls,h)) continue;
       const next=(h ? [...shifted,h-1] : shifted).sort((a,b)=>a-b);
       const nextKey=next.join(','), atGround=nextKey===groundKey;
       if(primeOnly && !atGround && visited.has(nextKey)) continue;
       const values=[...path,h];
       if(repeatedCycle(values,balls)) continue;
       if(atGround) {
-        if(values.length>=minimum && (!avoidIdlePairs || !hasIdleChallenge(values,balls))) return true;
+        if(values.length>=minimum && !referenceExcluded(values,balls,excludedSubpatterns)) return true;
       } else if(values.length<maximum) {
         const nextVisited=new Set(visited); nextVisited.add(nextKey);
         if(visit(next,values,nextVisited)) return true;
@@ -148,7 +205,7 @@ function verify(settings, rng = random) {
   const values = generateSiteswap(settings, rng), p = values.length;
   assert.ok(p >= settings.minimum && p <= settings.maximum);
   assert.ok(values.every(h => Number.isInteger(h) && h >= 0 && h <= settings.height));
-  if(settings.avoidIdlePairs) assert.equal(hasIdleChallenge(values,settings.balls),false,values.join(' '));
+  assert.equal(referenceExcluded(values,settings.balls,settings.excludedSubpatterns ?? []),false,values.join(' '));
   assert.equal(values.reduce((a,b) => a+b, 0), settings.balls * p);
   assert.equal(new Set(values.map((h,t) => (t+h)%p)).size, p);
   assert.equal(primitivePeriod(values), p);
@@ -210,20 +267,34 @@ for (let i=0;i<100;i++) periods.add(verify({balls:3,height:7,minimum:2,maximum:6
 assert.deepEqual([...periods].sort(),[2,3,4,5,6]);
 assert.ok(revisiting>0,'The generator must still allow non-prime loops.');
 assert.deepEqual(generateSiteswap({balls:1,height:3,minimum:1,maximum:1}),[1]);
-assert.throws(()=>generateSiteswap({balls:1,height:3,minimum:1,maximum:3,avoidIdlePairs:true}),/avoiding 00/);
-assert.throws(()=>generateSiteswap({balls:2,height:2,minimum:1,maximum:1,avoidIdlePairs:true}),/avoiding 00/);
-assert.deepEqual(generateSiteswap({balls:2,height:2,minimum:1,maximum:1,avoidIdlePairs:false}),[2]);
-for(let i=0;i<40;i++) verify({balls:3,height:7,minimum:2,maximum:6,avoidIdlePairs:true});
+// The default list allows 11; users can still ban it or any single throw.
+assert.deepEqual(verify({balls:1,height:3,minimum:1,maximum:3,excludedSubpatterns:defaultExcluded}),[1]);
+assert.throws(()=>generateSiteswap({balls:1,height:3,minimum:1,maximum:3,excludedSubpatterns:[...defaultExcluded,[1,1]]}),/Excluded Subpatterns/);
+assert.throws(()=>generateSiteswap({balls:2,height:2,minimum:1,maximum:1,excludedSubpatterns:defaultExcluded}),/Excluded Subpatterns/);
+assert.deepEqual(verify({balls:2,height:2,minimum:1,maximum:1,excludedSubpatterns:[]}),[2]);
+assert.throws(()=>generateSiteswap({balls:3,height:3,minimum:1,maximum:1,excludedSubpatterns:[[3,3,3,3]]}),/Excluded Subpatterns/);
+assert.deepEqual(verify({balls:1,height:3,minimum:1,maximum:2,excludedSubpatterns:[[1]],primeOnly:true}),[2,0]);
+assert.deepEqual(verify({balls:1,height:3,minimum:1,maximum:3,excludedSubpatterns:[[1],[2]]}),[3,0,0]);
+for(const excludedSubpatterns of [[[1,1,1,2]],[[0,1,1,1]],[[0,1,1,1,1,2]]]) {
+  assert.throws(()=>generateSiteswap({balls:1,height:2,minimum:2,maximum:2,excludedSubpatterns}),/Excluded Subpatterns/);
+}
+assert.deepEqual(verify({balls:1,height:2,minimum:2,maximum:2,excludedSubpatterns:[[1,1,1,1,1,2]]}),[2,0]);
+for(let i=0;i<40;i++) verify({balls:3,height:7,minimum:2,maximum:6,excludedSubpatterns:defaultExcluded});
 for(let i=0;i<40;i++) verify({balls:3,height:7,minimum:2,maximum:6,primeOnly:true});
 let filteredZeros=0;
 for(const primeOnly of [false,true]) for(let i=0;i<80;i++) {
-  const values=verify({balls:3,height:8,minimum:2,maximum:8,avoidIdlePairs:true,primeOnly});
+  const values=verify({balls:3,height:8,minimum:2,maximum:8,excludedSubpatterns:defaultExcluded,primeOnly});
   if(values.includes(0)) filteredZeros++;
 }
-assert.ok(filteredZeros>0,'The idle-pair filter must still allow isolated zeros.');
-verify({balls:2,height:3,minimum:2,maximum:2,avoidIdlePairs:true});
-// Reject 11 and 22 for period-1 challenges, including nonconstant-height settings.
-assert.throws(()=>generateSiteswap({balls:2,height:5,minimum:1,maximum:1,avoidIdlePairs:true}),/avoiding 00/);
+assert.ok(filteredZeros>0,'Excluding pairs must still allow isolated zeros.');
+for(const primeOnly of [false,true]) for(let i=0;i<20;i++) {
+  verify({balls:3,height:10,minimum:2,maximum:10,excludedSubpatterns:[[0],[5,3,1],[4,4],[3,3,4]],primeOnly});
+}
+verify({balls:2,height:3,minimum:2,maximum:2,excludedSubpatterns:defaultExcluded});
+assert.throws(()=>generateSiteswap({balls:2,height:5,minimum:1,maximum:1,excludedSubpatterns:defaultExcluded}),/Excluded Subpatterns/);
+for(const excludedSubpatterns of [false,'00',[[]],[[NaN]],[[60]],[[1.5]],[[0,-1]],['00']]) {
+  assert.throws(()=>generateSiteswap({balls:3,height:7,minimum:2,maximum:6,excludedSubpatterns}),/Excluded Subpatterns/);
+}
 for(const [value,label] of [[0,'0'],[9,'9'],[10,'a'],[25,'p'],[35,'z'],[36,'α'],[52,'ρ'],[59,'ω'],[60,'60']]) {
   assert.equal(formatSiteswapValue(value),label);
 }
@@ -233,32 +304,23 @@ for(const [source,value] of [['0',0],['09',9],['10',10],['64',64],['a',10],['A',
 for(const source of ['', 'a0', '-1', '3.5', '_', 'ς', 'αβ']) assert.ok(Number.isNaN(parseSiteswapValue(source)));
 assert.throws(()=>generateSiteswap({balls:3,height:60,minimum:1,maximum:3}),/Max Throw must be an integer from 1 to 59/);
 verify({balls:2,height:59,minimum:2,maximum:2});
-// Independently enumerate small spaces to check the feasibility decisions.
+// Independently enumerate small spaces for arbitrary exclusion lists.
+const exclusionLists=[[],defaultExcluded,[[1,1]],[[3,1,3]],[[3,3,3]],[[3,4]],[[4]],[[2,2,2]],[[0],[3,3]],[[1,0],[4,2,2]]];
 for(let height=1;height<=4;height++) for(let p=1;p<=4;p++) {
-  const possible=new Set(), possiblePrime=new Set(), possibleFiltered=new Set(), possibleFilteredPrime=new Set();
+  const candidates=[];
   for(let code=0;code<(height+1)**p;code++) {
     let n=code; const a=Array.from({length:p},()=>{const h=n%(height+1);n=Math.floor(n/(height+1));return h;});
     const balls=a.reduce((x,y)=>x+y,0)/p;
     if(Number.isInteger(balls) && balls>0 && firstReturn(a,balls) && !repeatedCycle(a,balls)) {
-      possible.add(balls);
-      if(new Set(traceStates(a,balls).slice(0,-1)).size===p) possiblePrime.add(balls);
-      if(!hasIdleChallenge(a,balls)) {
-        possibleFiltered.add(balls);
-        if(new Set(traceStates(a,balls).slice(0,-1)).size===p) possibleFilteredPrime.add(balls);
-      }
+      candidates.push({values:a,balls,prime:new Set(traceStates(a,balls).slice(0,-1)).size===p});
     }
   }
-  for(let balls=1;balls<=4;balls++) {
-    const settings={balls,height,minimum:p,maximum:p};
-    if(possible.has(balls)) verify(settings); else assert.throws(()=>generateSiteswap(settings));
-    const primeSettings={...settings,primeOnly:true};
-    if(possiblePrime.has(balls)) verify(primeSettings); else assert.throws(()=>generateSiteswap(primeSettings));
-    for(const primeOnly of [false,true]) {
-      const filteredSettings={...settings,avoidIdlePairs:true,primeOnly};
-      const expected=primeOnly ? possibleFilteredPrime : possibleFiltered;
-      if(expected.has(balls)) verify(filteredSettings); else assert.throws(()=>generateSiteswap(filteredSettings));
-      assert.equal(referenceExists(filteredSettings),expected.has(balls));
-    }
+  for(let balls=1;balls<=4;balls++) for(const primeOnly of [false,true]) for(const excludedSubpatterns of exclusionLists) {
+    const settings={balls,height,minimum:p,maximum:p,primeOnly,excludedSubpatterns};
+    const expected=candidates.some(candidate=>candidate.balls===balls && (!primeOnly || candidate.prime)
+      && !referenceExcluded(candidate.values,balls,excludedSubpatterns));
+    if(expected) verify(settings); else assert.throws(()=>generateSiteswap(settings));
+    assert.equal(referenceExists(settings),expected,JSON.stringify(settings));
   }
 }
 for (const settings of [

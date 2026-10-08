@@ -21,10 +21,54 @@ function parseSiteswapValue(text) {
   if (/^[0-9]+$/.test(value)) return Number(value);
   return NaN;
 }
-function isIdlePair(left, right) {
-  return (left === 0 && (right === 0 || right === 2))
-    || (left === 1 && right === 1)
-    || (left === 2 && (right === 0 || right === 2));
+function parseExcludedSubpatterns(text) {
+  const patterns = [], seen = new Set();
+  String(text).split(/\r?\n/).forEach((line, index) => {
+    const source = line.trim();
+    if (!source) return;
+    const values = [...source].map(symbol => {
+      const value = parseSiteswapValue(symbol);
+      if (!Number.isInteger(value) || value < 0 || value > MAX_THROW) {
+        throw Error(`Excluded Subpatterns, line ${index + 1}: use one compact sequence per line, with 0–9, a–z or α–ω. Each symbol is one beat.`);
+      }
+      return value;
+    });
+    const key = values.join(",");
+    if (!seen.has(key)) { patterns.push(values); seen.add(key); }
+  });
+  return patterns;
+}
+function hasExcludedPrefix(values, balls, patterns) {
+  /* Only inspect matches ending at the latest challenge beat. Continuous
+     playback joins the previous recovery to the current lead-in qualify. */
+  return patterns.some(pattern => pattern.length <= 4 * balls + values.length
+    && pattern.every((value, i) => {
+      const t = values.length - pattern.length + i;
+      return value === (t < 0 ? balls : values[t]);
+    }));
+}
+function hasExcludedSubpattern(values, balls, patterns) {
+  const period = values.length, qualifyBeats = 2 * balls;
+  const roundLength = period + 2 * qualifyBeats;
+  return patterns.some(pattern => {
+    /* The periodic siteswap can match across several repetitions. */
+    for (let start = 0; start < period; start++) {
+      if (pattern.every((value, i) => value === values[(start + i) % period])) return true;
+    }
+    /* Check the looping playback too, including recovery-to-lead-in joins.
+       Matches entirely within steady qualifies are deliberately exempt. */
+    for (let start = 0; start < roundLength; start++) {
+      let touchesChallenge = false;
+      const matches = pattern.every((value, i) => {
+        const t = (start + i) % roundLength - qualifyBeats;
+        const inChallenge = t >= 0 && t < period;
+        if (inChallenge) touchesChallenge = true;
+        return value === (inChallenge ? values[t] : balls);
+      });
+      if (matches && touchesChallenge) return true;
+    }
+    return false;
+  });
 }
 function cycleSignature(cycle) {
   let first = 0;
@@ -61,24 +105,33 @@ function validateChallenge({balls, height, minimum, maximum}) {
 function* searchSiteswap(settings, random = Math.random) {
   validateChallenge(settings);
   const {balls, height, minimum, maximum} = settings;
-  const avoidIdlePairs = settings.avoidIdlePairs === true;
+  const excluded = settings.excludedSubpatterns ?? [];
+  if (!Array.isArray(excluded) || excluded.some(pattern => !Array.isArray(pattern) || !pattern.length
+      || pattern.some(value => !Number.isInteger(value) || value < 0 || value > MAX_THROW))) {
+    throw Error("Excluded Subpatterns must be nonempty sequences of throw values from 0 to 59.");
+  }
   const primeOnly = settings.primeOnly === true;
   const pick = count => Math.floor(random() * count);
-  const idleError = "No pattern matches these settings while avoiding 00, 11, 22, 02 and 20. Increase Balls or Max Throw, change the period range, or turn off Avoid idle pairs.";
-  if (avoidIdlePairs && (balls === 1 || (balls === height && balls === 2))) throw Error(idleError);
-  if (balls === height) return [balls];
-  if (balls === 1) {
-    const last = Math.min(maximum, height);
-    if (minimum > last) throw Error("No first-return pattern matches these settings. Shorten the period or increase Max Throw.");
-    const period = minimum + pick(last - minimum + 1);
-    return [period, ...Array(period - 1).fill(0)];
-  }
+  const constraint = primeOnly ? "requiring a prime loop" : "avoiding intermediate ground states and repeated cycles";
+  const noResult = () => Error(`No pattern matches these settings while ${constraint}${excluded.length ? " and avoiding Excluded Subpatterns" : ""}. Adjust Max Throw or the period range${excluded.length ? ", or edit or clear Excluded Subpatterns" : ""}.`);
   const shuffle = values => {
     for (let i = values.length - 1; i > 0; i--) {
       const j = pick(i + 1); [values[i], values[j]] = [values[j], values[i]];
     }
     return values;
   };
+  if (balls === height) {
+    if (hasExcludedSubpattern([balls], balls, excluded)) throw noResult();
+    return [balls];
+  }
+  if (balls === 1) {
+    const last = Math.min(maximum, height);
+    for (const period of shuffle(Array.from({length: Math.max(0, last - minimum + 1)}, (_, i) => minimum + i))) {
+      const values = [period, ...Array(period - 1).fill(0)];
+      if (!hasExcludedSubpattern(values, balls, excluded)) return values;
+    }
+    throw noResult();
+  }
   const ground = (1n << BigInt(balls)) - 1n;
   const path = [], states = [ground], usedCycles = new Set();
   let work = 0;
@@ -90,15 +143,14 @@ function* searchSiteswap(settings, random = Math.random) {
     for (const h of choices) {
       if (++work > 150000) throw Error("The search is too large and found no result yet. Reduce Max Throw or narrow the period range.");
       if (work % 1000 === 0) yield;
-      if (avoidIdlePairs) {
-        /* Check the periodic challenge and its two joins to the qualify. The
-           deliberate steady qualify itself is outside the challenge filter. */
-        if (isIdlePair(path.at(-1) ?? balls, h)) continue;
-        if (remaining === 1 && (isIdlePair(h, path[0] ?? h) || isIdlePair(h, balls))) continue;
-      }
       const next = h ? shifted | (1n << BigInt(h - 1)) : shifted;
       if ((remaining === 1) !== (next === ground)) continue;
       if (primeOnly && next !== ground && states.includes(next)) continue;
+      if (excluded.length) {
+        const values = [...path, h];
+        if (hasExcludedPrefix(values, balls, excluded)) continue;
+        if (remaining === 1 && hasExcludedSubpattern(values, balls, excluded)) continue;
+      }
       path.push(h); states.push(next);
       /* The repeated-cycle constraint depends on the entire prefix, so failed
          (state, remaining) pairs cannot be memoized across different paths. */
@@ -117,8 +169,7 @@ function* searchSiteswap(settings, random = Math.random) {
     const result = yield* visit(ground, period);
     if (result) return result;
   }
-  const constraint = primeOnly ? "requiring a prime loop" : "avoiding intermediate ground states and repeated cycles";
-  throw Error(`No pattern matches these settings while ${constraint}${avoidIdlePairs ? " and avoiding 00, 11, 22, 02 and 20" : ""}. Adjust Max Throw or the period range${avoidIdlePairs ? ", or turn off Avoid idle pairs" : ""}.`);
+  throw noResult();
 }
 function generateSiteswap(settings, random = Math.random) {
   const search = searchSiteswap(settings, random);
@@ -145,5 +196,5 @@ function qualifyRoutine(values, balls) {
     basicName: balls === 1 ? "One-Ball Alternation" : balls === 2 ? "Two-Ball Hold" : balls % 2 ? "Cascade" : "Fountain"
   };
 }
-globalThis.SiteswapChallenge = {primitivePeriod, formatSiteswapValue, parseSiteswapValue, isIdlePair, cycleSignature, simpleCycleAtEnd, hasRepeatedCycle, validateChallenge, searchSiteswap, generateSiteswap, alternatingHands, qualifyRoutine};
+globalThis.SiteswapChallenge = {primitivePeriod, formatSiteswapValue, parseSiteswapValue, parseExcludedSubpatterns, hasExcludedSubpattern, cycleSignature, simpleCycleAtEnd, hasRepeatedCycle, validateChallenge, searchSiteswap, generateSiteswap, alternatingHands, qualifyRoutine};
 """

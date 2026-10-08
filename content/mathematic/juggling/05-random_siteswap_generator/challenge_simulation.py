@@ -10,6 +10,8 @@ CONTROLS = r"""
 #challengeForm input { width: 92px; }
 #challengeForm .option { flex-direction: row; align-items: center; padding-bottom: 6px; }
 #challengeForm .option input { width: auto; }
+#challengeForm .exclusions { flex: 1 1 100%; }
+#excludedSubpatterns { width: min(100%, 360px); min-height: 100px; resize: vertical; font-family: ui-monospace, monospace; }
 #sequence { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; padding: 0; list-style: none; }
 #sequence li { font: 600 21px/1.5 ui-monospace, monospace; padding: 2px 9px; border: 1px solid var(--line); border-radius: 6px; }
 #sequence li[aria-current=true] { color: var(--panel); background: var(--accent); border-color: var(--accent); }
@@ -24,12 +26,12 @@ CONTROLS = r"""
   <label>Max Throw<input id="height" type="text" inputmode="text" value="7" maxlength="2" aria-describedby="heightHint" required></label>
   <label>Min Period<input id="minimum" type="number" min="1" max="64" step="1" value="2" required></label>
   <label>Max Period<input id="maximum" type="number" min="1" max="64" step="1" value="6" required></label>
-  <label class="option"><input id="avoidIdlePairs" type="checkbox" checked aria-describedby="idlePairsHint">Avoid idle pairs</label>
   <label class="option"><input id="primeOnly" type="checkbox">Prime loops only</label>
+  <label class="exclusions">Excluded Subpatterns<textarea id="excludedSubpatterns" rows="4" spellcheck="false" autocapitalize="off" aria-describedby="excludedSubpatternsHint">00&#10;22&#10;02&#10;20</textarea></label>
   <button id="generate" type="submit" class="primary">New Pattern</button>
 </form>
 <p id="heightHint" class="hint">Enter the maximum throw as a decimal integer, or use a–z for 10–35 and α–ω for 36–59.</p>
-<p id="idlePairsHint" class="hint">Avoid 00, 11, 22, 02 and 20. Isolated 0s are allowed. Checks include the pattern's wraparound and its joins to the qualify; the steady qualify itself is exempt.</p>
+<p id="excludedSubpatternsHint" class="hint">One compact sequence per line; each symbol is one beat (a = 10, b = 11, α = 36). Leave blank for no exclusions. Checks include wraparound and joins to the qualify; the steady qualify itself is exempt.</p>
 <output id="challengeStats" aria-live="polite"></output>
 <div id="routinePhases" role="group" aria-label="Playback phases">
   <span id="leadIn"></span><span id="challengePhase">Challenge</span><span id="leadOut"></span>
@@ -66,7 +68,7 @@ async function nextChallenge() {
   try {
     const settings = Object.fromEntries(["balls", "minimum", "maximum"].map(id => [id, $(id).value === "" ? NaN : Number($(id).value)]));
     settings.height = parseSiteswapValue($("height").value);
-    settings.avoidIdlePairs = $("avoidIdlePairs").checked;
+    settings.excludedSubpatterns = parseExcludedSubpatterns($("excludedSubpatterns").value);
     settings.primeOnly = $("primeOnly").checked;
     message("Searching for a pattern that first returns to the ground state at the end…");
     const search = searchSiteswap(settings);
