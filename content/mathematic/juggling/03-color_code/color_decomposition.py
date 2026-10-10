@@ -48,7 +48,7 @@ function formatColorDuration(value) {
 
 function formatColorComponent(pattern, edgeIds) {
   const slots = Array.from({length: pattern.period}, () => Array.from({length: pattern.hands}, () => []));
-  for (const id of edgeIds) {
+  for (const id of [...edgeIds].sort((a, b) => a - b)) {
     const edge = pattern.edges[id], duration = formatColorDuration(edge.duration);
     slots[edge.phase][edge.source].push(pattern.hands === 1 ? duration : `${duration}_${edge.destination + 1}`);
   }
@@ -118,46 +118,40 @@ function enumerateHandMergedDecompositions(beats, requestedLimits = {}) {
   const period = pattern.period, projectedPeriod = projected.pattern.period;
   const types = colorEdgeTypes(pattern), budget = {steps: projected.searchSteps};
   const cycles = simpleColorCycles(pattern, types, limits, budget);
-  const solutions = [], seen = new Set();
-  let unliftable = 0;
+  const solutions = [], seen = new Set(), solutionCounts = new Map();
+  let coarsenedDecompositions = 0, partitionsSearched = 0;
   const spend = () => {
     if (++budget.steps > limits.maxSearch) throw Error("Restoring the hand-merged colors is too combinatorial to enumerate safely. Shorten the pattern or reduce its multiplex capacity.");
   };
-  for (const projectedSolution of projected.solutions) {
-    /* Compare indecomposable types in the common projected period, with their
-       phases intact. Group identical copies before requiring hand balance. */
-    const grouped = new Map();
-    for (const component of projectedSolution.components) {
-      const signature = component.edgeIds.map(id => {
-        const edge = projected.pattern.edges[id]; return [edge.phase, edge.duration];
-      }).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(edge => edge.join(",")).join(";");
-      if (!grouped.has(signature)) grouped.set(signature, {projectedEdgeIds: [],
-        typeEdgeIds: component.edgeIds, copies: 0, objects: 0});
-      const group = grouped.get(signature);
-      group.projectedEdgeIds.push(...component.edgeIds); group.copies++; group.objects += component.objects;
-    }
-    const groups = [...grouped.values()];
-    const required = groups.map(group => new Map(group.typeEdgeIds.map(id => {
-      const edge = projected.pattern.edges[id]; return [edge.phase, edge.duration];
-    })));
+  const slotKey = (color, phase, duration) => `${color},${phase},${duration}`;
+  const isRefinement = (finer, coarser) => finer.every(part => coarser.some(other => (part & other) === part));
+
+  const liftPartition = groups => {
+    partitionsSearched++;
     const slots = [], candidates = new Map(), remainingSlots = new Map();
-    required.forEach((phases, color) => {
-      for (let t = 0; t < period; t++) if (phases.has(t % projectedPeriod)) {
-        const slot = color * period + t; slots.push(slot); candidates.set(slot, []);
-        remainingSlots.set(slot, groups[color].copies);
+    groups.forEach((group, color) => {
+      const quotas = new Map();
+      for (const id of group.projectedEdgeIds) {
+        const edge = projected.pattern.edges[id], key = `${edge.phase},${edge.duration}`;
+        quotas.set(key, (quotas.get(key) ?? 0) + 1);
+      }
+      for (let t = 0; t < period; t++) for (const [key, copies] of quotas) {
+        const [phase, duration] = key.split(",").map(Number);
+        if (t % projectedPeriod !== phase) continue;
+        const slot = slotKey(color, t, duration);
+        slots.push(slot); candidates.set(slot, []); remainingSlots.set(slot, copies);
       }
     });
     const units = [];
-    required.forEach((phases, color) => {
+    groups.forEach((group, color) => {
       for (const cycle of cycles) {
         spend();
-        if (!cycle.every(id => phases.get(types[id].phase % projectedPeriod) === types[id].duration)) continue;
         const costs = new Map();
         for (const id of cycle) {
-          const slot = color * period + types[id].phase;
+          const type = types[id], slot = slotKey(color, type.phase, type.duration);
           costs.set(slot, (costs.get(slot) ?? 0) + 1);
         }
-        if ([...costs.values()].some(cost => cost > groups[color].copies)) continue;
+        if ([...costs].some(([slot, cost]) => cost > (remainingSlots.get(slot) ?? 0))) continue;
         const unit = {cycle, color, costs: [...costs]};
         units.push(unit);
         for (const [slot] of unit.costs) candidates.get(slot).push(units.length - 1);
@@ -167,7 +161,7 @@ function enumerateHandMergedDecompositions(beats, requestedLimits = {}) {
     let found = false;
     const materialize = () => {
       found = true;
-      const colorCounts = required.map(() => Array(types.length).fill(0));
+      const colorCounts = groups.map(() => Array(types.length).fill(0));
       for (const unit of chosen) for (const type of unit.cycle) colorCounts[unit.color][type]++;
       const signature = colorCounts.map(counts => counts.join(",")).sort().join(";");
       if (seen.has(signature)) return;
@@ -177,7 +171,8 @@ function enumerateHandMergedDecompositions(beats, requestedLimits = {}) {
       const edgeCycleColors = chosen.map(unit => unit.color);
       const components = groups.map(group => ({...group, edgeIds: []}));
       edgeCycles.forEach((cycle, i) => components[edgeCycleColors[i]].edgeIds.push(...cycle));
-      solutions.push({edgeCycles, edgeCycleColors, components});
+      const solution = {edgeCycles, edgeCycleColors, components};
+      solutions.push(solution); solutionCounts.set(solution, colorCounts);
       if (solutions.length > limits.maxDecompositions) throw Error(`This pattern has more than ${limits.maxDecompositions} lifted color groupings. Narrow the input before listing all of them.`);
     };
     const fits = unit => unit.costs.every(([slot, cost]) => remainingSlots.get(slot) >= cost)
@@ -218,12 +213,74 @@ function enumerateHandMergedDecompositions(beats, requestedLimits = {}) {
       fillPivot(0);
     };
     search();
-    if (!found) unliftable++;
+    return found;
+  };
+
+  for (const projectedSolution of projected.solutions) {
+    /* Compare types in the common projected period, with their phases intact.
+       Identical copies remain inseparable in every candidate grouping. */
+    const grouped = new Map();
+    for (const component of projectedSolution.components) {
+      const signature = component.edgeIds.map(id => {
+        const edge = projected.pattern.edges[id]; return [edge.phase, edge.duration];
+      }).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(edge => edge.join(",")).join(";");
+      if (!grouped.has(signature)) grouped.set(signature, {projectedEdgeIds: [],
+        typeEdgeIds: component.edgeIds, copies: 0, objects: 0});
+      const group = grouped.get(signature);
+      group.projectedEdgeIds.push(...component.edgeIds); group.copies++; group.objects += component.objects;
+    }
+    const atoms = [...grouped.values()];
+    const initial = atoms.map((_, i) => 1n << BigInt(i));
+    const queue = [initial], visited = new Set([initial.join(",")]), finest = [];
+    const canonical = parts => parts.sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    for (let cursor = 0; cursor < queue.length; cursor++) {
+      spend();
+      const parts = queue[cursor];
+      /* Breadth first visits every strict refinement before its coarsenings.
+         Retain all incomparable finest partitions, even with different sizes. */
+      if (finest.some(finer => { spend(); return isRefinement(finer, parts); })) continue;
+      const groups = parts.map(part => {
+        const members = atoms.filter((_, i) => (part & (1n << BigInt(i))) !== 0n);
+        return {types: members, projectedEdgeIds: members.flatMap(member => member.projectedEdgeIds),
+          objects: members.reduce((sum, member) => sum + member.objects, 0)};
+      });
+      if (liftPartition(groups)) { finest.push(parts); continue; }
+      for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) {
+        spend();
+        const coarser = canonical([...parts.filter((_, k) => k !== i && k !== j), parts[i] | parts[j]]);
+        const signature = coarser.join(",");
+        if (!visited.has(signature)) { visited.add(signature); queue.push(coarser); }
+      }
+    }
+    if (finest.some(parts => parts.length < atoms.length)) coarsenedDecompositions++;
   }
-  if (!solutions.length) throw Error("No hand-merged type grouping can be restored while keeping each hand balanced within the input period. Turn off Ignore Hands and Group Identical Components to use the original decomposition.");
-  return {pattern, cycles, solutions, projectedPattern: projected.pattern, projectedPeriod,
-    projectedDecompositions: projected.solutions.length, unliftableDecompositions: unliftable,
-    searchSteps: budget.steps};
+  /* Different projected decompositions can yield comparable restorations.
+     Compare multiplicities of original edge types, not arbitrary copy IDs. */
+  const refinesColors = (finer, coarser) => {
+    if (finer.length <= coarser.length) return false;
+    const remaining = coarser.map(counts => [...counts]);
+    const parts = [...finer].sort((a, b) => b.reduce((s, n) => s + n, 0) - a.reduce((s, n) => s + n, 0));
+    const assign = index => {
+      spend();
+      if (index === parts.length) return remaining.every(counts => counts.every(n => n === 0));
+      const part = parts[index];
+      for (const counts of remaining) {
+        if (part.some((n, i) => n > counts[i])) continue;
+        part.forEach((n, i) => { counts[i] -= n; });
+        const found = assign(index + 1);
+        part.forEach((n, i) => { counts[i] += n; });
+        if (found) return true;
+      }
+      return false;
+    };
+    return assign(0);
+  };
+  const finestSolutions = solutions.filter(coarser => !solutions.some(finer =>
+    refinesColors(solutionCounts.get(finer), solutionCounts.get(coarser))));
+  if (!finestSolutions.length) throw Error("No balanced hand-merged grouping was found within the input period.");
+  return {pattern, cycles, solutions: finestSolutions, projectedPattern: projected.pattern, projectedPeriod,
+    projectedDecompositions: projected.solutions.length, coarsenedDecompositions,
+    partitionsSearched, searchSteps: budget.steps};
 }
 
 globalThis.ColorDecomposition = {colorEdgeTypes, simpleColorCycles,

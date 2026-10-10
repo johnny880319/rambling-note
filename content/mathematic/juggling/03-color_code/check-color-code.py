@@ -127,7 +127,7 @@ for(let first=0;first<pairs.length;first++) for(let second=0;second<pairs.length
 }
 
 
-let liftChecked=0, unliftableChecked=0, liftLimitChecked=false;
+let liftChecked=0, coarsenedChecked=0, liftLimitChecked=false;
 const groupingSignature=(pattern,groups)=>groups.map(ids=>formatColorComponent(pattern,ids)).sort().join('\n---\n');
 function verifyLift(beats, expectedObjects=null) {
   const result=enumerateHandMergedDecompositions(beats), base=buildPattern(beats);
@@ -154,14 +154,19 @@ function verifyLift(beats, expectedObjects=null) {
     });
     assert.equal(seen.size,base.edges.length);
     solution.components.forEach(component=>{
-      const typeSignature=formatColorComponent(result.projectedPattern,component.typeEdgeIds);
-      assert.ok(!typeSignatures.has(typeSignature),'Identical projected types must share one color');
-      typeSignatures.add(typeSignature);
-      assert.ok(Number.isSafeInteger(component.copies) && component.copies>0);
-      assert.equal(component.projectedEdgeIds.length,component.typeEdgeIds.length*component.copies);
-      const typePattern=buildPattern(parseThrows(typeSignature));
-      assert.equal(typePattern.objects*component.copies,component.objects);
-      assert.equal(enumerateColorDecompositions(parseThrows(typeSignature)).solutions[0].components.length,1);
+      assert.ok(component.types.length>0);
+      assert.equal(component.objects,component.types.reduce((sum,type)=>sum+type.objects,0));
+      assert.deepEqual([...component.projectedEdgeIds].sort((a,b)=>a-b),component.types.flatMap(type=>type.projectedEdgeIds).sort((a,b)=>a-b));
+      component.types.forEach(type=>{
+        const typeSignature=formatColorComponent(result.projectedPattern,type.typeEdgeIds);
+        assert.ok(!typeSignatures.has(typeSignature),'Identical projected types must share one color');
+        typeSignatures.add(typeSignature);
+        assert.ok(Number.isSafeInteger(type.copies) && type.copies>0);
+        assert.equal(type.projectedEdgeIds.length,type.typeEdgeIds.length*type.copies);
+        const typePattern=buildPattern(parseThrows(typeSignature));
+        assert.equal(typePattern.objects*type.copies,type.objects);
+        assert.equal(enumerateColorDecompositions(parseThrows(typeSignature)).solutions[0].components.length,1);
+      });
       const restored=buildPattern(parseThrows(formatColorComponent(base,component.edgeIds)));
       assert.equal(restored.objects,component.objects);
       assert.equal(component.edgeIds.reduce((sum,id)=>sum+base.edges[id].duration,0)/base.period,component.objects);
@@ -170,8 +175,8 @@ function verifyLift(beats, expectedObjects=null) {
         const edge=result.projectedPattern.edges[id];projectedRows[edge.phase].push(edge.duration);
       }
       for(let t=0;t<result.projectedPeriod;t++) {
-        const typeDurations=component.typeEdgeIds.filter(id=>result.projectedPattern.edges[id].phase===t).map(id=>result.projectedPattern.edges[id].duration);
-        assert.deepEqual(projectedRows[t].sort((a,b)=>a-b),Array.from({length:component.copies},()=>typeDurations).flat().sort((a,b)=>a-b));
+        const typeDurations=component.types.flatMap(type=>Array.from({length:type.copies},()=>type.typeEdgeIds.filter(id=>result.projectedPattern.edges[id].phase===t).map(id=>result.projectedPattern.edges[id].duration)).flat());
+        assert.deepEqual(projectedRows[t].sort((a,b)=>a-b),typeDurations.sort((a,b)=>a-b));
       }
       for(let t=0;t<base.period;t++) {
         const durations=component.edgeIds.filter(id=>base.edges[id].phase===t).map(id=>base.edges[id].duration).sort((a,b)=>a-b);
@@ -212,17 +217,25 @@ const identicalTypes=verifyLift(parseThrows('2_1|2_2 2_1|2_2'),[4]);
 assert.equal(identicalTypes.solutions.length,1);
 const partial=verifyLift(parseThrows('5_2|1_1 3_2|1_1'),[2,3]);
 assert.equal(partial.projectedDecompositions,2);
-assert.equal(partial.unliftableDecompositions,1);
+assert.equal(partial.coarsenedDecompositions,1);
 assert.equal(partial.solutions.length,1);
-assert.throws(()=>enumerateHandMergedDecompositions(parseThrows('1_2|2_1')),/within the input period/);
+verifyLift(parseThrows('1_2|2_1'),[3]);
 assert.throws(()=>enumerateHandMergedDecompositions(parseThrows('3',true),{maxSearch:0}),/combinatorial/);
 assert.throws(()=>buildPattern(parseThrows('3',true),{edgeCycles:[[0,1]],edgeCycleColors:[]}),/valid color index/);
 assert.throws(()=>buildPattern(parseThrows('3',true),{edgeCycles:[[0,1]],edgeCycleColors:[-1]}),/valid color index/);
 
-// An independent oracle assigns colors to individual edges and checks balance;
-// it does not use the lifted-cycle exact-cover search.
+// An independent oracle enumerates all set partitions and assigns individual
+// edges. It uses neither breadth-first coarsening nor cycle-based restoration.
 function referenceLifts(beats) {
-  const base=buildPattern(beats), projected=enumerateColorDecompositions(collapseHands(beats)), signatures=new Set();
+  const base=buildPattern(beats), projected=enumerateColorDecompositions(collapseHands(beats));
+  const candidates=new Map();
+  const edgeKey=edge=>`${edge.phase},${edge.source},${edge.destination},${edge.duration}`;
+  const keys=[...new Set(base.edges.map(edgeKey))];
+  function* partitions(size,position=0,blocks=[]) {
+    if(position===size) {yield blocks.map(block=>[...block]);return;}
+    for(const block of blocks) {block.push(position);yield* partitions(size,position+1,blocks);block.pop();}
+    blocks.push([position]);yield* partitions(size,position+1,blocks);blocks.pop();
+  }
   for(const solution of projected.solutions) {
     const types=new Map();
     for(const component of solution.components) {
@@ -234,53 +247,75 @@ function referenceLifts(beats) {
         quotas.set(slot,(quotas.get(slot) ?? 0)+1);
       }
     }
-    const remaining=[...types.values()].map(quotas=>{
-      const counts=new Map();
-      for(let t=0;t<base.period;t++) for(const [slot,copies] of quotas) {
-        const [phase,duration]=slot.split(',').map(Number);
-        if(t%projected.pattern.period===phase) counts.set(`${t},${duration}`,copies);
-      }
-      return counts;
-    });
-    const groups=remaining.map(()=>[]);
-    function assign(index) {
-      if(index===base.edges.length) {
-        if(remaining.some(counts=>[...counts.values()].some(n=>n!==0))) return;
-        for(const ids of groups) {
-          const balance=Array(base.period*base.hands).fill(0);
-          for(const id of ids) {
-            const edge=base.edges[id];balance[edge.phase*base.hands+edge.source]++;
-            balance[((edge.phase+edge.duration)%base.period)*base.hands+edge.destination]--;
+    const atoms=[...types.values()], feasible=[];
+    for(const blocks of partitions(atoms.length)) {
+      const remaining=blocks.map(block=>{
+        const counts=new Map();
+        for(const atom of block) for(let t=0;t<base.period;t++) for(const [slot,copies] of atoms[atom]) {
+          const [phase,duration]=slot.split(',').map(Number);
+          if(t%projected.pattern.period===phase) {
+            const key=`${t},${duration}`;counts.set(key,(counts.get(key) ?? 0)+copies);
           }
-          if(balance.some(n=>n!==0)) return;
         }
-        signatures.add(groupingSignature(base,groups));return;
-      }
-      const edge=base.edges[index],key=`${edge.phase},${edge.duration}`;
-      remaining.forEach((counts,color)=>{
-        const count=counts.get(key) ?? 0;
-        if(!count) return;
-        counts.set(key,count-1);groups[color].push(edge.id);assign(index+1);
-        groups[color].pop();counts.set(key,count);
+        return counts;
       });
+      const groups=blocks.map(()=>[]), restorations=new Map();
+      function assign(index) {
+        if(index===base.edges.length) {
+          if(remaining.some(counts=>[...counts.values()].some(n=>n!==0))) return;
+          for(const ids of groups) {
+            const balance=Array(base.period*base.hands).fill(0);
+            for(const id of ids) {
+              const edge=base.edges[id];balance[edge.phase*base.hands+edge.source]++;
+              balance[((edge.phase+edge.duration)%base.period)*base.hands+edge.destination]--;
+            }
+            if(balance.some(n=>n!==0)) return;
+          }
+          restorations.set(groupingSignature(base,groups),groups.map(ids=>keys.map(key=>ids.filter(id=>edgeKey(base.edges[id])===key).length)));
+          return;
+        }
+        const edge=base.edges[index],key=`${edge.phase},${edge.duration}`;
+        remaining.forEach((counts,color)=>{
+          const count=counts.get(key) ?? 0;
+          if(!count) return;
+          counts.set(key,count-1);groups[color].push(edge.id);assign(index+1);
+          groups[color].pop();counts.set(key,count);
+        });
+      }
+      assign(0);
+      if(restorations.size) feasible.push({blocks,restorations});
     }
-    assign(0);
+    for(const coarse of feasible) {
+      if(feasible.some(fine=>fine.blocks.length>coarse.blocks.length && fine.blocks.every(block=>coarse.blocks.some(other=>block.every(atom=>other.includes(atom)))))) continue;
+      for(const [signature,counts] of coarse.restorations) candidates.set(signature,counts);
+    }
   }
-  return signatures;
+  // Check refinement by explicitly trying subsets of the finer color groups.
+  function refines(fine,coarse) {
+    if(fine.length<=coarse.length) return false;
+    function match(index,remaining) {
+      if(index===coarse.length) return remaining===0;
+      for(let mask=remaining;mask;mask=(mask-1)&remaining) {
+        const sum=keys.map((_,key)=>fine.reduce((total,part,i)=>total+((mask&(1<<i))?part[key]:0),0));
+        if(sum.every((n,key)=>n===coarse[index][key]) && match(index+1,remaining^mask)) return true;
+      }
+      return false;
+    }
+    return match(0,(1<<fine.length)-1);
+  }
+  return new Set([...candidates].filter(([,coarse])=>![...candidates.values()].some(fine=>refines(fine,coarse))).map(([signature])=>signature));
 }
 function compareLifts(beats) {
   try {buildPattern(beats);} catch(error){assert.match(error.message,/Balance fails/);return;}
   const expected=referenceLifts(beats);
-  if(!expected.size) {
-    assert.throws(()=>enumerateHandMergedDecompositions(beats),/cannot be restored|can be restored/);unliftableChecked++;
-  } else {
-    const result=verifyLift(beats);
-    const actual=new Set(result.solutions.map(s=>groupingSignature(result.pattern,s.components.map(c=>c.edgeIds))));
-    assert.deepEqual(actual,expected);
-    if(!liftLimitChecked && result.projectedDecompositions===1 && result.solutions.length>1) {
-      assert.throws(()=>enumerateHandMergedDecompositions(beats,{maxDecompositions:1}),/more than 1 lifted/);
-      liftLimitChecked=true;
-    }
+  assert.ok(expected.size,'Every balanced pattern has an all-types restoration');
+  const result=verifyLift(beats);
+  const actual=new Set(result.solutions.map(s=>groupingSignature(result.pattern,s.components.map(c=>c.edgeIds))));
+  assert.deepEqual(actual,expected);
+  if(result.coarsenedDecompositions) coarsenedChecked++;
+  if(!liftLimitChecked && result.projectedDecompositions===1 && result.solutions.length>1) {
+    assert.throws(()=>enumerateHandMergedDecompositions(beats,{maxDecompositions:1}),/more than 1 lifted/);
+    liftLimitChecked=true;
   }
 }
 const handOptions=[[]];
@@ -304,8 +339,18 @@ for(const left of destinations) for(const right of destinations) for(let mask=0;
   ];
   compareLifts(beats);
 }
+// Generate zero-sum hand imbalances with incomparable finest partitions.
+// Keeping only the largest number of colors would miss valid two-part results.
+const imbalanced=[[],[]];
+let duration=0;
+for(let magnitude=1;magnitude<=2;magnitude++) for(const source of [0,1]) for(let rank=0;rank<3-magnitude;rank++) {
+  duration++;
+  for(let copy=0;copy<magnitude;copy++) imbalanced[source].push([1-source,duration]);
+}
+compareLifts([imbalanced]);
+assert.deepEqual(new Set(enumerateHandMergedDecompositions([imbalanced]).solutions.map(solution=>solution.components.length)),new Set([2,3]));
 assert.ok(liftLimitChecked,'Generated patterns must exercise the lifted-grouping limit');
-console.log(`Passed ${liftChecked} type color groupings against independent edge-color enumeration and ${unliftableChecked} unliftable patterns; identical-copy merging, shortest projected periods, multiplex counts, trajectories, and input limits passed.`);
+console.log(`Passed ${liftChecked} finest restored groupings against independent partition and edge-color enumeration, including ${coarsenedChecked} patterns requiring type merging; refinement, identical copies, multiplex counts, trajectories, and input limits passed.`);
 console.log(`Passed ${checked} minimized decompositions, including every valid one-hand capacity-1 pattern through period 5 and small capacity-2 patterns.`);
 """
 
