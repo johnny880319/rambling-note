@@ -122,9 +122,9 @@ class Pattern:
         return len(self.throws)
 
 
-def read_pattern(text: str) -> Pattern:
+def read_pattern(text: str, *, traditional: bool = False) -> Pattern:
     """Parse input, then validate and trace its canonical throws."""
-    return build_pattern(parse_throws(text))
+    return build_pattern(parse_throws(text, traditional=traditional))
 
 
 def build_pattern(throws: tuple[Throw, ...]) -> Pattern:

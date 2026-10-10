@@ -1,7 +1,10 @@
 """Browser counterpart of pattern_parser; outputs [beat][hand][copy] pairs."""
 
-JAVASCRIPT = r"""
-function parseThrows(text) {
+from traditional_siteswap import JAVASCRIPT as TRADITIONAL_JAVASCRIPT
+
+JAVASCRIPT = TRADITIONAL_JAVASCRIPT + r"""
+function parseThrows(text, traditional = false) {
+  if (traditional) return parseTraditionalSiteswap(text);
   if (text.length > 60000) throw Error("The input is too long. Shorten the period.");
   const word = /^[0-9a-z]+$/i, targetSlot = /^([0-9a-z]+)_([0-9]+)$/i;
   const retiredTarget = /^[0-9a-z]+p[0-9]+$/i;

@@ -843,7 +843,7 @@ def _(mo):
     mo.md(r"""
     ## Simulation
 
-    以下是我讓 AI vibe 出來的 juggling state 模擬。關於 juggling matrix 的符號的部分可以參考第一篇雜耍文章。
+    以下是我讓 AI vibe 出來的 juggling state 模擬。關於 juggling matrix 的符號以及各種客製化選項的部分可以參考第一篇雜耍文章。
 
     有別於 juggling matrix 一行是一拍、行內以 | 分手，juggling state 則一段是一手，段內依高度排列。一來可以讓記號比較精簡，二來也比較方便讀者去觀察狀態隨著時間的變化。
 
@@ -881,7 +881,10 @@ def _(PatternEditor, mo):
 def _(pattern_input, set_beat, state_graph):
     set_beat(0)
     try:
-        pattern = state_graph.read_pattern(pattern_input.value["value"].strip())
+        pattern = state_graph.read_pattern(
+            pattern_input.value["value"].strip(),
+            traditional=pattern_input.value["traditional"],
+        )
     except ValueError as _error:
         pattern, background, trouble = None, None, str(_error)
     else:

@@ -17,6 +17,7 @@ from pathlib import Path
 import marimo as mo
 
 JUGGLING = Path(__file__).resolve().parent
+sys.path.insert(0, str(JUGGLING))
 
 
 def load_module(name, path):
@@ -275,20 +276,184 @@ for text in examples:
         }
     )
 
+# Traditional and custom notation stay separate, but share canonical data.
+traditional_examples = [
+    "97531",
+    "3",
+    "0",
+    "531",
+    "24[54]",
+    "[33]",
+    "[34]",
+    "[00]",
+    "a",
+    "x",
+    "z",
+    "{36}",
+    "{64}",
+    "{49}1",
+    "3p2",
+    " 9 7\t5\n3 1 ",
+    "(6x, 4)*",
+    "(4,4)",
+    "(4x,4x)",
+    "(4,2x)*",
+    "(4,2)(2x,[44x])",
+    "([44],[44])",
+    "([4x4],[44x])",
+    "(4,4)(4,0)",
+    "(0,0)*",
+    "({64},4)",
+    "1" * 128,
+    "(2,2)" * 64,
+    "(2,2)" * 32 + "*",
+    "532",
+    "(6x,4)",
+]
+traditional_invalid = [
+    "",
+    " ",
+    "[]",
+    "[",
+    "[3",
+    "[3,4]",
+    "[[33]]",
+    "3_2|0",
+    "3*",
+    "(3,4)",
+    "(0x,4)",
+    "(4,4",
+    "(4 4)",
+    "(4,4))",
+    "(4,4)**",
+    "(4,4)*3",
+    "3(4,4)",
+    "(4,4)3",
+    "(4,4)!",
+    "(4,4)^2",
+    "3B",
+    "A",
+    "α",
+    "<3|3>",
+    "{65}",
+    "{}",
+    "{3",
+    "{-1}",
+    "{3.5}",
+    "{a}",
+    "1" * 127,
+    "(2,2)" * 33 + "*",
+    "(2,2)" * 65,
+    "3" * 60001,
+]
+assert parser.parse_throws("97531", traditional=True) == tuple(
+    ((), (((1 + t + h) % 2, h),)) if t % 2 == 0 else ((((1 + t + h) % 2, h),), ())
+    for t, h in enumerate([9, 7, 5, 3, 1] * 2)
+)
+assert parser.parse_throws("(6x, 4)*", traditional=True) == parser.parse_throws(
+    "6_2|4_2 []|[] 4_1|6_1 []|[]"
+)
+assert parser.parse_throws("[34]", traditional=True) != parser.parse_throws("[34]")
+assert parser.parse_throws("3", traditional=True) != parser.parse_throws("3")
+assert widget_adapter.PatternEditor.class_traits()["traditional"].default_value is False
+
+# Generate balanced async multiplexes by permuting landing beats in each layer.
+for _ in range(30):
+    period = rng.randrange(2, 12, 2)
+    columns = [[] for _ in range(period)]
+    for _ in range(rng.randint(1, 3)):
+        for t, landing in enumerate(rng.sample(range(period), period)):
+            columns[t].append((landing - t) % period + period * rng.randint(1, 3))
+    traditional_examples.append(
+        "".join(
+            "["
+            + "".join(
+                ("0123456789abcdefghijklmnopqrstuvwxyz"[h] if h < 36 else f"{{{h}}}")
+                for h in heights
+            )
+            + "]"
+            for heights in columns
+        )
+    )
+
+for text in traditional_examples + traditional_invalid:
+    try:
+        throws = parser.parse_throws(text, traditional=True)
+    except ValueError:
+        assert text in traditional_invalid, text
+        canonical_fixtures.append({"text": text, "traditional": True, "invalid": True})
+        fixtures.append({"text": text, "traditional": True, "invalid": True})
+        continue
+    assert text not in traditional_invalid, text
+    canonical_fixtures.append({"text": text, "traditional": True, "throws": throws})
+    formatted = "\n".join(state_graph.throw_label(beat, 2) for beat in throws)
+    assert parser.parse_throws(formatted) == throws
+    try:
+        pattern = state_graph.read_pattern(text, traditional=True)
+    except ValueError:
+        fixtures.append({"text": text, "traditional": True, "invalid": True})
+    else:
+        fixtures.append(
+            {
+                "text": text,
+                "traditional": True,
+                "hands": 2,
+                "period": len(pattern),
+                "objects": pattern.objects,
+                "throws": pattern.throws,
+            }
+        )
+
 CHECKS = r"""
 const assert = require('node:assert/strict');
-const parsePattern = text => buildPattern(parseThrows(text));
+const parsePattern = (text, traditional = false) => buildPattern(parseThrows(text, traditional));
 for (const fixture of CANONICAL_FIXTURES) {
-  if (fixture.invalid) assert.throws(() => parseThrows(fixture.text), fixture.text);
-  else assert.deepEqual(parseThrows(fixture.text), fixture.throws, fixture.text);
+  if (fixture.invalid) assert.throws(() => parseThrows(fixture.text, fixture.traditional), fixture.text);
+  else assert.deepEqual(parseThrows(fixture.text, fixture.traditional), fixture.throws, fixture.text);
 }
 SCRIPTS.forEach(script => new (require('node:vm').Script)(script));
+// Match marimo's model API: single-key setters and synchronous change events.
+// In particular, applying the text must not reset the pending notation mode.
+class WidgetElement {
+  constructor(tag) { this.tag=tag; this.children=[]; this.listeners={}; this.classList={add(){}}; }
+  set innerHTML(value) { this.parts={textarea:new WidgetElement('textarea'), '#traditionalNotation':new WidgetElement('input'), '.editor-hint':new WidgetElement('p')}; }
+  querySelector(selector) { return this.parts[selector]; }
+  setAttribute() {}
+  addEventListener(name, callback) { this.listeners[name]=callback; }
+  append(...children) { this.children.push(...children); }
+  replaceChildren(...children) { this.children=children; }
+  attachShadow() { this.shadowRoot=new WidgetElement('shadow');return this.shadowRoot; }
+}
+const elements=[], documentMock={createElement(tag){const el=new WidgetElement(tag);elements.push(el);return el;}};
+const adapterContext={document:documentMock,AbortController};
+require('node:vm').runInNewContext(WIDGET_ESM.replace('export default','globalThis.adapter ='),adapterContext);
+const widgetState={value:'3',traditional:false}, pendingKeys=new Set(), listeners=new Map(), saved=[];
+const model={
+  get:key=>widgetState[key],
+  set(key,value){assert.equal(typeof key,'string');widgetState[key]=value;pendingKeys.add(key);for(const callback of listeners.get('change:'+key)||[]) callback();},
+  save_changes(){saved.push(Object.fromEntries([...pendingKeys].map(key=>[key,widgetState[key]])));pendingKeys.clear();},
+  on(event,callback){listeners.set(event,[...(listeners.get(event)||[]),callback]);},
+  off(event,callback){listeners.set(event,(listeners.get(event)||[]).filter(fn=>fn!==callback));}
+};
+const cleanup=adapterContext.adapter.render({model,el:new WidgetElement('div')});
+const editorRoot=elements.find(el=>el.parts), widgetInput=editorRoot.parts.textarea, notation=editorRoot.parts['#traditionalNotation'];
+const buttons=elements.filter(el=>el.tag==='button');
+assert.equal(notation.checked,false);
+widgetInput.value='97531';notation.checked=true;buttons[0].listeners.click();
+assert.deepEqual(saved.at(-1),{value:'97531',traditional:true});
+widgetInput.value='wrong';notation.checked=false;buttons[1].listeners.click();
+assert.equal(widgetInput.value,'97531');assert.equal(notation.checked,true);
+notation.checked=false;buttons[0].listeners.click();
+assert.deepEqual(saved.at(-1),{value:'97531',traditional:false});
+model.set('traditional',true);assert.equal(notation.checked,true);
+model.set('value','(6x,4)*');assert.equal(widgetInput.value,'(6x,4)*');
+cleanup();assert.ok([...listeners.values()].every(callbacks=>!callbacks.length));
 const close = (a, b) => assert.ok(Math.hypot(a.x - b.x, a.y - b.y) < 0.001,
   `Discontinuous trajectory: (${a.x}, ${a.y}) -> (${b.x}, ${b.y})`);
 let samples = 0;
 for (const fixture of FIXTURES) {
-  if (fixture.invalid) { assert.throws(() => parsePattern(fixture.text)); continue; }
-  const p = parsePattern(fixture.text);
+  if (fixture.invalid) { assert.throws(() => parsePattern(fixture.text, fixture.traditional)); continue; }
+  const p = parsePattern(fixture.text, fixture.traditional);
   assert.equal(p.hands, fixture.hands, fixture.text);
   assert.equal(p.period, fixture.period, fixture.text);
   assert.equal(p.objects, fixture.objects, fixture.text);
@@ -375,6 +540,17 @@ for(const gravity of [4,24,48]) {
   const acceleration=(position(five,fiveGeometry,2.01).y-2*position(five,fiveGeometry,2).y+position(five,fiveGeometry,1.99).y)/0.01**2;
   assert.ok(Math.abs(acceleration-gravity)<1e-6);
 }
+// A synchronous 2x is a flight; only same-hand 2s are held.
+const sync = parsePattern('(4,2x)*',true), syncGeometry=defaultGeometry(sync);
+sync.holdTwos=true;
+for(const ball of sync.balls) for(const segment of ball.segments) {
+  const t=ball.origin+segment.start;
+  if(segment.edge.duration===2) {
+    assert.notEqual(segment.edge.source,segment.edge.destination);
+    assert.equal(ballPosition(sync,syncGeometry,ball,t+1,0.35,true).held,false);
+  }
+  close(ballPosition(sync,syncGeometry,ball,t-1e-7,0.35,true),ballPosition(sync,syncGeometry,ball,t+1e-7,0.35,true));
+}
 console.log(`Passed ${FIXTURES.length} notation fixtures and ${samples} ball samples; gravity, viewport bounds, coordinate transforms, continuity, and input limits passed.`);
 """
 subprocess.run(
@@ -386,6 +562,8 @@ subprocess.run(
     + json.dumps(canonical_fixtures)
     + ";\nconst SCRIPTS = "
     + json.dumps(scripts)
+    + ";\nconst WIDGET_ESM = "
+    + json.dumps(widget_adapter.PatternEditor._esm)
     + ";\n"
     + CHECKS,
     text=True,

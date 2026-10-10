@@ -32,6 +32,8 @@ CSS = """
   }
 }
 .juggling-editor label { display: block; }
+.juggling-editor .notation-option { display: flex; align-items: center; gap: 6px; margin: 8px 0; }
+.juggling-editor .notation-option input { width: auto; accent-color: var(--editor-accent); }
 .juggling-editor .editor-hint { margin: 7px 0 12px; font-size: 13px; color: var(--editor-muted); }
 .juggling-editor textarea {
   display: block; box-sizing: border-box; width: 100%; min-height: 112px;
@@ -45,12 +47,15 @@ CSS = """
 """
 
 JAVASCRIPT = r"""
-function createPatternEditor(root, {value, hint = "", describedBy = ""}) {
+function createPatternEditor(root, {value, traditional = false, hint = "", describedBy = ""}) {
   root.classList.add("juggling-editor");
   root.innerHTML = `<label for="editor">Throws in One Period</label>
     <p id="editorHint" class="editor-hint"></p>
-    <textarea id="editor" rows="6" wrap="off" spellcheck="false"></textarea>`;
+    <textarea id="editor" rows="6" wrap="off" spellcheck="false"></textarea>
+    <label class="notation-option"><input id="traditionalNotation" type="checkbox">Traditional Siteswap (Two Hands)</label>`;
   const input = root.querySelector("textarea");
+  const notation = root.querySelector("#traditionalNotation");
+  notation.checked = traditional;
   root.querySelector(".editor-hint").textContent = "Use Tab to align columns. Press Esc, then Tab, to leave the editor. " + hint;
   input.setAttribute("aria-describedby", ["editorHint", describedBy].filter(Boolean).join(" "));
   input.value = value;
@@ -71,7 +76,7 @@ function createPatternEditor(root, {value, hint = "", describedBy = ""}) {
     }
   }, {signal: events.signal});
   input.addEventListener("blur", () => { allowTabExit = false; }, {signal: events.signal});
-  return {input, destroy: () => { events.abort(); root.replaceChildren(); }};
+  return {input, notation, destroy: () => { events.abort(); root.replaceChildren(); }};
 }
 """
 

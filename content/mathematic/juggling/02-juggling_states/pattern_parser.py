@@ -2,6 +2,8 @@
 
 import re
 
+from traditional_siteswap import parse_siteswap
+
 Throw = tuple[tuple[tuple[int, int], ...], ...]
 _WORD = re.compile(r"[0-9a-z]+", re.IGNORECASE)
 _TARGET = re.compile(r"([0-9a-z]+)_([0-9]+)", re.IGNORECASE)
@@ -9,7 +11,9 @@ _RETIRED_TARGET = re.compile(r"[0-9a-z]+p[0-9]+", re.IGNORECASE)
 _PAIR = re.compile(r"\(\s*([0-9]+)\s*,\s*([0-9a-z]+)\s*\)", re.IGNORECASE)
 
 
-def parse_throws(text: str) -> tuple[Throw, ...]:
+def parse_throws(text: str, *, traditional: bool = False) -> tuple[Throw, ...]:
+    if traditional:
+        return parse_siteswap(text)
     if len(text) > 60000:
         raise ValueError("The input is too long. Shorten the period.")
     position = 0

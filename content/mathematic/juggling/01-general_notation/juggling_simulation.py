@@ -136,14 +136,21 @@ function buildPattern(beats, options = {}) {
     if (!options.edgeCycles) arrivals.forEach((edge, rank) => { edge.next = departures[rank]; });
   }
   if (options.edgeCycles) {
+    if (options.edgeCycleColors && (!Array.isArray(options.edgeCycleColors)
+        || options.edgeCycleColors.length !== options.edgeCycles.length
+        || options.edgeCycleColors.some(color => !Number.isSafeInteger(color) || color < 0))) {
+      throw Error("Every trajectory cycle must have a valid color index.");
+    }
     const assigned = new Set();
-    options.edgeCycles.forEach((cycle, colorId) => {
+    options.edgeCycles.forEach((cycle, cycleIndex) => {
+      const colorId = options.edgeCycleColors?.[cycleIndex] ?? cycleIndex;
       if (!cycle.length) throw Error("A color component cannot be empty.");
       cycle.forEach((id, index) => {
         if (!Number.isInteger(id) || id < 0 || id >= edges.length || assigned.has(id)) throw Error("The color decomposition does not partition the throws.");
         const edge = edges[id], next = edges[cycle[(index + 1) % cycle.length]];
         if (!next || next.phase !== (edge.phase + edge.duration) % period || next.source !== edge.destination) throw Error("A color component is not balanced.");
-        assigned.add(id); edge.next = next; edge.colorId = colorId;
+        /* A chosen color cycle can reorder the copies received in a multiplex. */
+        assigned.add(id); edge.next = next; edge.landingRank = next.rank; edge.colorId = colorId;
       });
     });
     if (assigned.size !== edges.length) throw Error("The color decomposition does not cover every throw.");
@@ -218,7 +225,7 @@ function ballPosition(pattern, geometry, ball, time, dwell, dip, gravity = 12) {
   const edge = segment.edge, age = local - segment.start;
   const count = pattern.outgoing[edge.phase][edge.source].length;
   const offset = slotOffset(edge.rank, count);
-  if (age < dwell || (pattern.holdTwos && edge.duration === 2)) {
+  if (age < dwell || (pattern.holdTwos && edge.duration === 2 && edge.source === edge.destination)) {
     const point = handPosition(pattern, geometry, edge.source, time, dwell, dip);
     return {x: point.x + offset, y: point.y - 1.8, held: true, edge};
   }
@@ -247,7 +254,7 @@ function fitView(pattern, geometry, dwell, gravity, padding = 24, viewportHeight
     }
   });
   for (const edge of pattern.edges) {
-    if (pattern.holdTwos && edge.duration === 2) continue;
+    if (pattern.holdTwos && edge.duration === 2 && edge.source === edge.destination) continue;
     const a = geometry[edge.source][edge.phase].throw;
     const b = geometry[edge.destination][(edge.phase + edge.duration) % pattern.period].catch;
     const flight = edge.duration - dwell;
@@ -273,7 +280,7 @@ const $ = id => document.getElementById(id);
 __EDITOR_JAVASCRIPT__
 const defaultPattern = __DEFAULT_PATTERN__;
 if ($("patternEditor")) createPatternEditor($("patternEditor"), {value: defaultPattern, hint: "Select Apply and Play after editing.", describedBy: "message"});
-let pattern, geometry, source, time = 0, lastStamp = null, onFrame = null;
+let pattern, geometry, source, sourceTraditional = false, time = 0, lastStamp = null, onFrame = null;
 let running = !matchMedia("(prefers-reduced-motion: reduce)").matches;
 let drag = null, pan = null, resumeAfterDrag = false, frame = null;
 let view = {scale: 1, x: 0, y: 0};
@@ -323,11 +330,13 @@ function setPoint(hand, kind, point) {
 }
 function load(text, beats = null, options = {}) {
   /* Validate before replacing a working animation or its edited geometry. */
-  const candidate = Object.assign(buildPattern(beats ?? parseThrows(text), options), options);
+  const traditional = options.traditional === true;
+  const candidate = Object.assign(buildPattern(beats ?? parseThrows(text, traditional), options), options);
   const nextGeometry = geometry && pattern.hands === candidate.hands && pattern.period === candidate.period
     ? structuredClone(geometry) : defaultGeometry(candidate);
-  pattern = candidate; geometry = nextGeometry; source = text; time = 0; lastStamp = null;
+  pattern = candidate; geometry = nextGeometry; source = text; sourceTraditional = traditional; time = 0; lastStamp = null;
   if ($("editor")) $("editor").value = text;
+  if ($("traditionalNotation")) $("traditionalNotation").checked = traditional;
   $("stats").textContent = `${count(pattern.hands, "hand")} · ${count(pattern.period, "beat")} · ${count(pattern.objects, "object")}`;
   $("hand").replaceChildren(...Array.from({length: pattern.hands}, (_, h) => option(h, pattern.handLabels?.[h] ?? `Hand ${h + 1}`)));
   $("phase").replaceChildren(option("all", "All Beats"), ...Array.from({length: pattern.period}, (_, t) => option(t, `Beat ${t}`)));
@@ -462,10 +471,17 @@ for (const id of ["guides", "trails", "dip"]) $(id).onchange = draw;
 for (const id of ["hand", "phase"]) $(id).onchange = () => { syncCoordinates(); draw(); };
 $("resetGeometry").onclick = () => { geometry = defaultGeometry(pattern); syncCoordinates(); fitViewport(); draw(); };
 if ($("apply")) $("apply").onclick = () => {
-  try { load($("editor").value); running = true; schedule(); }
+  try {
+    const traditional = $("traditionalNotation").checked;
+    load($("editor").value, null, {traditional, holdTwos: traditional, handLabels: traditional ? ["L", "R"] : undefined});
+    running = true; schedule();
+  }
   catch (error) { message(error.message, true); }
 };
-if ($("restore")) $("restore").onclick = () => { $("editor").value = source; message("Restored the pattern currently being played."); };
+if ($("restore")) $("restore").onclick = () => {
+  $("editor").value = source; $("traditionalNotation").checked = sourceTraditional;
+  message("Restored the pattern currently being played.");
+};
 for (const kind of ["catch", "throw"]) for (const axis of ["x", "y"]) {
   const input = $(kind + axis.toUpperCase());
   input.onchange = () => {

@@ -12,6 +12,7 @@ from juggling_editor import CSS, DEFAULT_PATTERN, JAVASCRIPT
 
 class PatternEditor(anywidget.AnyWidget):
     value = traitlets.Unicode(DEFAULT_PATTERN).tag(sync=True)
+    traditional = traitlets.Bool(False).tag(sync=True)
 
     _esm = JAVASCRIPT + r"""
 export default {
@@ -28,7 +29,7 @@ export default {
     const wrapper = document.createElement("div");
     wrapper.className = "juggling-editor";
     const root = document.createElement("div");
-    const editor = createPatternEditor(root, {value: model.get("value"), hint: "Select Apply after editing."});
+    const editor = createPatternEditor(root, {value: model.get("value"), traditional: model.get("traditional"), hint: "Select Apply after editing."});
     const actions = document.createElement("div");
     actions.className = "actions";
     const apply = document.createElement("button"), restore = document.createElement("button");
@@ -36,16 +37,20 @@ export default {
     restore.textContent = "Restore Current Pattern";
     const events = new AbortController();
     apply.addEventListener("click", () => {
-      model.set("value", editor.input.value);
+      /* Model setters emit synchronously, so capture both edits before sync. */
+      const value = editor.input.value, traditional = editor.notation.checked;
+      model.set("value", value);
+      model.set("traditional", traditional);
       model.save_changes();
     }, {signal: events.signal});
-    restore.addEventListener("click", () => { editor.input.value = model.get("value"); }, {signal: events.signal});
-    const sync = () => { editor.input.value = model.get("value"); };
+    const sync = () => { editor.input.value = model.get("value"); editor.notation.checked = model.get("traditional"); };
+    restore.addEventListener("click", sync, {signal: events.signal});
     model.on("change:value", sync);
+    model.on("change:traditional", sync);
     actions.append(apply, restore);
     wrapper.append(root, actions);
     shadow.append(style, wrapper);
-    return () => { model.off("change:value", sync); events.abort(); editor.destroy(); shadow.replaceChildren(); };
+    return () => { model.off("change:value", sync); model.off("change:traditional", sync); events.abort(); editor.destroy(); shadow.replaceChildren(); };
   }
 };
 """.replace("__EDITOR_CSS__", json.dumps(CSS))

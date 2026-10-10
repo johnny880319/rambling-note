@@ -647,7 +647,9 @@ def _(mo):
     | `u` | 僅在單手時，可省略 `u_1` 的 `_1`；`u` 可為數字或單字母 |
     | `u_j` | 單顆球可省略中括號，等同 `[u_j]` |
 
-    此外輸入中的連續數字一律視為一個十進位整數，所以不同拍的內容務必用空白或換行分開。不同手跟 multiplex 也要各自用 `|` 跟 `,` 隔開。
+    在預設模式中，輸入的連續數字一律視為一個十進位整數，所以不同拍的內容務必用空白或換行分開。不同手跟 multiplex 也要各自用 `|` 跟 `,` 隔開。
+
+    如果想直接輸入玩家常用的雙手 siteswap，可以勾選 `Traditional Siteswap (Two Hands)`，再按 `Apply and Play`。此模式依照 [Juggling Lab 的記號慣例](https://jugglinglab.org/html/ssnotation.html)
     """)
     return
 

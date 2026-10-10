@@ -309,6 +309,8 @@ def _(mo):
     ## Color Decomposition Simulator
 
     以下為用 AI vibe 出來的 color decomposition 的模擬，輸入任意 siteswap 他會窮舉出所有 minimized color decomposition 的可能性。但如果可能性太多而窮舉不完時，程式會要求降遞週期數或 multiplex 數量。
+
+    關於 juggling matrix 的符號以及各種客製化選項的部分可以參考第一篇雜耍文章。
     """)
     return
 
